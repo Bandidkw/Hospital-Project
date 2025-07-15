@@ -35,6 +35,9 @@ module.exports = {
       animation:{
         'fade-in-up':'fade-in-up 1s ease-out forwards',
       },
+      colors:{
+        'my-custom-gray': '#666666',
+      }
     },
   },
   plugins: [],
