@@ -1,17 +1,24 @@
 <script setup lang="ts">
-import HeroSection from '../components/HeroSection.vue'; // Import HeroSection
+import HeroSection from '../components/HeroSection.vue';
+import ServiceSection from '@/components/ServiceSection.vue'; // ServiceSection ถูก import แล้ว
 </script>
 
 <template>
   <div>
-    <HeroSection /> <div class="text-center py-10">
-      <h1 class="text-4xl font-bold text-blue-700 mb-4">Welcome to Hospital Website</h1>
-      <p class="text-lg text-gray-700 max-w-2xl mx-auto">
-        Providing compassionate and quality healthcare services to our community.
-      </p>
-      <button class="mt-6 bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300">
-        Learn More About Our Services
-      </button>
+    <HeroSection />
+
+    <ServiceSection />
+
+    <div class="py-16 text-center bg-white">
+      <h2 class="text-3xl text-gray-700">ส่วนข่าวสาร (กำลังจะสร้าง)</h2>
     </div>
+    <div class="py-16 text-center bg-gray-100">
+      <h2 class="text-3xl text-gray-700">ส่วนติดต่อเรา (กำลังจะสร้าง)</h2>
+    </div>
+
   </div>
 </template>
+
+<style scoped>
+/* CSS สำหรับ HomeView.vue */
+</style>
