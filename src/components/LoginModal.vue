@@ -1,9 +1,6 @@
 <template>
-  <!-- Overlay (พื้นหลังทึบ) -->
   <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <!-- Modal Content -->
     <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full relative">
-      <!-- Close Button -->
       <button
         @click="closeModal"
         class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition duration-300 focus:outline-none"
@@ -20,7 +17,6 @@
         </p>
       </div>
       <form class="mt-6 space-y-6" @submit.prevent="handleLogin">
-        <!-- แก้ไขตรงนี้: เปลี่ยน -space-y-px เป็น space-y-4 หรือ space-y-3 -->
         <div class="rounded-md shadow-sm space-y-4">
           <div>
             <label for="modal-username" class="sr-only">ชื่อผู้ใช้งาน</label>
@@ -50,8 +46,8 @@
           </div>
         </div>
 
-        <div v-if="loginError" class="text-red-600 text-sm text-center">
-          {{ loginError }}
+        <div v-if="authStore.loginError" class="text-red-600 text-sm text-center">
+          {{ authStore.loginError }}
         </div>
 
         <div>
@@ -77,7 +73,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+// ไม่จำเป็นต้องใช้ useRouter ตรงนี้แล้ว เพราะ authStore จะจัดการการ redirect เอง
+// import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth'; // <--- เพิ่มการนำเข้า authStore
 
 const props = defineProps<{
   isOpen: boolean;
@@ -87,28 +85,34 @@ const emit = defineEmits(['update:isOpen', 'loginSuccess']);
 
 const username = ref('');
 const password = ref('');
-const loginError = ref('');
-const router = useRouter();
+// ไม่จำเป็นต้องมี loginError ใน component แล้ว เพราะจะใช้จาก store
+// const loginError = ref('');
+
+// สร้าง instance ของ authStore
+const authStore = useAuthStore();
+// ไม่จำเป็นต้องมี router ใน component แล้ว
+// const router = useRouter();
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     username.value = '';
     password.value = '';
-    loginError.value = '';
+    // เคลียร์ error จาก store เมื่อเปิด modal
+    authStore.loginError = null;
   }
 });
 
-const handleLogin = () => {
-  loginError.value = '';
+const handleLogin = async () => { // <--- เพิ่ม async
+  // ลบบรรทัดนี้: loginError.value = '';
 
-  if (username.value === 'admin' && password.value === 'password') {
-    alert('เข้าสู่ระบบสำเร็จ!');
+  // เรียกใช้ฟังก์ชัน login จาก authStore
+  const success = await authStore.login(username.value, password.value);
+
+  if (success) {
     emit('loginSuccess');
-    closeModal();
-    router.push('/back-office');
-  } else {
-    loginError.value = 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง';
+    closeModal(); // ปิด Modal หลังจาก Login สำเร็จ
   }
+  // ไม่ต้องมี else เพื่อ set loginError เพราะ authStore จะจัดการเอง
 };
 
 const closeModal = () => {
