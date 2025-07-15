@@ -1,3 +1,4 @@
+
 FROM node:20-slim AS build-stage
 
 WORKDIR /app
@@ -8,14 +9,14 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+RUN npm run build          
 
-FROM nginx:stable-alpine as production-stage
+FROM nginx:stable-alpine AS production-stage
+
 
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 3001
-
+EXPOSE 3001                
 CMD ["nginx", "-g", "daemon off;"]
