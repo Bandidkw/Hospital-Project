@@ -115,14 +115,14 @@
                 </a>
                 <hr class="my-1 border-gray-200"> </template>
             <template v-else>
-                <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click.prevent="openLoginModal">
-                    <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบเจ้าหน้าที่</span>
+                <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+                <i class="fas fa-external-link-alt w-5"></i><span>โปรแกรมเกี่ยวกับเรา</span>
                 </a>
-                <hr class="my-1 border-gray-200"> </template>
-
-            <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-external-link-alt w-5"></i><span>โปรแกรมเกี่ยวกับเรา</span>
-            </a>
+                <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click.prevent="openLoginModal">
+                <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>
+                </a>
+                <hr class="my-1 border-gray-200">
+              </template>
             </div>
         </div>
       </div>
@@ -209,7 +209,7 @@
             <i class="fas fa-external-link-alt"></i><span>โปรแกรมเกี่ยวกับเรา</span>
         </a>
           <a href="#" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click.prevent="openLoginModal">
-            <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบเจ้าหน้าที่</span>
+            <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>
           </a>
           <hr class="my-1 border-gray-200"> </template>
         </div>

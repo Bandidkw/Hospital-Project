@@ -75,11 +75,12 @@ interface UserProfile {
 }
 
 const profile = ref<UserProfile>({
-  username: authStore.user?.username || 'admin', // Get from auth store
+  username: authStore.user?.username || 'admin',
   email: authStore.user?.email || 'admin@example.com',
   fullName: authStore.user?.fullName || 'ผู้ดูแลระบบ',
   role: authStore.user?.role || 'admin',
 });
+
 
 const passwordForm = ref({
   currentPassword: '',
@@ -107,11 +108,6 @@ const changePassword = () => {
   toast.success('เปลี่ยนรหัสผ่านสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   passwordForm.value = { currentPassword: '', newPassword: '', confirmNewPassword: '' };
 };
-
-// In a real application, fetch initial profile data on mount
-// onMounted(() => {
-//   // Fetch profile data if not already in authStore
-// });
 </script>
 
 <style scoped>

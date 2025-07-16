@@ -3,6 +3,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
 import { useAuthStore } from '@/stores/auth';
 
+
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -178,5 +180,9 @@ router.beforeEach(async (to, from, next) => {
     next();
   }
 });
+interface WebsiteSettings {
+  slogan: string;
+  // เพิ่ม properties อื่นๆ ที่คาดว่าจะมี
+}
 
 export default router;

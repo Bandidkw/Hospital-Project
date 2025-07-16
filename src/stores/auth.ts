@@ -2,15 +2,20 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import router from '../router';
+
 interface User {
   username: string;
+  email: string; // เพิ่มบรรทัดนี้
+  fullName: string; // เพิ่มบรรทัดนี้
   role: 'admin' | 'editor' | 'user'; // เพิ่ม role
   token?: string; //token จาก backend
 }
+
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null); // เก็บข้อมูลผู้ใช้ที่ล็อกอิน
   const isAuthenticated = ref(false); // สถานะยืนยันตัวตน
   const loginError = ref<string | null>(null);
+
   const initializeAuth = () => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
@@ -35,22 +40,24 @@ export const useAuthStore = defineStore('auth', () => {
       await new Promise(resolve => setTimeout(resolve, 500)); // จำลองการดีเลย์ของ API
 
       if (usernameInput === 'admin' && passwordInput === 'password') {
-        user.value = { username: usernameInput, role: 'admin', token: 'mock-admin-token' };
+        // เพิ่ม email และ fullName ใน object ผู้ใช้
+        user.value = { username: usernameInput, email: 'admin@example.com', fullName: 'ผู้ดูแลระบบ', role: 'admin', token: 'mock-admin-token' };
         isAuthenticated.value = true;
         localStorage.setItem('user', JSON.stringify(user.value));
         localStorage.setItem('token', user.value.token || '');
 
         console.log("Login successful in store:", user.value);
-        router.push('/dashboard'); // <--- แก้ไขตรงนี้: เปลี่ยนเป็น Path ของ Route ที่ถูกต้อง
+        router.push('/dashboard'); // Path ของ Route ที่ถูกต้อง
         return true;
       } else if (usernameInput === 'editor' && passwordInput === 'password') {
-        user.value = { username: usernameInput, role: 'editor', token: 'mock-editor-token' };
+        // เพิ่ม email และ fullName ใน object ผู้ใช้
+        user.value = { username: usernameInput, email: 'editor@example.com', fullName: 'ผู้แก้ไขข้อมูล', role: 'editor', token: 'mock-editor-token' };
         isAuthenticated.value = true;
         localStorage.setItem('user', JSON.stringify(user.value));
         localStorage.setItem('token', user.value.token || '');
 
         console.log("Login successful in store:", user.value);
-        router.push('/dashboard'); // <--- แก้ไขตรงนี้: เปลี่ยนเป็น Path ของ Route ที่ถูกต้อง
+        router.push('/dashboard'); // Path ของ Route ที่ถูกต้อง
         return true;
       }
       else {
