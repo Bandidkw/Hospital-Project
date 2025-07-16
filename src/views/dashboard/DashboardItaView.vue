@@ -167,7 +167,8 @@ const sortedITADocuments = computed(() => {
     if (b.year !== a.year) {
       return b.year - a.year; // Sort by year descending
     }
-    return quarterOrder[a.quarter] - quarterOrder[b.quarter]; // Then by quarter ascending
+   return quarterOrder[a.quarter as keyof typeof quarterOrder] - quarterOrder[b.quarter as keyof typeof quarterOrder];
+
   });
 });
 
