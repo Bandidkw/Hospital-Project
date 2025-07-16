@@ -5,7 +5,6 @@
     </h2>
     <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับดูและแก้ไขข้อมูลโปรไฟล์ส่วนตัวของคุณ.</p>
 
-    <!-- Profile Information Form -->
     <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">ข้อมูลส่วนตัว</h3>
       <form @submit.prevent="updateProfile" class="space-y-4">
@@ -35,7 +34,6 @@
       </form>
     </div>
 
-    <!-- Change Password Form -->
     <div class="card bg-gray-50 p-6 rounded-lg shadow-inner">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">เปลี่ยนรหัสผ่าน</h3>
       <form @submit.prevent="changePassword" class="space-y-4">
@@ -63,8 +61,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useToast } from 'vue-toastification'; // นำเข้า useToast
 import { useAuthStore } from '@/stores/auth'; // Assuming authStore holds user info
 
+const toast = useToast(); // สร้าง instance ของ toast
 const authStore = useAuthStore();
 
 interface UserProfile {
@@ -90,21 +90,21 @@ const passwordForm = ref({
 const updateProfile = () => {
   // In a real application, send profile.value to backend API
   console.log('Updating profile:', profile.value);
-  alert('บันทึกข้อมูลโปรไฟล์สำเร็จ!');
+  toast.success('บันทึกข้อมูลโปรไฟล์สำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
 };
 
 const changePassword = () => {
   if (passwordForm.value.newPassword !== passwordForm.value.confirmNewPassword) {
-    alert('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!');
+    toast.error('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!'); // เปลี่ยนจาก alert เป็น toast.error
     return;
   }
   if (passwordForm.value.newPassword.length < 6) { // Example validation
-    alert('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร!');
+    toast.error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร!'); // เปลี่ยนจาก alert เป็น toast.error
     return;
   }
   // In a real application, send passwordForm.value to backend API
   console.log('Changing password...');
-  alert('เปลี่ยนรหัสผ่านสำเร็จ!');
+  toast.success('เปลี่ยนรหัสผ่านสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   passwordForm.value = { currentPassword: '', newPassword: '', confirmNewPassword: '' };
 };
 

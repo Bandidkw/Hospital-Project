@@ -5,7 +5,6 @@
     </h2>
     <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบข้อมูลผู้ใช้งานระบบ (เจ้าหน้าที่).</p>
 
-    <!-- Form for Adding/Editing User -->
     <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ editingUser ? 'แก้ไขผู้ใช้งาน' : 'เพิ่มผู้ใช้งานใหม่' }}</h3>
       <form @submit.prevent="saveUser" class="space-y-4">
@@ -13,7 +12,7 @@
           <label for="username" class="block text-sm font-medium text-gray-700">ชื่อผู้ใช้งาน:</label>
           <input type="text" id="username" v-model="currentUser.username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required :disabled="editingUser">
         </div>
-        <div>++++++
+        <div>
           <label for="email" class="block text-sm font-medium text-gray-700">อีเมล:</label>
           <input type="email" id="email" v-model="currentUser.email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required>
         </div>
@@ -28,8 +27,7 @@
             <option value="admin">Admin</option>
             <option value="editor">Editor</option>
             <option value="viewer">Viewer</option>
-            <!-- Add more roles as needed -->
-          </select>
+            </select>
         </div>
         <div class="flex justify-end space-x-3">
           <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300">
@@ -42,7 +40,6 @@
       </form>
     </div>
 
-    <!-- List of Users -->
     <div class="card bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการผู้ใช้งาน</h3>
       <div class="overflow-x-auto">
@@ -79,7 +76,6 @@
       </div>
     </div>
 
-    <!-- Custom Confirmation Modal -->
     <div v-if="showConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
         <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบ</h3>
@@ -99,6 +95,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useToast } from 'vue-toastification'; // นำเข้า useToast
+
+const toast = useToast(); // สร้าง instance ของ toast
 
 interface User {
   id: number;
@@ -132,11 +131,11 @@ const saveUser = () => {
       const { password, ...rest } = currentUser.value;
       usersList.value[index] = { ...rest };
     }
-    alert('แก้ไขผู้ใช้งานสำเร็จ!');
+    toast.success('แก้ไขผู้ใช้งานสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   } else {
     currentUser.value.id = usersList.value.length > 0 ? Math.max(...usersList.value.map(u => u.id)) + 1 : 1;
     usersList.value.push({ ...currentUser.value });
-    alert('เพิ่มผู้ใช้งานสำเร็จ!');
+    toast.success('เพิ่มผู้ใช้งานสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   }
   resetForm();
 };
@@ -158,7 +157,7 @@ const confirmDeleteUser = (id: number) => {
 const deleteUser = () => {
   if (userToDeleteId.value !== null) {
     usersList.value = usersList.value.filter(u => u.id !== userToDeleteId.value);
-    alert('ลบผู้ใช้งานสำเร็จ!');
+    toast.success('ลบผู้ใช้งานสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   }
   resetDeleteConfirm();
 };

@@ -1,30 +1,34 @@
 <template>
   <div class="p-6 bg-white rounded-lg shadow-md">
     <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-      <i class="fas fa-images mr-3 text-blue-400"></i> จัดการภาพสไลด์
+      <i class="fas fa-images mr-3 text-fuchsia-500"></i> จัดการสไลด์ / แบนเนอร์
     </h2>
-    <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบภาพสไลด์ที่แสดงบนหน้าแรกของเว็บไซต์.</p>
+    <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และจัดลำดับสไลด์บนหน้าแรกของเว็บไซต์.</p>
 
-    <!-- Form for Adding/Editing Slide -->
+
     <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ editingSlide ? 'แก้ไขภาพสไลด์' : 'เพิ่มภาพสไลด์ใหม่' }}</h3>
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ editingSlide ? 'แก้ไขสไลด์' : 'เพิ่มสไลด์ใหม่' }}</h3>
       <form @submit.prevent="saveSlide" class="space-y-4">
         <div>
-          <label for="slideTitle" class="block text-sm font-medium text-gray-700">หัวข้อสไลด์ (ไม่บังคับ)</label>
+          <label for="slideImageUrl" class="block text-sm font-medium text-gray-700">URL รูปภาพสไลด์:</label>
+          <input type="url" id="slideImageUrl" v-model="currentSlide.imageUrl" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="เช่น https://example.com/slide1.jpg" required>
+        </div>
+        <div>
+          <label for="slideTitle" class="block text-sm font-medium text-gray-700">หัวข้อสไลด์ (Optional):</label>
           <input type="text" id="slideTitle" v-model="currentSlide.title" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
         </div>
         <div>
-          <label for="slideDescription" class="block text-sm font-medium text-gray-700">คำอธิบาย (ไม่บังคับ)</label>
+          <label for="slideDescription" class="block text-sm font-medium text-gray-700">คำอธิบาย (Optional):</label>
           <textarea id="slideDescription" v-model="currentSlide.description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
         </div>
         <div>
-          <label for="slideImage" class="block text-sm font-medium text-gray-700">รูปภาพสไลด์</label>
-          <input type="file" id="slideImage" @change="handleImageUpload" accept="image/*" class="mt-1 block w-full text-gray-700" :required="!editingSlide">
-          <p v-if="currentSlide.imageUrl" class="text-sm text-gray-500 mt-2">รูปภาพปัจจุบัน: <a :href="currentSlide.imageUrl" target="_blank" class="text-blue-500 hover:underline">ดูรูป</a></p>
+          <label for="slideLink" class="block text-sm font-medium text-gray-700">ลิงก์ (Optional):</label>
+          <input type="url" id="slideLink" v-model="currentSlide.link" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="เช่น https://www.maetaenghospital.com/news/123">
+          <p class="text-xs text-gray-500 mt-1">เมื่อคลิกสไลด์จะนำไปยังลิงก์นี้</p>
         </div>
-        <div>
-          <label for="slideOrder" class="block text-sm font-medium text-gray-700">ลำดับการแสดงผล</label>
-          <input type="number" id="slideOrder" v-model.number="currentSlide.order" class="mt-1 block w-24 border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+        <div class="flex items-center">
+          <input id="slideIsActive" type="checkbox" v-model="currentSlide.isActive" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+          <label for="slideIsActive" class="ml-2 block text-sm text-gray-900">ใช้งานอยู่</label>
         </div>
         <div class="flex justify-end space-x-3">
           <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300">
@@ -37,30 +41,30 @@
       </form>
     </div>
 
-    <!-- List of Slides -->
+
     <div class="card bg-white p-6 rounded-lg shadow-md">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการภาพสไลด์</h3>
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการสไลด์</h3>
       <div class="overflow-x-auto">
         <table class="min-w-full bg-white border border-gray-200 rounded-lg">
           <thead>
             <tr class="bg-gray-100 text-left text-gray-600 uppercase text-sm leading-normal">
-              <th class="py-3 px-6 text-left">#</th>
               <th class="py-3 px-6 text-left">รูปภาพ</th>
               <th class="py-3 px-6 text-left">หัวข้อ</th>
-              <th class="py-3 px-6 text-left">คำอธิบาย</th>
-              <th class="py-3 px-6 text-center">ลำดับ</th>
+              <th class="py-3 px-6 text-left">สถานะ</th>
               <th class="py-3 px-6 text-center">การจัดการ</th>
             </tr>
           </thead>
           <tbody class="text-gray-600 text-sm font-light">
-            <tr v-for="(slide, index) in slidesList" :key="slide.id" class="border-b border-gray-200 hover:bg-gray-50">
-              <td class="py-3 px-6 text-left">{{ index + 1 }}</td>
+            <tr v-for="slide in slidesList" :key="slide.id" class="border-b border-gray-200 hover:bg-gray-50">
               <td class="py-3 px-6 text-left">
-                <img :src="slide.imageUrl" alt="Slide Image" class="w-16 h-12 object-cover rounded-md">
+                <img :src="slide.imageUrl" alt="Slide Image" class="w-20 h-12 object-cover rounded-md shadow-sm">
               </td>
               <td class="py-3 px-6 text-left">{{ slide.title || '-' }}</td>
-              <td class="py-3 px-6 text-left truncate max-w-xs">{{ slide.description || '-' }}</td>
-              <td class="py-3 px-6 text-center">{{ slide.order }}</td>
+              <td class="py-3 px-6 text-left">
+                <span :class="{'bg-green-200 text-green-800': slide.isActive, 'bg-red-200 text-red-800': !slide.isActive}" class="py-1 px-3 rounded-full text-xs">
+                  {{ slide.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                </span>
+              </td>
               <td class="py-3 px-6 text-center">
                 <button @click="editSlide(slide)" class="bg-yellow-500 text-white px-3 py-1 rounded-md text-xs hover:bg-yellow-600 transition duration-300 mr-2">
                   <i class="fas fa-edit"></i> แก้ไข
@@ -71,18 +75,18 @@
               </td>
             </tr>
             <tr v-if="slidesList.length === 0">
-              <td colspan="6" class="py-8 text-center text-gray-500">ยังไม่มีภาพสไลด์ในขณะนี้.</td>
+              <td colspan="4" class="py-8 text-center text-gray-500">ยังไม่มีสไลด์ในระบบ.</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Custom Confirmation Modal -->
+
     <div v-if="showConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
         <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบ</h3>
-        <p class="text-gray-700 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบภาพสไลด์นี้?</p>
+        <p class="text-gray-700 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบสไลด์นี้?</p>
         <div class="flex justify-center space-x-4">
           <button @click="deleteSlide" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-300">
             <i class="fas fa-trash-alt mr-2"></i> ลบ
@@ -98,26 +102,32 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useToast } from 'vue-toastification';
+
+const toast = useToast();
 
 interface SlideItem {
   id: number;
-  title: string;
-  description: string;
   imageUrl: string;
-  order: number;
+  title?: string;
+  description?: string;
+  link?: string;
+  isActive: boolean;
 }
 
 const slidesList = ref<SlideItem[]>([
-  { id: 1, title: 'สไลด์ 1', description: 'คำอธิบายสไลด์ 1', imageUrl: 'https://placehold.co/100x100/a0a0a0/ffffff?text=Slide1', order: 1 },
-  { id: 2, title: 'สไลด์ 2', description: 'คำอธิบายสไลด์ 2', imageUrl: 'https://placehold.co/100x100/b0b0b0/ffffff?text=Slide2', order: 2 },
+  { id: 1, imageUrl: 'https://via.placeholder.com/800x300/4F46E5/FFFFFF?text=Slide+1', title: 'ยินดีต้อนรับสู่โรงพยาบาลแม่แตง', description: 'บริการทางการแพทย์ครบวงจร', link: '/about', isActive: true },
+  { id: 2, imageUrl: 'https://via.placeholder.com/800x300/10B981/FFFFFF?text=Slide+2', title: 'ตรวจสุขภาพประจำปี', description: 'โปรโมชั่นพิเศษสำหรับคุณ', link: '/services/checkup', isActive: true },
+  { id: 3, imageUrl: 'https://via.placeholder.com/800x300/EF4444/FFFFFF?text=Slide+3', title: 'รับสมัครบุคลากร', description: 'ร่วมเป็นส่วนหนึ่งของเรา', link: '/personnel/careers', isActive: false },
 ]);
 
 const currentSlide = ref<SlideItem>({
   id: 0,
+  imageUrl: '',
   title: '',
   description: '',
-  imageUrl: '',
-  order: 0,
+  link: '',
+  isActive: true,
 });
 const editingSlide = ref(false);
 const slideToDeleteId = ref<number | null>(null);
@@ -129,11 +139,11 @@ const saveSlide = () => {
     if (index !== -1) {
       slidesList.value[index] = { ...currentSlide.value };
     }
-    alert('แก้ไขภาพสไลด์สำเร็จ!');
+    toast.success('แก้ไขสไลด์สำเร็จ!');
   } else {
     currentSlide.value.id = slidesList.value.length > 0 ? Math.max(...slidesList.value.map(s => s.id)) + 1 : 1;
     slidesList.value.push({ ...currentSlide.value });
-    alert('เพิ่มภาพสไลด์สำเร็จ!');
+    toast.success('เพิ่มสไลด์ใหม่สำเร็จ!');
   }
   resetForm();
 };
@@ -155,7 +165,7 @@ const confirmDeleteSlide = (id: number) => {
 const deleteSlide = () => {
   if (slideToDeleteId.value !== null) {
     slidesList.value = slidesList.value.filter(s => s.id !== slideToDeleteId.value);
-    alert('ลบภาพสไลด์สำเร็จ!');
+    toast.success('ลบสไลด์สำเร็จ!');
   }
   resetDeleteConfirm();
 };
@@ -165,10 +175,15 @@ const cancelDelete = () => {
 };
 
 const resetForm = () => {
-  currentSlide.value = { id: 0, title: '', description: '', imageUrl: '', order: 0 };
+  currentSlide.value = {
+    id: 0,
+    imageUrl: '',
+    title: '',
+    description: '',
+    link: '',
+    isActive: true,
+  };
   editingSlide.value = false;
-  const fileInput = document.getElementById('slideImage') as HTMLInputElement;
-  if (fileInput) fileInput.value = '';
 };
 
 const resetDeleteConfirm = () => {
@@ -176,16 +191,11 @@ const resetDeleteConfirm = () => {
   showConfirmModal.value = false;
 };
 
-const handleImageUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      currentSlide.value.imageUrl = e.target?.result as string;
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-};
+// In a real application, you would fetch initial slides from an API on mount
+// onMounted(() => {
+//   fetchSlides();
+// });
+// const fetchSlides = async () => { /* ... */ };
 </script>
 
 <style scoped>

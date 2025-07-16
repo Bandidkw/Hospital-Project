@@ -5,7 +5,6 @@
     </h2>
     <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบข้อมูลบุคลากรของโรงพยาบาล.</p>
 
-    <!-- Form for Adding/Editing Personnel -->
     <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ editingPersonnel ? 'แก้ไขข้อมูลบุคลากร' : 'เพิ่มบุคลากรใหม่' }}</h3>
       <form @submit.prevent="savePersonnel" class="space-y-4">
@@ -41,7 +40,6 @@
       </form>
     </div>
 
-    <!-- List of Personnel -->
     <div class="card bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการบุคลากร</h3>
       <div class="overflow-x-auto">
@@ -82,7 +80,6 @@
       </div>
     </div>
 
-    <!-- Custom Confirmation Modal -->
     <div v-if="showConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
         <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบ</h3>
@@ -102,6 +99,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useToast } from 'vue-toastification'; // นำเข้า useToast
+
+const toast = useToast(); // สร้าง instance ของ toast
 
 interface PersonnelItem {
   id: number;
@@ -135,11 +135,11 @@ const savePersonnel = () => {
     if (index !== -1) {
       personnelList.value[index] = { ...currentPersonnel.value };
     }
-    alert('แก้ไขข้อมูลบุคลากรสำเร็จ!');
+    toast.success('แก้ไขข้อมูลบุคลากรสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   } else {
     currentPersonnel.value.id = personnelList.value.length > 0 ? Math.max(...personnelList.value.map(p => p.id)) + 1 : 1;
     personnelList.value.push({ ...currentPersonnel.value });
-    alert('เพิ่มบุคลากรสำเร็จ!');
+    toast.success('เพิ่มบุคลากรสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   }
   resetForm();
 };
@@ -161,7 +161,7 @@ const confirmDeletePersonnel = (id: number) => {
 const deletePersonnel = () => {
   if (personnelToDeleteId.value !== null) {
     personnelList.value = personnelList.value.filter(p => p.id !== personnelToDeleteId.value);
-    alert('ลบข้อมูลบุคลากรสำเร็จ!');
+    toast.success('ลบข้อมูลบุคลากรสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
   }
   resetDeleteConfirm();
 };

@@ -5,7 +5,6 @@
     </h2>
     <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับสร้างและดูรายงานต่างๆ ของระบบ.</p>
 
-    <!-- Report Generation Options -->
     <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">สร้างรายงาน</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -16,8 +15,7 @@
             <option value="user_activity">รายงานกิจกรรมผู้ใช้งาน</option>
             <option value="news_summary">รายงานสรุปข่าวสาร</option>
             <option value="ita_documents">รายงานเอกสาร ITA</option>
-            <!-- Add more report types -->
-          </select>
+            </select>
         </div>
         <div>
           <label for="dateRange" class="block text-sm font-medium text-gray-700">ช่วงวันที่:</label>
@@ -33,7 +31,6 @@
       </div>
     </div>
 
-    <!-- Generated Reports List (Placeholder) -->
     <div class="card bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">รายงานที่สร้างล่าสุด</h3>
       <div v-if="generatedReports.length > 0" class="space-y-4">
@@ -56,6 +53,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useToast } from 'vue-toastification'; // นำเข้า useToast
+
+const toast = useToast(); // สร้าง instance ของ toast
 
 interface Report {
   id: number;
@@ -75,7 +75,7 @@ const generatedReports = ref<Report[]>([]);
 
 const generateReport = () => {
   if (!reportForm.value.type) {
-    alert('กรุณาเลือกประเภทรายงาน!');
+    toast.error('กรุณาเลือกประเภทรายงาน!'); // เปลี่ยนจาก alert เป็น toast.error
     return;
   }
   // In a real application, this would trigger a backend process
@@ -90,7 +90,7 @@ const generateReport = () => {
     url: 'https://www.africau.edu/images/default/sample.pdf', // Placeholder URL
   };
   generatedReports.value.push(newReport);
-  alert('สร้างรายงานสำเร็จ! สามารถดาวน์โหลดได้จากรายการด้านล่าง.');
+  toast.success('สร้างรายงานสำเร็จ! สามารถดาวน์โหลดได้จากรายการด้านล่าง.'); // เปลี่ยนจาก alert เป็น toast.success
   resetReportForm();
 };
 

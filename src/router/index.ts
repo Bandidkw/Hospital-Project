@@ -12,120 +12,120 @@ const router = createRouter({
       component: HomeView
     },
     // Routes สำหรับข้อมูลโรงพยาบาล (About)
-    { path: '/history', name: 'history', component: () => import('@/views/About/HistoryView.vue') },
-    { path: '/vision', name: 'vision', component: () => import('@/views/About/VisionView.vue') },
-    { path: '/organization', name: 'organization', component: () => import('@/views/About/OrganizationView.vue') },
-    { path: '/personnel', name: 'personnel', component: () => import('@/views/About/PersonnelView.vue') },
+    { path: '/history', name: 'history', component: () => import('@/views/about/HistoryView.vue') },
+    { path: '/vision', name: 'vision', component: () => import('@/views/about/VisionView.vue') },
+    { path: '/organization', name: 'organization', component: () => import('@/views/about/OrganizationView.vue') },
+    { path: '/personnel', name: 'personnel', component: () => import('@/views/about/PersonnelView.vue') },
 
     // Routes สำหรับบริการ (Services)
-    { path: '/outpatient', name: 'outpatient', component: () => import('@/views/Services/OutpatientView.vue') },
-    { path: '/inpatient', name: 'inpatient', component: () => import('@/views/Services/InpatientView.vue') },
-    { path: '/emergency', name: 'emergency', component: () => import('@/views/Services/EmergencyView.vue') },
+    { path: '/outpatient', name: 'outpatient', component: () => import('@/views/services/OutpatientView.vue') },
+    { path: '/inpatient', name: 'inpatient', component: () => import('@/views/services/InpatientView.vue') },
+    { path: '/emergency', name: 'emergency', component: () => import('@/views/services/EmergencyView.vue') },
 
     // Routes อื่นๆ
     { path: '/news', name: 'news', component: () => import('@/views/NewsView.vue') },
     { path: '/ita', name: 'ita', component: () => import('@/views/ItaView.vue') },
     { path: '/contact', name: 'contact', component: () => import('@/views/ContactView.vue') },
+    {path: '/contact',name: 'contact',component:() => import("@/views/ContactView.vue"),
+},
 
     // **Dashboard และ Nested Routes**
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('@/views/staff/DashboardView.vue'),
+      component: () => import('../views/staff/DashboardView.vue'),
       meta: { requiresAuth: true, requiredRole: 'admin' }, // กำหนดให้เข้าถึงได้เฉพาะ admin
       children: [
         {
           path: '', // /dashboard
           name: 'dashboard-home',
-          component: () => import('@/views/dashboard/DashboardHomeView.vue'),
+          component: () => import('../views/dashboard/DashboardHomeView.vue'),
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'news', // /dashboard/news
           name: 'dashboard-news',
-          component: () => import('@/views/dashboard/DashboardNewsView.vue'),
+          component: () => import('../views/dashboard/DashboardNewsView.vue'),
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'categories', // /dashboard/categories
           name: 'dashboard-categories',
-          component: () => import('@/views/dashboard/DashboardCategoriesView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardCategoriesView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'ita', // /dashboard/ita
           name: 'dashboard-ita',
-          component: () => import('@/views/dashboard/DashboardItaView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardItaView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'slides', // /dashboard/slides
           name: 'dashboard-slides',
-          component: () => import('@/views/dashboard/DashboardSlidesView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardSlidesView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'footer-links', // /dashboard/footer-links
           name: 'dashboard-footer-links',
-          component: () => import('@/views/dashboard/DashboardFooterLinksView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardFooterLinksView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'org-structure', // /dashboard/org-structure
           name: 'dashboard-org-structure',
-          component: () => import('@/views/dashboard/DashboardOrgStructureView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardOrgStructureView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'media-files', // /dashboard/media-files
           name: 'dashboard-media-files',
-          component: () => import('@/views/dashboard/DashboardMediaFilesView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardMediaFilesView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'page-images', // /dashboard/page-images
           name: 'dashboard-page-images',
-          component: () => import('@/views/dashboard/DashboardPageImagesView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardPageImagesView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'audit-logs', // /dashboard/audit-logs
           name: 'dashboard-audit-logs',
-          component: () => import('@/views/dashboard/DashboardAuditLogsView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardAuditLogsView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'website-settings', // /dashboard/website-settings
           name: 'dashboard-website-settings',
-          component: () => import('@/views/dashboard/DashboardWebsiteSettingsView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardWebsiteSettingsView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'reports', // /dashboard/reports
           name: 'dashboard-reports',
-          component: () => import('@/views/dashboard/DashboardReportsView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardReportsView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'statistics', // /dashboard/statistics
           name: 'dashboard-statistics',
-          component: () => import('@/views/dashboard/DashboardStatisticsView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardStatisticsView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'profile', // /dashboard/profile
           name: 'dashboard-profile',
-          component: () => import('@/views/dashboard/DashboardProfileView.vue'), // <--- Component ใหม่
+          component: () => import('../views/dashboard/DashboardProfileView.vue'), // <--- Component ใหม่
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
         {
           path: 'users', // /dashboard/users (เดิมคือ manage_users)
           name: 'dashboard-users',
-          component: () => import('@/views/dashboard/DashboardUsersView.vue'),
+          component: () => import('../views/dashboard/DashboardUsersView.vue'),
           meta: { requiresAuth: true, requiredRole: 'admin' }
         },
-        // หมายเหตุ: 'view_website' ไม่ได้เป็นหน้าภายใน Dashboard แต่เป็นลิงก์ออกไปหน้าหลัก
-        // จึงไม่ต้องมี route ใน children นี้
       ]
     },
 
