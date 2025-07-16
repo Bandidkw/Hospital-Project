@@ -1,5 +1,5 @@
 <template>
-  <nav class="bg-white py-4 text-my-custom-gray shadow-lg">
+  <nav class="bg-white py-4 text-my-custom-gray shadow-lg relative z-50">
     <div class="container mx-auto flex justify-between items-center h-16 px-4">
       <div class="flex items-center h-full">
         <img src="/src/assets/MTH-Logo/logo.png" alt="Hospital Logo" class="h-24 w-24 p-3 mr-3">
@@ -99,26 +99,26 @@
             class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
             @click.stop
           >
-            <RouterLink to="/back-office" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-desktop"></i><span>ระบบ Back Office</span>
-            </RouterLink>
-            <RouterLink to="/equipment" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-box"></i><span>ระบบครุภัณฑ์</span>
+            <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+              <i class="fas fa-external-link-alt w-5"></i><span>โปรแกรมเกี่ยวกับเรา</span>
+            </a>
+            <!-- <RouterLink to="/equipment" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
+              <i class="fas fa-box w-5"></i><span>ระบบครุภัณฑ์</span>
             </RouterLink>
             <RouterLink to="/personnel-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-users-cog"></i><span>ระบบบุคลากร</span>
+              <i class="fas fa-users-cog w-5"></i><span>ระบบบุคลากร</span>
             </RouterLink>
             <RouterLink to="/pharmacy-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-pills"></i><span>ระบบคลังยา</span>
+              <i class="fas fa-pills w-5"></i><span>ระบบคลังยา</span>
             </RouterLink>
             <RouterLink to="/finance-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-dollar-sign"></i><span>ระบบการเงิน</span>
+              <i class="fas fa-dollar-sign w-5"></i><span>ระบบการเงิน</span>
             </RouterLink>
             <RouterLink to="/other-systems-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-th-large"></i><span>ระบบงานอื่นๆ</span>
-            </RouterLink>
+              <i class="fas fa-th-large w-5"></i><span>ระบบงานอื่นๆ</span>
+            </RouterLink> -->
             <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click.prevent="openLoginModal">
-              <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>
+              <i class="fas fa-sign-in-alt w-5"></i><span>เข้าสู่ระบบ</span>
             </a>
           </div>
         </div>
