@@ -29,7 +29,7 @@
             v-if="isDropdownOpen.about"
             class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
             @click.stop >
-            <RouterLink to="/history" class="px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
+            <RouterLink to="/history" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
                 <i class="fas fa-history"></i><span>ประวัติโรงพยาบาล</span>
             </RouterLink>
             <RouterLink to="/vision" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
@@ -75,7 +75,7 @@
           <i class="fas fa-newspaper"></i>
           <span>ข่าวสาร</span>
         </RouterLink>
-        <RouterLink to="/ita" class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300">
+        <RouterLink to="/ita-documents-public" class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300">
           <i class="fas fa-award"></i>
           <span>ITA</span>
         </RouterLink>
@@ -99,28 +99,31 @@
             class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
             @click.stop
           >
+            <template v-if="authStore.isAuthenticated">
+                <div class="block px-4 py-2 text-my-custom-gray font-semibold">
+                    <i class="fas fa-user"></i> สวัสดี, {{ authStore.user?.username || 'ผู้ใช้งาน' }}
+                </div>
+                <a href="#" class="block px-4 py-2 text-my-custom-gray hover:bg-red-100 flex items-center space-x-2" @click.prevent="handleLogout">
+                    <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
+                </a>
+                <hr class="my-1 border-gray-200">
+                <RouterLink to="/dashboard" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+                    <i class="fas fa-desktop"></i><span>แผงควบคุมเว็บไซต์</span>
+                </RouterLink>
+                <a href="https://11123.gtwoffice.com/login" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+                    <i class="fas fa-external-link-alt"></i><span>ระบบ Back Office</span>
+                </a>
+                <hr class="my-1 border-gray-200"> </template>
+            <template v-else>
+                <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click.prevent="openLoginModal">
+                    <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบเจ้าหน้าที่</span>
+                </a>
+                <hr class="my-1 border-gray-200"> </template>
+
             <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
               <i class="fas fa-external-link-alt w-5"></i><span>โปรแกรมเกี่ยวกับเรา</span>
             </a>
-            <!-- <RouterLink to="/equipment" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-box w-5"></i><span>ระบบครุภัณฑ์</span>
-            </RouterLink>
-            <RouterLink to="/personnel-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-users-cog w-5"></i><span>ระบบบุคลากร</span>
-            </RouterLink>
-            <RouterLink to="/pharmacy-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-pills w-5"></i><span>ระบบคลังยา</span>
-            </RouterLink>
-            <RouterLink to="/finance-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-dollar-sign w-5"></i><span>ระบบการเงิน</span>
-            </RouterLink>
-            <RouterLink to="/other-systems-login" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click="closeAllDropdowns()">
-              <i class="fas fa-th-large w-5"></i><span>ระบบงานอื่นๆ</span>
-            </RouterLink> -->
-            <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click.prevent="openLoginModal">
-              <i class="fas fa-sign-in-alt w-5"></i><span>เข้าสู่ระบบ</span>
-            </a>
-          </div>
+            </div>
         </div>
       </div>
 
@@ -174,7 +177,7 @@
       <RouterLink to="/news" class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2">
         <i class="fas fa-newspaper"></i> <span>ข่าวสาร</span>
       </RouterLink>
-      <RouterLink to="/ita" class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2">
+      <RouterLink to="/ita-documents-public" class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2">
         <i class="fas fa-award"></i> <span>ITA</span>
       </RouterLink>
       <RouterLink to="/contact" class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2">
@@ -186,12 +189,30 @@
         <i :class="{'fas fa-chevron-down': !isDropdownOpen.staff, 'fas fa-chevron-up': isDropdownOpen.staff}" class="text-xs ml-auto transition-transform duration-300"></i>
       </div>
       <div v-if="isDropdownOpen.staff" class="bg-gray-100 pl-6">
-        <a href="#" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click.prevent="openLoginModal">
-          <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบเจ้าหน้าที่</span>
+        <template v-if="authStore.isAuthenticated">
+          <div class="block px-4 py-2 text-my-custom-gray font-semibold">
+              <i class="fas fa-user"></i> สวัสดี, {{ authStore.user?.username || 'ผู้ใช้งาน' }}
+          </div>
+          <a href="#" class="block px-4 py-2 text-my-custom-gray hover:bg-red-100 flex items-center space-x-2" @click.prevent="handleLogout">
+              <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
+          </a>
+          <hr class="my-1 border-gray-200">
+          <RouterLink to="/dashboard" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+              <i class="fas fa-desktop"></i><span>แผงควบคุมเว็บไซต์</span>
+          </RouterLink>
+          <a href="https://11123.gtwoffice.com/login" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+              <i class="fas fa-external-link-alt"></i><span>ระบบ Back Office</span>
+          </a>
+          <hr class="my-1 border-gray-200"> </template>
+        <template v-else>
+                  <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+            <i class="fas fa-external-link-alt"></i><span>โปรแกรมเกี่ยวกับเรา</span>
         </a>
-        <RouterLink to="/admin-panel" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
-          <i class="fas fa-user-cog"></i><span>แผงควบคุมผู้ดูแล</span> </RouterLink>
-      </div>
+          <a href="#" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click.prevent="openLoginModal">
+            <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบเจ้าหน้าที่</span>
+          </a>
+          <hr class="my-1 border-gray-200"> </template>
+        </div>
     </div>
   </nav>
 
@@ -200,10 +221,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router'; // เพิ่ม useRouter
-
-// Import LoginModal component
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import LoginModal from './LoginModal.vue';
+import { useAuthStore } from '@/stores/auth'; // Import Pinia Store
 
 const isMobileMenuOpen = ref(false);
 const isDropdownOpen = ref({
@@ -211,10 +231,11 @@ const isDropdownOpen = ref({
   services: false,
   staff: false,
 });
-const isLoginModalOpen = ref(false); // สถานะสำหรับควบคุม Login Modal
+const isLoginModalOpen = ref(false);
 
-const route = useRoute(); // สำหรับ watch route change เพื่อปิด dropdown
-const router = useRouter(); // สำหรับ redirect หลัง login
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore(); // สร้าง instance ของ Store
 
 const toggleDropdown = (menu: 'about' | 'services' | 'staff') => {
   for (const key in isDropdownOpen.value) {
@@ -241,27 +262,28 @@ const closeAllDropdowns = () => {
 
 const handleClickOutside = (event: MouseEvent) => {
   const navbarElement = document.querySelector('nav');
-  // ตรวจสอบว่าคลิกนอก navbar และไม่ได้คลิกที่ modal (ถ้า modal เปิดอยู่)
   if (navbarElement && !navbarElement.contains(event.target as Node) && !isLoginModalOpen.value) {
     closeAllDropdowns();
   }
 };
 
-// **ฟังก์ชันสำหรับเปิด Login Modal**
 const openLoginModal = () => {
   isLoginModalOpen.value = true;
-  closeAllDropdowns(); // ปิด Dropdown ย่อยใน Navbar ทันทีที่เปิด Modal
+  closeAllDropdowns();
 };
 
-// **ฟังก์ชันที่จะถูกเรียกเมื่อ Login สำเร็จจาก LoginModal**
 const handleLoginSuccess = () => {
   console.log("Login Success Handled by Navbar!");
-  // ในตอนนี้ LoginModal จัดการการ redirect แล้ว แต่ถ้าคุณต้องการ Logic อื่นๆ ที่นี่ก็ได้
-  // เช่น แสดง toast notification หรืออัปเดตสถานะใน Navbar (ในอนาคตถ้าใช้ Pinia/Vuex)
-  // router.push('/back-office'); // LoginModal ทำการ push แล้ว แต่ถ้าต้องการให้ Navbar ควบคุมก็ใส่ตรงนี้
+  // Pinia store's login action will handle the redirection to /dashboard
 };
 
-// Watch for route changes to close all dropdowns
+const handleLogout = () => {
+  authStore.logout(); // เรียกใช้ Action logout จาก Store
+  closeAllDropdowns(); // ปิด dropdown
+  // Pinia store's logout function will handle the redirection to /
+  alert('ออกจากระบบเรียบร้อยแล้ว');
+};
+
 watch(() => route.path, () => {
   closeAllDropdowns();
 });
