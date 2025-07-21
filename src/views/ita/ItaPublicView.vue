@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-extrabold text-my-custom-blue mb-8 text-center">
-      การประเมินคุณธรรมและความโปร่งใส (MOPH ITA)
+      การประเมินคุณธรรมและความโปร่งใส (ITA)
     </h1>
 
     <div class="mb-8 flex justify-center items-center space-x-4">
@@ -105,7 +105,9 @@ interface ITADocument {
   id: number
   name: string // Document title
   path: string // URL to the document file
-  quarter: string // e.g., 'Q1', 'Q2'
+  // CHANGED: quarter can now be a number or string (e.g., '1', '2' or 'Q1', 'Q2')
+  // To strictly enforce numbers for 'ไตรมาส 1' display, you might use 'number' type here
+  quarter: string // Changed to string for flexibility, but will ensure only number is displayed
   topicId: number // Links to the ITATopic
   year: number // Year of the document
   description?: string // Optional description for the document
@@ -140,38 +142,38 @@ const mockITATopics: ITATopic[] = [
         id: 101,
         name: 'คำสั่งแต่งตั้งคณะทำงาน ITA 2567',
         path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: 'Q1',
+        quarter: '1',
         topicId: 1,
         year: 2567,
         subTopic: 'คำสั่ง',
-      },
+      }, // CHANGED: quarter to '1'
       {
         id: 102,
         name: 'ประกาศช่องทางการเผยแพร่ข้อมูล 2567',
         path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: 'Q1',
+        quarter: '1',
         topicId: 1,
         year: 2567,
         subTopic: 'ประกาศ',
-      },
+      }, // CHANGED: quarter to '1'
       {
         id: 103,
         name: 'รายงานสรุปการเผยแพร่ข้อมูล Q2/2567',
         path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: 'Q2',
+        quarter: '2',
         topicId: 1,
         year: 2567,
         subTopic: 'รายงานผล',
-      },
+      }, // CHANGED: quarter to '2'
       {
         id: 104,
         name: 'มาตรการเสริมสร้างความโปร่งใส',
         path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: 'Q2',
+        quarter: '2',
         topicId: 1,
         year: 2567,
         subTopic: 'มาตรการ',
-      },
+      }, // CHANGED: quarter to '2'
     ],
   },
   {
@@ -184,20 +186,20 @@ const mockITATopics: ITATopic[] = [
         id: 201,
         name: 'รายงานสรุปข้อมูลข่าวสาร Q1-2567',
         path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: 'Q1',
+        quarter: '1',
         topicId: 2,
         year: 2567,
         subTopic: 'รายงานผล',
-      },
+      }, // CHANGED: quarter to '1'
       {
         id: 202,
         name: 'แผนการปรับปรุงเว็บไซต์ 2567',
         path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: 'Q2',
+        quarter: '2',
         topicId: 2,
         year: 2567,
         subTopic: 'แผนปฏิบัติการ',
-      },
+      }, // CHANGED: quarter to '2'
     ],
   },
   {
@@ -210,20 +212,20 @@ const mockITATopics: ITATopic[] = [
         id: 301,
         name: 'รายงานผลการจัดซื้อจัดจ้าง 2567 (รอบ 6 เดือน)',
         path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: 'Q2',
+        quarter: '2',
         topicId: 3,
         year: 2567,
         subTopic: 'รายงานผล',
-      },
+      }, // CHANGED: quarter to '2'
       {
         id: 302,
         name: 'ประกาศแผนจัดซื้อจัดจ้างประจำปี 2567',
         path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: 'Q1',
+        quarter: '1',
         topicId: 3,
         year: 2567,
         subTopic: 'ประกาศ',
-      },
+      }, // CHANGED: quarter to '1'
     ],
   },
   {
@@ -236,29 +238,29 @@ const mockITATopics: ITATopic[] = [
         id: 1301,
         name: 'รายงานผลการประเมินภายใน Q2 2567',
         path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: 'Q2',
+        quarter: '2',
         topicId: 12,
         year: 2567,
         subTopic: 'รายงานผล',
-      },
+      }, // CHANGED: quarter to '2'
       {
         id: 1302,
         name: 'คู่มือการประเมินตนเอง ITA 2567',
         path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: 'Q1',
+        quarter: '1',
         topicId: 12,
         year: 2567,
         subTopic: 'คู่มือ',
-      },
+      }, // CHANGED: quarter to '1'
       {
         id: 1303,
         name: 'สรุปการประชุมคณะกรรมการ ITA',
         path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: 'Q1',
+        quarter: '1',
         topicId: 12,
         year: 2567,
         subTopic: 'อื่นๆ',
-      },
+      }, // CHANGED: quarter to '1'
     ],
   },
   // --- MOIT Topics for Year 2566 ---
@@ -273,11 +275,11 @@ const mockITATopics: ITATopic[] = [
         id: 1401,
         name: 'ประกาศช่องทางข้อมูล 2566',
         path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: 'Q1',
+        quarter: '1',
         topicId: 14,
         year: 2566,
         subTopic: 'ประกาศ',
-      },
+      }, // CHANGED: quarter to '1'
     ],
   },
   {
@@ -290,11 +292,11 @@ const mockITATopics: ITATopic[] = [
         id: 1501,
         name: 'รายงานข้อมูลข่าวสาร Q4-2566',
         path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: 'Q4',
+        quarter: '4',
         topicId: 15,
         year: 2566,
         subTopic: 'รายงานผล',
-      },
+      }, // CHANGED: quarter to '4'
     ],
   },
   // Add more MOIT topics for 2566 or other years as needed, with documents and subTopics
@@ -317,7 +319,7 @@ const filteredTopics = computed(() => {
 // New computed property to group documents by subTopic within each main topic
 const groupedTopicsBySubTopic = computed(() => {
   return filteredTopics.value.map((topic) => {
-    const subTopics: { [key: string]: ITADocument[] } = {} // Use index signature for string keys
+    const subTopics: { [key: string]: ITADocument[] } = {}
 
     // Group documents by their subTopic
     topic.documents.forEach((doc) => {
@@ -335,18 +337,14 @@ const groupedTopicsBySubTopic = computed(() => {
   })
 })
 
-// Function to sort documents by quarter (Q1, Q2, Q3, Q4)
+// Function to sort documents by quarter (1, 2, 3, 4)
+// This function needs to handle string '1', '2' etc. as numbers for sorting
 const sortedDocuments = (documents: ITADocument[]) => {
-  const quarterOrder = { Q1: 1, Q2: 2, Q3: 3, Q4: 4 }
+  const quarterOrder: { [key: string]: number } = { '1': 1, '2': 2, '3': 3, '4': 4 }
   return [...documents].sort((a, b) => {
-    const aQuarterValue =
-      a.quarter && quarterOrder[a.quarter as keyof typeof quarterOrder]
-        ? quarterOrder[a.quarter as keyof typeof quarterOrder]
-        : 0
-    const bQuarterValue =
-      b.quarter && quarterOrder[b.quarter as keyof typeof quarterOrder]
-        ? quarterOrder[b.quarter as keyof typeof quarterOrder]
-        : 0
+    // Convert string quarter to number for sorting, or default to 0 if not a valid quarter
+    const aQuarterValue = a.quarter ? quarterOrder[a.quarter] || 0 : 0
+    const bQuarterValue = b.quarter ? quarterOrder[b.quarter] || 0 : 0
     return aQuarterValue - bQuarterValue
   })
 }

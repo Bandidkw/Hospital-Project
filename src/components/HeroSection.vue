@@ -48,75 +48,75 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { RouterLink } from 'vue-router'; // ต้อง import RouterLink ด้วยถ้ายังไม่ได้ทำ
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { RouterLink } from 'vue-router'
 
-// ข้อมูลสำหรับแต่ละสไลด์ (ใช้ Placeholder/สีพื้นหลังแทนรูปจริง)
+// Import your background images directly
+// Ensure these paths and filenames match your actual files in src/assets/Home/
+import slide01 from '../assets/Home/slide-01.png'
+import slide02 from '../assets/Home/slide-02.jpg'
+import slide03 from '../assets/Home/slide-03.jpg' // <--- แก้ไขตรงนี้ให้เป็น slide-03.jpg
+
 const slides = ref([
   {
-    background: 'https://via.placeholder.com/1500x500/007bff/ffffff?text=Hospital+Banner+1',
+    background: slide01,
     title: 'โรงพยาบาลแม่แตง',
     subtitle: 'ให้บริการทางการแพทย์ด้วยมาตรฐานระดับสากล',
   },
   {
-    background: 'https://via.placeholder.com/1500x500/28a745/ffffff?text=Caring+for+Our+Community+2',
+    background: slide02,
     title: 'ดูแลสุขภาพคุณด้วยหัวใจ',
     subtitle: 'ทีมแพทย์และพยาบาลผู้เชี่ยวชาญพร้อมดูแลทุกท่าน',
   },
   {
-    background: 'https://via.placeholder.com/1500x500/dc3545/ffffff?text=Emergency+Services+3',
+    background: slide03,
     title: 'ห้องฉุกเฉิน 24 ชั่วโมง',
     subtitle: 'พร้อมให้ความช่วยเหลือในทุกสถานการณ์ฉุกเฉิน',
   },
-]);
+])
 
-const currentIndex = ref(0);
-let slideInterval: number | undefined; // ใช้ number หรือ undefined เพื่อให้เข้ากับ setInterval/clearInterval
+const currentIndex = ref(0)
+let slideInterval: number | undefined
 
-// Computed property เพื่อดึงข้อมูลของสไลด์ปัจจุบัน
-const currentBackground = computed(() => slides.value[currentIndex.value].background);
-const currentTitle = computed(() => slides.value[currentIndex.value].title);
-const currentSubtitle = computed(() => slides.value[currentIndex.value].subtitle);
+const currentBackground = computed(() => slides.value[currentIndex.value].background)
+const currentTitle = computed(() => slides.value[currentIndex.value].title)
+const currentSubtitle = computed(() => slides.value[currentIndex.value].subtitle)
 
-// ฟังก์ชันเปลี่ยนสไลด์ไปถัดไป
 const nextSlide = () => {
-  currentIndex.value = (currentIndex.value + 1) % slides.value.length;
-};
+  currentIndex.value = (currentIndex.value + 1) % slides.value.length
+}
 
-// ฟังก์ชันเปลี่ยนสไลด์ไปก่อนหน้า
 const prevSlide = () => {
-  currentIndex.value = (currentIndex.value - 1 + slides.value.length) % slides.value.length;
-};
+  currentIndex.value = (currentIndex.value - 1 + slides.value.length) % slides.value.length
+}
 
-// ฟังก์ชันไปที่สไลด์ที่ระบุ (สำหรับ Pagination Dots)
 const goToSlide = (index: number) => {
-  currentIndex.value = index;
-};
+  currentIndex.value = index
+  stopAutoplay()
+  startAutoplay()
+}
 
-// ฟังก์ชันเริ่ม Autoplay
 const startAutoplay = () => {
-  slideInterval = setInterval(nextSlide, 5000); // เปลี่ยนทุก 5 วินาที
-};
+  stopAutoplay()
+  slideInterval = setInterval(nextSlide, 5000) // เปลี่ยนทุก 5 วินาที
+}
 
-// ฟังก์ชันหยุด Autoplay
 const stopAutoplay = () => {
   if (slideInterval) {
-    clearInterval(slideInterval);
+    clearInterval(slideInterval)
   }
-};
+}
 
-// Lifecycle Hooks สำหรับเริ่ม/หยุด Autoplay
 onMounted(() => {
-  startAutoplay();
-});
+  startAutoplay()
+})
 
 onUnmounted(() => {
-  stopAutoplay();
-});
+  stopAutoplay()
+})
 </script>
 
 <style scoped>
-/* Keyframes for the animation (จากโค้ดเดิมของคุณ) */
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -129,13 +129,18 @@ onUnmounted(() => {
 }
 .animate-fade-in-up {
   animation: fade-in-up 1s ease-out forwards;
-  opacity: 0; /* เริ่มต้นด้วย opacity 0 เพื่อให้ animation ทำงาน */
+  opacity: 0;
 }
-.delay-200 { animation-delay: 0.2s; }
-.delay-400 { animation-delay: 0.4s; }
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-400 {
+  animation-delay: 0.4s;
+}
 
-/* คุณอาจจะต้องเพิ่ม transition สำหรับ background-image ถ้าต้องการให้มัน fade ด้วย */
 section {
-  transition: background-image 0.5s ease-in-out; /* เพิ่ม transition ให้ background */
+  background-size: cover;
+  background-position: center;
+  transition: background-image 0.8s ease-in-out;
 }
 </style>
