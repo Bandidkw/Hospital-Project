@@ -61,6 +61,7 @@
           <label for="documentTopic" class="block text-sm font-medium text-gray-700"
             >หัวข้อ ITA:</label
           >
+<<<<<<< HEAD
           <select
             id="documentTopic"
             v-model="currentDocument.topic"
@@ -70,6 +71,16 @@
             <option value="">-- เลือกหัวข้อ --</option>
             <option v-for="topic in itaTopics" :key="topic" :value="topic">{{ topic }}</option>
           </select>
+=======
+          <input
+            type="text"
+            id="documentTopic"
+            v-model="currentDocument.topic"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="เช่น ข้อมูลพื้นฐาน, การจัดซื้อจัดจ้าง"
+            required
+          />
+>>>>>>> 9312c449790d1fd3e827e2b6508c7e505d221896
         </div>
         <div>
           <label for="documentDescription" class="block text-sm font-medium text-gray-700"
@@ -262,6 +273,7 @@ const itaDocuments = ref<ITADocument[]>([
     url: 'https://www.africau.edu/images/default/sample.pdf',
   },
 ])
+<<<<<<< HEAD
 
 // List of predefined ITA topics for the dropdown
 const itaTopics = ref([
@@ -275,6 +287,8 @@ const itaTopics = ref([
   'การใช้จ่ายงบประมาณ',
   'อื่นๆ',
 ])
+=======
+>>>>>>> 9312c449790d1fd3e827e2b6508c7e505d221896
 
 const currentDocument = ref<ITADocument>({
   id: 0,
@@ -373,5 +387,14 @@ const resetDeleteConfirm = () => {
   documentToDeleteId.value = null
   showConfirmModal.value = false
 }
+<<<<<<< HEAD
+=======
+
+// In a real application, you would fetch initial documents from an API on mount
+// onMounted(() => {
+//   fetchITADocuments();
+// });
+// const fetchITADocuments = async () => { /* ... */ };
+>>>>>>> 9312c449790d1fd3e827e2b6508c7e505d221896
 </script>
 <style scoped></style>
