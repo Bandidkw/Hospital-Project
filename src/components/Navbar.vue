@@ -2,10 +2,12 @@
   <nav class="bg-white py-4 text-my-custom-gray shadow-lg relative z-50">
     <div class="container mx-auto flex justify-between items-center h-16 px-4">
       <div class="flex items-center h-full">
-        <img src="/src/assets/MTH-Logo/logo.png" alt="Hospital Logo" class="h-24 w-24 p-3 mr-3">
+        <router-link to="/"><img src="/src/assets/MTH-Logo/logo.png" alt="Hospital Logo" class="h-24 w-24 p-3 m-0"></router-link>
         <div>
-          <h1 class="text-xl font-bold text-my-custom-gray">โรงพยาบาลแม่แตง</h1>
-          <p class="text-sm text-gray-600">Maetaeng Hospital</p>
+          <router-link to="/">
+          <h1 class="text-xl font-bold text-my-custom-green">โรงพยาบาลแม่แตง</h1>
+          <p class="text-sm text-my-custom-green">Maetaeng Hospital</p>
+          </router-link>
         </div>
       </div>
 
@@ -116,14 +118,14 @@
                 <hr class="my-1 border-gray-200"> </template>
             <template v-else>
                 <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
-                <i class="fas fa-external-link-alt w-5"></i><span>โปรแกรมเกี่ยวกับเรา</span>
+                <i class="fas fa-external-link-alt w-5"></i><span>บริการของเรา</span>
                 </a>
                 <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" @click.prevent="openLoginModal">
                 <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>
                 </a>
                 <hr class="my-1 border-gray-200">
               </template>
-            </div>
+          </div>
         </div>
       </div>
 
@@ -205,13 +207,13 @@
           </a>
           <hr class="my-1 border-gray-200"> </template>
         <template v-else>
-                  <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
-            <i class="fas fa-external-link-alt"></i><span>โปรแกรมเกี่ยวกับเรา</span>
+            <a href="http://10.0.0.5/portal" target="_blank" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click="closeAllDropdowns()">
+            <i class="fas fa-external-link-alt"></i><span>บริการของเรา</span>
         </a>
-          <a href="#" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click.prevent="openLoginModal">
+            <a href="#" class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2" @click.prevent="openLoginModal">
             <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>
           </a>
-          <hr class="my-1 border-gray-200"> </template>
+            <hr class="my-1 border-gray-200"> </template>
         </div>
     </div>
   </nav>
@@ -223,7 +225,8 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import LoginModal from './LoginModal.vue';
-import { useAuthStore } from '@/stores/auth'; // Import Pinia Store
+import { useAuthStore } from '@/stores/auth';
+import { useToast } from "vue-toastification";
 
 const isMobileMenuOpen = ref(false);
 const isDropdownOpen = ref({
@@ -235,7 +238,8 @@ const isLoginModalOpen = ref(false);
 
 const route = useRoute();
 const router = useRouter();
-const authStore = useAuthStore(); // สร้าง instance ของ Store
+const authStore = useAuthStore();
+const toast = useToast();
 
 const toggleDropdown = (menu: 'about' | 'services' | 'staff') => {
   for (const key in isDropdownOpen.value) {
@@ -274,14 +278,12 @@ const openLoginModal = () => {
 
 const handleLoginSuccess = () => {
   console.log("Login Success Handled by Navbar!");
-  // Pinia store's login action will handle the redirection to /dashboard
 };
 
 const handleLogout = () => {
-  authStore.logout(); // เรียกใช้ Action logout จาก Store
-  closeAllDropdowns(); // ปิด dropdown
-  // Pinia store's logout function will handle the redirection to /
-  alert('ออกจากระบบเรียบร้อยแล้ว');
+  authStore.logout();
+  closeAllDropdowns();
+  toast.info('ออกจากระบบเรียบร้อยแล้ว');
 };
 
 watch(() => route.path, () => {

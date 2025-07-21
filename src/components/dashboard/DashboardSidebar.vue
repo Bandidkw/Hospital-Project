@@ -12,7 +12,7 @@
         <li class="mb-2">
           <RouterLink to="/dashboard" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
             <i class="fas fa-tachometer-alt mr-3 text-indigo-400"></i>
-            <span>แดชบอร์ด</span>
+            <span class="text-gray-300">แดชบอร์ด</span>
           </RouterLink>
         </li>
 
@@ -24,32 +24,32 @@
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/news" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-newspaper mr-3 text-green-500"></i> <span>ข่าวสาร</span>
+            <i class="fas fa-newspaper mr-3 text-green-500"></i> <span class="text-gray-300">ข่าวสาร</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/categories" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-tags mr-3 text-yellow-500"></i> <span>หมวดหมู่</span>
+            <i class="fas fa-tags mr-3 text-yellow-500"></i> <span class="text-gray-300">หมวดหมู่</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/ita" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-file-alt mr-3 text-red-500"></i> <span>ITA</span>
+            <i class="fas fa-file-alt mr-3 text-red-500"></i> <span class="text-gray-300">ITA</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/slides" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-images mr-3 text-blue-400"></i> <span>สไลด์</span>
+            <i class="fas fa-images mr-3 text-blue-400"></i> <span class="text-gray-300">สไลด์</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/footer-links" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-link mr-3 text-pink-400"></i> <span>ลิงก์ Footer</span>
+            <i class="fas fa-link mr-3 text-pink-400"></i> <span class="text-gray-300">ลิงก์ Footer</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/org-structure" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-sitemap mr-3 text-purple-400"></i> <span>โครงสร้างองค์กร</span>
+            <i class="fas fa-sitemap mr-3 text-purple-400"></i> <span class="text-gray-300">โครงสร้างองค์กร</span>
           </RouterLink>
         </li>
 
@@ -61,23 +61,23 @@
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/media-files" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-photo-video mr-3 text-blue-500"></i> <span>ไฟล์มีเดีย</span>
+            <i class="fas fa-photo-video mr-3 text-blue-500"></i> <span class="text-gray-300">ไฟล์มีเดีย</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/page-images" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-image mr-3 text-red-400"></i> <span>รูปภาพตามหน้า</span>
+            <i class="fas fa-image mr-3 text-red-400"></i> <span class="text-gray-300">รูปภาพตามหน้า</span>
           </RouterLink>
         </li>
         <!-- Audit Logs และ Website Settings มักจะเป็น Admin-only -->
         <li class="mb-2" v-if="authStore.user?.role === 'admin'">
           <RouterLink to="/dashboard/audit-logs" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-shield-alt mr-3 text-orange-500"></i> <span>Audit Logs</span>
+            <i class="fas fa-shield-alt mr-3 text-orange-500"></i> <span class="text-gray-300">Audit Logs</span>
           </RouterLink>
         </li>
         <li class="mb-2" v-if="authStore.user?.role === 'admin'">
           <RouterLink to="/dashboard/website-settings" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-sliders-h mr-3 text-teal-500"></i> <span>ตั้งค่าเว็บไซต์</span>
+            <i class="fas fa-sliders-h mr-3 text-teal-500"></i> <span class="text-gray-300">ตั้งค่าเว็บไซต์</span>
           </RouterLink>
         </li>
 
@@ -89,12 +89,12 @@
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/reports" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-chart-line mr-3 text-cyan-500"></i> <span>รายงาน</span>
+            <i class="fas fa-chart-line mr-3 text-cyan-500"></i> <span class="text-gray-300">รายงาน</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/statistics" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-chart-bar mr-3 text-red-600"></i> <span>สถิติ</span>
+            <i class="fas fa-chart-bar mr-3 text-red-600"></i> <span class="text-gray-300">สถิติ</span>
           </RouterLink>
         </li>
 
@@ -106,19 +106,19 @@
         </li>
         <li class="mb-2">
           <RouterLink to="/dashboard/profile" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-user mr-3 text-gray-300"></i> <span>โปรไฟล์</span>
+            <i class="fas fa-user mr-3 text-gray-300"></i> <span class="text-gray-300">โปรไฟล์</span>
           </RouterLink>
         </li>
         <li class="mb-2">
           <!-- ลิงก์ไปหน้าหลักของเว็บไซต์ (เปิดในแท็บใหม่) -->
           <a href="/" rel="noopener noreferrer" target="_blank" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200">
-            <i class="fas fa-globe mr-3 text-green-400"></i> <span>ดูเว็บไซต์</span>
+            <i class="fas fa-globe mr-3 text-green-400"></i> <span class="text-gray-300">ดูเว็บไซต์</span>
           </a>
         </li>
         <!-- จัดการผู้ใช้ (Admin-only) -->
         <li class="mb-2" v-if="authStore.user?.role === 'admin'">
           <RouterLink to="/dashboard/users" class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200" active-class="bg-blue-600">
-            <i class="fas fa-user-shield mr-3 text-yellow-300"></i> <span>จัดการผู้ใช้</span>
+            <i class="fas fa-user-shield mr-3 text-yellow-300"></i> <span class="text-gray-300">จัดการผู้ใช้</span>
           </RouterLink>
         </li>
       </ul>

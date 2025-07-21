@@ -26,10 +26,10 @@ const router = createRouter({
 
     // Routes อื่นๆ
     { path: '/news', name: 'news', component: () => import('@/views/NewsView.vue') },
-    { path: '/ita', name: 'ita', component: () => import('@/views/ItaView.vue') },
     { path: '/contact', name: 'contact', component: () => import('@/views/ContactView.vue') },
     {path: '/contact',name: 'contact',component:() => import("@/views/ContactView.vue"),},
     {path: '/ita-documents-public',name: 'ita-documents-public',component:() => import("@/views/ita/ITADocumentsView.vue"),},
+    // {path: '/ita-documents-public',name: 'ita-documents-public',component:() => import("@/views/ita/ItaPublicView.vue"),},
 
     // **Dashboard และ Nested Routes**
     {

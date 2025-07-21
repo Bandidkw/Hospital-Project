@@ -84,24 +84,22 @@ const router = useRouter();
 const quickAction = (action: string) => {
   switch (action) {
     case 'add_news':
-      toast.info('กำลังนำทางไปยังหน้าเพิ่มข่าวสาร...'); // ใช้ toast.info
-      router.push({ name: 'DashboardNews' }); // สมมติว่ามี route name 'DashboardNews'
+      toast.info('กำลังนำทางไปยังหน้าเพิ่มข่าวสาร...');
+      router.push({ name: 'dashboard-news' });
       break;
     case 'upload_ita':
-      toast.info('กำลังนำทางไปยังหน้าจัดการเอกสาร ITA...'); // ใช้ toast.info
-      router.push({ name: 'DashboardITADocuments' }); // สมมติว่ามี route name 'DashboardITADocuments'
+      toast.info('กำลังนำทางไปยังหน้าจัดการเอกสาร ITA...');
+      router.push({ name: 'dashboard-ita' });
       break;
     case 'view_reports':
-      toast.info('กำลังนำทางไปยังหน้าดูรายงานสถิติ...'); // ใช้ toast.info
-      router.push({ name: 'DashboardReports' }); // สมมติว่ามี route name 'DashboardReports'
+      toast.info('กำลังนำทางไปยังหน้าดูรายงานสถิติ...');
+      router.push({ name: 'dashboard-statistics' });
       break;
     default:
-      toast.error('การดำเนินการไม่ถูกต้อง!'); // ใช้ toast.error
+      toast.error('การดำเนินการไม่ถูกต้อง!');
       break;
   }
 };
 </script>
 
-<style scoped>
-/* Specific styles for this page */
-</style>
+<style scoped></style>

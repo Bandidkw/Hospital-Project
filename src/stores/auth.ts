@@ -1,76 +1,87 @@
-// src/stores/auth.ts
+// ตัวอย่างการแก้ไขใน src/stores/auth.ts
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import router from '../router';
+import router from '@/router';
+import { useToast } from "vue-toastification";
 
-interface User {
+// เพิ่มหรือแก้ไข User Interface
+export interface User {
   username: string;
-  email: string; // เพิ่มบรรทัดนี้
-  fullName: string; // เพิ่มบรรทัดนี้
-  role: 'admin' | 'editor' | 'user'; // เพิ่ม role
-  token?: string; //token จาก backend
+  role: "user" | "admin" | "editor";
+  token?: string;
+  fullName?: string; // <--- เพิ่มบรรทัดนี้
+  email?: string;    // <--- เพิ่มบรรทัดนี้
+  // เพิ่ม properties อื่นๆ ที่ User object อาจจะมี
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<User | null>(null); // เก็บข้อมูลผู้ใช้ที่ล็อกอิน
-  const isAuthenticated = ref(false); // สถานะยืนยันตัวตน
+  const user = ref<User | null>(null); // ใช้ User interface ที่แก้ไขแล้ว
   const loginError = ref<string | null>(null);
+  const isAuthenticated = ref(false); // Add isAuthenticated state
+  const toast = useToast();
 
-  const initializeAuth = () => {
+  // Load user from localStorage on store initialization
+  const loadUserFromLocalStorage = () => {
     const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
-    if (storedUser && storedToken) {
+    if (storedUser) {
       try {
         const parsedUser: User = JSON.parse(storedUser);
         user.value = parsedUser;
         isAuthenticated.value = true;
-        console.log("Auth Store Initialized: User logged in.");
       } catch (e) {
-        console.error("Failed to parse stored user data:", e);
-        logout(); // ข้อมูลเสียหาย ให้ logout
+        console.error("Failed to parse user from localStorage", e);
+        logout(); // Clear invalid data
       }
     }
   };
 
-  // ฟังก์ชันสำหรับ Login (Mockup)
-  const login = async (usernameInput: string, passwordInput: string) => {
-    loginError.value = null; // เคลียร์ error ก่อน
+  // Call this once on store creation
+  loadUserFromLocalStorage();
+
+  const login = async (usernameInput: string, passwordInput: string): Promise<boolean> => {
+    loginError.value = null; // Clear previous errors
     try {
-      // --- จำลองการเรียก API ---
-      await new Promise(resolve => setTimeout(resolve, 500)); // จำลองการดีเลย์ของ API
+      // Simulate API call
+      const response = await new Promise<any>((resolve, reject) => {
+        setTimeout(() => {
+          if (usernameInput === 'admin' && passwordInput === 'password') {
+            resolve({
+              username: 'admin',
+              role: 'admin',
+              token: 'fake-admin-token',
+              fullName: 'Admin User', // <--- ตัวอย่างข้อมูล
+              email: 'admin@example.com' // <--- ตัวอย่างข้อมูล
+            });
+          } else if (usernameInput === 'editor' && passwordInput === 'password') {
+            resolve({
+              username: 'editor',
+              role: 'editor',
+              token: 'fake-editor-token',
+              fullName: 'Editor User', // <--- ตัวอย่างข้อมูล
+              email: 'editor@example.com' // <--- ตัวอย่างข้อมูล
+            });
+          } else if (usernameInput === 'user' && passwordInput === 'password') {
+            resolve({
+              username: 'user',
+              role: 'user',
+              token: 'fake-user-token',
+              fullName: 'Regular User', // <--- ตัวอย่างข้อมูล
+              email: 'user@example.com' // <--- ตัวอย่างข้อมูล
+            });
+          } else {
+            reject(new Error('ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง'));
+          }
+        }, 1000);
+      });
 
-      if (usernameInput === 'admin' && passwordInput === 'password') {
-        // เพิ่ม email และ fullName ใน object ผู้ใช้
-        user.value = { username: usernameInput, email: 'admin@example.com', fullName: 'ผู้ดูแลระบบ', role: 'admin', token: 'mock-admin-token' };
-        isAuthenticated.value = true;
-        localStorage.setItem('user', JSON.stringify(user.value));
-        localStorage.setItem('token', user.value.token || '');
-
-        console.log("Login successful in store:", user.value);
-        router.push('/dashboard'); // Path ของ Route ที่ถูกต้อง
-        return true;
-      } else if (usernameInput === 'editor' && passwordInput === 'password') {
-        // เพิ่ม email และ fullName ใน object ผู้ใช้
-        user.value = { username: usernameInput, email: 'editor@example.com', fullName: 'ผู้แก้ไขข้อมูล', role: 'editor', token: 'mock-editor-token' };
-        isAuthenticated.value = true;
-        localStorage.setItem('user', JSON.stringify(user.value));
-        localStorage.setItem('token', user.value.token || '');
-
-        console.log("Login successful in store:", user.value);
-        router.push('/dashboard'); // Path ของ Route ที่ถูกต้อง
-        return true;
-      }
-      else {
-        loginError.value = 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง';
-        isAuthenticated.value = false;
-        user.value = null;
-        return false;
-      }
-    } catch (error) {
-      console.error("Login failed:", error);
-      loginError.value = 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
+      user.value = response;
+      isAuthenticated.value = true;
+      localStorage.setItem('user', JSON.stringify(user.value));
+      router.push('/dashboard'); // Navigate to dashboard on success
+      return true;
+    } catch (error: any) {
+      loginError.value = error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
       isAuthenticated.value = false;
-      user.value = null;
       return false;
     }
   };
@@ -79,18 +90,9 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null;
     isAuthenticated.value = false;
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    console.log("Logged out.");
-    router.push('/'); // กลับไปหน้าแรกหลังจาก logout
+    router.push('/'); // Navigate to home on logout
+    toast.info('ออกจากระบบเรียบร้อยแล้ว');
   };
 
-  initializeAuth();
-
-  return {
-    user,
-    isAuthenticated,
-    loginError,
-    login,
-    logout,
-  };
+  return { user, loginError, isAuthenticated, login, logout };
 });

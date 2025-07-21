@@ -61,10 +61,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useToast } from 'vue-toastification'; // นำเข้า useToast
-import { useAuthStore } from '@/stores/auth'; // Assuming authStore holds user info
+import { useToast } from 'vue-toastification';
+import { useAuthStore } from '@/stores/auth';
 
-const toast = useToast(); // สร้าง instance ของ toast
+const toast = useToast();
 const authStore = useAuthStore();
 
 interface UserProfile {
@@ -89,27 +89,23 @@ const passwordForm = ref({
 });
 
 const updateProfile = () => {
-  // In a real application, send profile.value to backend API
   console.log('Updating profile:', profile.value);
-  toast.success('บันทึกข้อมูลโปรไฟล์สำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
+  toast.success('บันทึกข้อมูลโปรไฟล์สำเร็จ!');
 };
 
 const changePassword = () => {
   if (passwordForm.value.newPassword !== passwordForm.value.confirmNewPassword) {
-    toast.error('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!'); // เปลี่ยนจาก alert เป็น toast.error
+    toast.error('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!');
     return;
   }
-  if (passwordForm.value.newPassword.length < 6) { // Example validation
-    toast.error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร!'); // เปลี่ยนจาก alert เป็น toast.error
+  if (passwordForm.value.newPassword.length < 6) {
+    toast.error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร!');
     return;
   }
-  // In a real application, send passwordForm.value to backend API
   console.log('Changing password...');
-  toast.success('เปลี่ยนรหัสผ่านสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
+  toast.success('เปลี่ยนรหัสผ่านสำเร็จ!');
   passwordForm.value = { currentPassword: '', newPassword: '', confirmNewPassword: '' };
 };
 </script>
 
-<style scoped>
-/* Specific styles for this page */
-</style>
+<style scoped></style>

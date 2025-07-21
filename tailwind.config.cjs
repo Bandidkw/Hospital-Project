@@ -11,7 +11,6 @@ module.exports = {
       container: {
         center: true, // ทำให้ container อยู่ตรงกลาง
         padding: '2rem', // เพิ่ม padding รอบๆ container
-        // กำหนด max-width เองสำหรับแต่ละ breakpoint
         screens: {
           'sm': '600px',
           'md': '728px',
@@ -37,6 +36,7 @@ module.exports = {
       },
       colors:{
         'my-custom-gray': '#666666',
+        'my-custom-green':'#056839',
       }
     },
   },
