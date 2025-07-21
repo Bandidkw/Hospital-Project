@@ -55,7 +55,7 @@ import { RouterLink } from 'vue-router'
 // Ensure these paths and filenames match your actual files in src/assets/Home/
 import slide01 from '../assets/Home/slide-01.png'
 import slide02 from '../assets/Home/slide-02.jpg'
-import slide03 from '../assets/Home/slide-03.jpg' // <--- แก้ไขตรงนี้ให้เป็น slide-03.jpg
+import slide03 from '../assets/Home/slide-03.jpg' // Assuming this is the correct path for slide 3
 
 const slides = ref([
   {
@@ -84,26 +84,39 @@ const currentSubtitle = computed(() => slides.value[currentIndex.value].subtitle
 
 const nextSlide = () => {
   currentIndex.value = (currentIndex.value + 1) % slides.value.length
+  // Stop and restart autoplay to reset the timer after manual interaction
+  stopAutoplay()
+  startAutoplay()
+  // console.log('Next slide clicked, new index:', currentIndex.value)
 }
 
 const prevSlide = () => {
   currentIndex.value = (currentIndex.value - 1 + slides.value.length) % slides.value.length
+  // Stop and restart autoplay to reset the timer after manual interaction
+  stopAutoplay()
+  startAutoplay()
+  // console.log('Prev slide clicked, new index:', currentIndex.value)
 }
 
 const goToSlide = (index: number) => {
   currentIndex.value = index
+  // Stop and restart autoplay to reset the timer after manual interaction
   stopAutoplay()
   startAutoplay()
+  // console.log('Dot clicked, new index:', currentIndex.value)
 }
 
 const startAutoplay = () => {
-  stopAutoplay()
-  slideInterval = setInterval(nextSlide, 5000) // เปลี่ยนทุก 5 วินาที
+  stopAutoplay() // Ensure any existing interval is cleared before setting a new one
+  slideInterval = setInterval(nextSlide, 5000) // Change every 5 seconds
+  // console.log('Autoplay started.')
 }
 
 const stopAutoplay = () => {
   if (slideInterval) {
     clearInterval(slideInterval)
+    slideInterval = undefined // Clear the reference to the interval
+    // console.log('Autoplay stopped.')
   }
 }
 
@@ -141,6 +154,6 @@ onUnmounted(() => {
 section {
   background-size: cover;
   background-position: center;
-  transition: background-image 0.8s ease-in-out;
+  transition: background-image 0.8s ease-in-out; /* Smooth transition for background image */
 }
 </style>
