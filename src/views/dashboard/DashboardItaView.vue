@@ -59,28 +59,37 @@
         </div>
         <div>
           <label for="documentTopic" class="block text-sm font-medium text-gray-700"
-            >หัวข้อ ITA:</label
+            >หัวข้อ ITA (MOIT):</label
           >
-<<<<<<< HEAD
           <select
             id="documentTopic"
             v-model="currentDocument.topic"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
-            <option value="">-- เลือกหัวข้อ --</option>
+            <option value="">-- เลือกหัวข้อ MOIT --</option>
             <option v-for="topic in itaTopics" :key="topic" :value="topic">{{ topic }}</option>
           </select>
-=======
-          <input
-            type="text"
-            id="documentTopic"
-            v-model="currentDocument.topic"
+        </div>
+        <!-- New field for Sub Topic -->
+        <div>
+          <label for="documentSubTopic" class="block text-sm font-medium text-gray-700"
+            >หัวข้อย่อย (ประเภทเอกสาร):</label
+          >
+          <select
+            id="documentSubTopic"
+            v-model="currentDocument.subTopic"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="เช่น ข้อมูลพื้นฐาน, การจัดซื้อจัดจ้าง"
-            required
-          />
->>>>>>> 9312c449790d1fd3e827e2b6508c7e505d221896
+          >
+            <option value="">-- เลือกหัวข้อย่อย (ไม่บังคับ) --</option>
+            <option value="คำสั่ง">คำสั่ง</option>
+            <option value="ประกาศ">ประกาศ</option>
+            <option value="รายงานผล">รายงานผล</option>
+            <option value="แผนปฏิบัติการ">แผนปฏิบัติการ</option>
+            <option value="คู่มือ">คู่มือ</option>
+            <option value="แนวปฏิบัติ">แนวปฏิบัติ</option>
+            <option value="อื่นๆ">อื่นๆ</option>
+          </select>
         </div>
         <div>
           <label for="documentDescription" class="block text-sm font-medium text-gray-700"
@@ -138,7 +147,9 @@
               <th class="py-3 px-6 text-left">ชื่อเอกสาร</th>
               <th class="py-3 px-6 text-left">ปี</th>
               <th class="py-3 px-6 text-left">ไตรมาส</th>
-              <th class="py-3 px-6 text-left">หัวข้อ</th>
+              <th class="py-3 px-6 text-left">หัวข้อ MOIT</th>
+              <th class="py-3 px-6 text-left">หัวข้อย่อย</th>
+              <!-- New column for Sub Topic -->
               <th class="py-3 px-6 text-center">การจัดการ</th>
             </tr>
           </thead>
@@ -160,6 +171,8 @@
               <td class="py-3 px-6 text-left">{{ doc.year }}</td>
               <td class="py-3 px-6 text-left">{{ doc.quarter }}</td>
               <td class="py-3 px-6 text-left">{{ doc.topic }}</td>
+              <td class="py-3 px-6 text-left">{{ doc.subTopic || '-' }}</td>
+              <!-- Display Sub Topic -->
               <td class="py-3 px-6 text-center">
                 <button
                   @click="editITADocument(doc)"
@@ -176,7 +189,8 @@
               </td>
             </tr>
             <tr v-if="itaDocuments.length === 0">
-              <td colspan="5" class="py-8 text-center text-gray-500">ยังไม่มีเอกสาร ITA ในระบบ.</td>
+              <td colspan="6" class="py-8 text-center text-gray-500">ยังไม่มีเอกสาร ITA ในระบบ.</td>
+              <!-- Updated colspan -->
             </tr>
           </tbody>
         </table>
@@ -215,12 +229,14 @@ import { useToast } from 'vue-toastification'
 
 const toast = useToast()
 
+// Interface for ITA Document
 interface ITADocument {
   id: number
   title: string
   year: number
   quarter: string
-  topic: string // e.g., 'ข้อมูลพื้นฐาน', 'การจัดซื้อจัดจ้าง'
+  topic: string // Main MOIT topic, e.g., 'MOIT 1: ...'
+  subTopic?: string // New field for sub-topic, e.g., 'คำสั่ง', 'รายงานผล'
   description?: string
   url: string // URL to the actual document file
 }
@@ -232,7 +248,9 @@ const itaDocuments = ref<ITADocument[]>([
     title: 'เอกสารโครงสร้างองค์กร 2567',
     year: 2567,
     quarter: 'Q1',
-    topic: 'ข้อมูลพื้นฐาน',
+    topic:
+      'MOIT 1 หน่วยงานมีการวางระบบโดยการกำหนดมาตรการการเผยแพร่ข้อมูลต่อสาธารณะ ผ่านเว็บไซต์ของหน่วยงาน',
+    subTopic: 'คำสั่ง', // Example subTopic
     description: 'เอกสารโครงสร้างองค์กรล่าสุด',
     url: 'https://www.africau.edu/images/default/sample.pdf',
   },
@@ -241,7 +259,8 @@ const itaDocuments = ref<ITADocument[]>([
     title: 'แผนการจัดซื้อจัดจ้าง 2567',
     year: 2567,
     quarter: 'Q1',
-    topic: 'การจัดซื้อจัดจ้าง',
+    topic: 'MOIT 3 หน่วยงานมีรายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
+    subTopic: 'แผนปฏิบัติการ', // Example subTopic
     description: 'แผนการจัดซื้อจัดจ้างประจำปี',
     url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
   },
@@ -250,7 +269,8 @@ const itaDocuments = ref<ITADocument[]>([
     title: 'รายงานผลการดำเนินงาน Q2 2567',
     year: 2567,
     quarter: 'Q2',
-    topic: 'การดำเนินงานและงบประมาณ',
+    topic: 'MOIT 5 หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
+    subTopic: 'รายงานผล', // Example subTopic
     description: 'รายงานผลการดำเนินงานไตรมาส 2',
     url: 'https://www.africau.edu/images/default/sample.pdf',
   },
@@ -259,7 +279,8 @@ const itaDocuments = ref<ITADocument[]>([
     title: 'นโยบาย No Gift Policy 2566',
     year: 2566,
     quarter: 'Q1',
-    topic: 'การป้องกันการทุจริต',
+    topic: 'MOIT 12 หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ',
+    subTopic: 'ประกาศ', // Example subTopic
     description: 'นโยบายไม่รับของขวัญปี 2566',
     url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
   },
@@ -268,59 +289,88 @@ const itaDocuments = ref<ITADocument[]>([
     title: 'งบประมาณรายรับ-รายจ่าย 2565',
     year: 2565,
     quarter: 'Q3',
-    topic: 'การดำเนินงานและงบประมาณ',
+    topic: 'MOIT 2 หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
+    subTopic: 'รายงานผล', // Example subTopic
     description: 'สรุปงบประมาณปี 2565',
     url: 'https://www.africau.edu/images/default/sample.pdf',
   },
+  {
+    id: 6,
+    title: 'นโยบายป้องกันการรับสินบน 2567',
+    year: 2567,
+    quarter: 'Q1',
+    topic: 'MOIT 13 หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณ',
+    subTopic: 'นโยบาย', // Example subTopic for MOIT 13
+    description: 'นโยบายป้องกันการรับสินบนล่าสุดสำหรับปี 2567',
+    url: 'https://www.africau.edu/images/default/sample.pdf',
+  },
 ])
-<<<<<<< HEAD
 
-// List of predefined ITA topics for the dropdown
+// List of predefined ITA topics for the main topic dropdown
 const itaTopics = ref([
-  'ข้อมูลพื้นฐาน',
-  'การจัดซื้อจัดจ้าง',
-  'การบริหารและพัฒนาทรัพยากรบุคคล',
-  'การส่งเสริมความโปร่งใส',
-  'การป้องกันการทุจริต',
-  'การเปิดเผยข้อมูล',
-  'การบริหารจัดการเรื่องร้องเรียน',
-  'การใช้จ่ายงบประมาณ',
-  'อื่นๆ',
+  'MOIT 1 หน่วยงานมีการวางระบบโดยการกำหนดมาตรการการเผยแพร่ข้อมูลต่อสาธารณะ ผ่านเว็บไซต์ของหน่วยงาน',
+  'MOIT 2 หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
+  'MOIT 3 หน่วยงานมีรายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
+  'MOIT 4 หน่วยงานมีการวางระบบการจัดซื้อจัดจ้างและการจัดหาพัสดุ ประจำปีงบประมาณ',
+  'MOIT 5 หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
+  'MOIT 6 ผู้บริหารแสดงนโยบายการบริหารและพัฒนาทรัพยากรบุคคล',
+  'MOIT 7 หน่วยงานมีการรายงานการประเมินและเกี่ยวกับการประเมินผลการปฏิบัติราชการของบุคลากรในหน่วยงาน และเปิดเผยผลการปฏิบัติราชการ ระดับดีเด่น และระดับดีมาก ในที่เปิดเผยให้ทราบ รอบปีงบประมาณ พ.ศ. 2566 และรอบปีงบประมาณ',
+  'MOIT 8 หน่วยงานมีการอบรมให้ความรู้แก่เจ้าหน้าที่ภายในหน่วยงานเกี่ยวกับการเสริมสร้างและพัฒนาทางด้านจริยธรรม และการรักษาวินัยรวมทั้งการป้องกันมิให้กระทำผิดวินัย',
+  'MOIT 9 หน่วยงานมีแนวปฏิบัติการจัดการเรื่องร้องเรียน และช่องทางการร้องเรียน',
+  'MOIT 10 หน่วยงานมีสรุปผลการดำเนินงานเรื่องรัองเรียนการปฏิบัติงานหรือการให้บริการของเจ้าหน้าที่ภายในหน่วยงาน และเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ',
+  'MOIT 11 หน่วยงานของท่านเปิดโอกาสให้ผู้มีส่วนได้ส่วนเสียมีโอกาสเข้ามามีส่วนร่วมในการดำเนินงานตามภารกิจของหน่วยงาน',
+  'MOIT 12 หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ',
+  'MOIT 13 หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณ', // MOIT 13 added
+  'MOIT 14 หน่วยงานมีแนวทางปฏิบัติเกี่ยวกับการใช้ทรัพย์สินของราชการ และมีขั้นตอนการขออนุญาตเพื่อยืมทรัพย์สินของราชการไปใช้ปฏิบัติในหน่วยงานที่ถูกต้อง',
+  'MOIT 15 หน่วยงานมีแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ และแผนปฏิบัติการส่งเสริมคุณธรรมของชมรมจริยธรรม ประจำปีงบประมาณ',
+  'MOIT 16 หน่วยงานมีรายงานการกำกับติดตามการดำเนินงานตามแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ ประจำปีงบประมาณ 2568 และแผนปฏิบัติการส่งเสริมคุณธรรมของชมรมจริยธรรม ประจำปีงบประมาณ',
+  'MOIT 17 หน่วยงานมีการประเมินความเสี่ยงการทุจริต ประจำปีงบประมาณ',
+  'MOIT 18 หน่วยงานมีการปฏิบัติตามมาตรการป้องกันการทุจริต (การควบคุมความเสี่ยงการทุจริต)',
+  'MOIT 19 หน่วยงานมีการรายงานผลการส่งเสริมการปฏิบัติตามประมวลจริยธรรมข้าราชการพลเรือน:กรณีการเรี่ยไรและกรณีการให้หรือรับของขวัญหรือประโยชน์อื่นใด ประจำปีงบประมาณ',
+  'MOIT 20 หน่วยงานมีการอบรมให้ความรู้ภายในหน่วยงาน เรื่อง ผลประโยชน์ทับซ้อนในหลักสูตร ต้านทุจริตศึกษา(Anti-Corruption Education)กระทรวงสาธารณสุข (ฉบับปรับปรุง) พ.ศ.2565',
+  'MOIT 21 หน่วยงานมีการเผยแพร่เจตจำนงสุจริตของการปฏิบัติหน้าที่ราชการ และนโยบายที่เคารพ สิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงานและของผู้บริหาร ต่อสาธารณชน',
+  'MOIT 22 หน่วยงานมีแนวปฏิบัติที่เคารพสิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงาน และรายงานการป้องกันและแก้ไขปัญหาการล่วงละเมิดหรือคุกคามทางเพศในการทำงาน ประจำปีงบประมาณ',
 ])
-=======
->>>>>>> 9312c449790d1fd3e827e2b6508c7e505d221896
 
+// Reactive state for the current document being added/edited
 const currentDocument = ref<ITADocument>({
   id: 0,
   title: '',
   year: new Date().getFullYear() + 543, // Default to current Thai year
   quarter: 'Q1',
   topic: '',
+  subTopic: '', // Initialize new subTopic field
   description: '',
   url: '',
 })
+
+// Reactive state to determine if we are editing an existing document
 const editingDocument = ref(false)
+
+// Reactive state for document to be deleted and confirmation modal visibility
 const documentToDeleteId = ref<number | null>(null)
 const showConfirmModal = ref(false)
 
-// Generate a list of years (current year + 2 years back/forward for example)
+// Function to generate a list of years for the dropdown
 const getYearsList = () => {
   const currentYear = new Date().getFullYear() + 543 // Thai year
   const years = []
+  // Generate years from 2 years in the future to 5 years in the past
   for (let i = currentYear + 2; i >= currentYear - 5; i--) {
-    // Adjust range as needed
     years.push(i)
   }
   return years
 }
 
-// Sort documents by year (descending) and then quarter
+// Computed property to sort documents by year (descending) and then quarter
 const sortedITADocuments = computed(() => {
   const quarterOrder = { Q1: 1, Q2: 2, Q3: 3, Q4: 4 }
   return [...itaDocuments.value].sort((a, b) => {
+    // Sort by year descending first
     if (b.year !== a.year) {
-      return b.year - a.year // Sort by year descending
+      return b.year - a.year
     }
+    // If years are the same, sort by quarter
     return (
       quarterOrder[a.quarter as keyof typeof quarterOrder] -
       quarterOrder[b.quarter as keyof typeof quarterOrder]
@@ -328,73 +378,82 @@ const sortedITADocuments = computed(() => {
   })
 })
 
+// Function to save (add or update) an ITA document
 const saveITADocument = () => {
   if (editingDocument.value) {
+    // Find the index of the document being edited
     const index = itaDocuments.value.findIndex((doc) => doc.id === currentDocument.value.id)
     if (index !== -1) {
+      // Update the document in the array with a copy of currentDocument
       itaDocuments.value[index] = { ...currentDocument.value }
     }
     toast.success('แก้ไขเอกสาร ITA สำเร็จ!')
   } else {
+    // Assign a new unique ID for a new document
     currentDocument.value.id =
       itaDocuments.value.length > 0 ? Math.max(...itaDocuments.value.map((doc) => doc.id)) + 1 : 1
+    // Add the new document to the array
     itaDocuments.value.push({ ...currentDocument.value })
     toast.success('เพิ่มเอกสาร ITA ใหม่สำเร็จ!')
   }
-  resetForm()
+  resetForm() // Reset the form after saving
 }
 
+// Function to populate the form for editing an existing document
 const editITADocument = (doc: ITADocument) => {
-  currentDocument.value = { ...doc }
-  editingDocument.value = true
+  currentDocument.value = { ...doc } // Create a copy to avoid direct mutation
+  editingDocument.value = true // Set editing mode to true
 }
 
+// Function to cancel editing and reset the form
 const cancelEdit = () => {
   resetForm()
 }
 
+// Function to open the confirmation modal for deleting a document
 const confirmDeleteITADocument = (id: number) => {
   documentToDeleteId.value = id
   showConfirmModal.value = true
 }
 
+// Function to delete the document after confirmation
 const deleteITADocument = () => {
   if (documentToDeleteId.value !== null) {
+    // Filter out the document to be deleted
     itaDocuments.value = itaDocuments.value.filter((doc) => doc.id !== documentToDeleteId.value)
     toast.success('ลบเอกสาร ITA สำเร็จ!')
   }
-  resetDeleteConfirm()
+  resetDeleteConfirm() // Reset confirmation modal state
 }
 
+// Function to cancel the delete operation
 const cancelDelete = () => {
   resetDeleteConfirm()
 }
 
+// Function to reset the form to its initial state
 const resetForm = () => {
   currentDocument.value = {
     id: 0,
     title: '',
     year: new Date().getFullYear() + 543,
     quarter: 'Q1',
-    topic: '', // Reset topic to empty string
+    topic: '',
+    subTopic: '', // Reset subTopic
     description: '',
     url: '',
   }
   editingDocument.value = false
 }
 
+// Function to reset the delete confirmation modal state
 const resetDeleteConfirm = () => {
   documentToDeleteId.value = null
   showConfirmModal.value = false
 }
-<<<<<<< HEAD
-=======
-
-// In a real application, you would fetch initial documents from an API on mount
-// onMounted(() => {
-//   fetchITADocuments();
-// });
-// const fetchITADocuments = async () => { /* ... */ };
->>>>>>> 9312c449790d1fd3e827e2b6508c7e505d221896
 </script>
-<style scoped></style>
+
+<style scoped>
+/* No specific scoped styles needed for this component based on current design.
+   Tailwind CSS handles most of the styling. */
+</style>
