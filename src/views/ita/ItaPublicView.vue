@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-extrabold text-my-custom-blue mb-8 text-center">
-      การประเมินคุณธรรมและความโปร่งใส (ITA)
+      การประเมินคุณธรรมและความโปร่งใส <br />(MOPH ITA)
     </h1>
 
     <div class="mb-8 flex justify-center items-center space-x-4">
@@ -40,7 +40,7 @@
 
     <div v-else class="space-y-10">
       <div
-        v-for="topicGroup in groupedTopicsBySubTopic"
+        v-for="topicGroup in groupedTopicsByQuarterThenSubTopic"
         :key="topicGroup.id"
         class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
       >
@@ -51,41 +51,73 @@
           v-if="topicGroup.description"
           class="text-gray-600 mb-6 border-l-4 border-emerald-400 pl-3 italic"
         >
-          {{ topicGroup.description }}
+          {{ topicGroup.description }} {{ topicGroup.year }}
         </p>
 
-        <div v-if="Object.keys(topicGroup.subTopics).length > 0" class="space-y-6">
+        <!-- Outer loop for Quarters -->
+        <div v-if="Object.keys(topicGroup.groupedByQuarter).length > 0" class="space-y-6">
           <div
-            v-for="(docs, subTopicName) in topicGroup.subTopics"
-            :key="subTopicName"
-            class="ml-4"
+            v-for="(subTopicsData, quarterName) in sortQuarters(topicGroup.groupedByQuarter)"
+            :key="quarterName"
+            class="ml-4 bg-gray-100 p-4 rounded-md shadow-sm"
           >
-            <h3 class="text-xl font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center">
-              <i class="fas fa-file-alt mr-2 text-blue-500"></i>
-              {{ subTopicName || 'เอกสารทั่วไป' }}
+            <!-- Quarter Heading - Clickable to toggle content -->
+            <h3
+              class="text-xl font-bold text-gray-700 mb-3 pb-2 flex items-center justify-between cursor-pointer"
+              @click="toggleQuarter(topicGroup.id, quarterName)"
+            >
+              <div>
+                <i class="fas fa-calendar-alt mr-2 text-orange-500"></i> ไตรมาส {{ quarterName }}
+              </div>
+              <i
+                class="fas fa-chevron-down transition-transform duration-300"
+                :class="{ 'rotate-180': expandedQuarters[`${topicGroup.id}-${quarterName}`] }"
+              ></i>
             </h3>
-            <ul class="list-none p-0">
-              <li
-                v-for="doc in sortedDocuments(docs)"
-                :key="doc.id"
-                class="flex items-start mb-3 bg-gray-50 p-3 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
-              >
-                <i class="fas fa-file-pdf text-red-500 text-xl mr-3 mt-1"></i>
-                <div>
-                  <a
-                    :href="doc.path"
-                    target="_blank"
-                    class="text-blue-600 hover:underline text-lg font-medium"
+
+            <!-- Content to be collapsed/expanded -->
+            <div v-if="expandedQuarters[`${topicGroup.id}-${quarterName}`]" class="mt-4">
+              <!-- Inner loop for Sub-Topics within each Quarter -->
+              <div v-if="Object.keys(subTopicsData).length > 0" class="ml-4 space-y-4">
+                <div
+                  v-for="(docs, subTopicName) in subTopicsData"
+                  :key="subTopicName"
+                  class="bg-white p-4 rounded-md shadow-md"
+                >
+                  <h4
+                    class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center"
                   >
-                    {{ doc.name }}
-                  </a>
-                  <p class="text-sm text-gray-600 mt-1">
-                    <span class="font-semibold">ไตรมาส:</span> {{ doc.quarter }}
-                    <span v-if="doc.description" class="ml-4 italic">{{ doc.description }}</span>
-                  </p>
+                    <i class="fas fa-file-alt mr-2 text-blue-500"></i>
+                    {{ subTopicName || 'เอกสารทั่วไป' }}
+                  </h4>
+
+                  <ul class="list-none p-0">
+                    <li
+                      v-for="doc in sortedDocuments(docs)"
+                      :key="doc.id"
+                      class="flex items-start mb-3 bg-gray-50 p-3 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <i class="fas fa-file-pdf text-red-500 text-xl mr-3 mt-1"></i>
+                      <div>
+                        <a
+                          :href="doc.path"
+                          target="_blank"
+                          class="text-blue-600 hover:underline text-lg font-medium"
+                        >
+                          {{ doc.name }}
+                        </a>
+                        <p class="text-sm text-gray-600 mt-1">
+                          <span v-if="doc.description" class="italic">{{ doc.description }}</span>
+                        </p>
+                      </div>
+                    </li>
+                  </ul>
                 </div>
-              </li>
-            </ul>
+              </div>
+              <div v-else class="text-gray-500 text-center py-2">
+                ไม่พบเอกสารสำหรับไตรมาสนี้ในปัจจุบัน
+              </div>
+            </div>
           </div>
         </div>
         <div v-else class="text-gray-500 text-center py-4 border-t mt-6">
@@ -97,17 +129,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-// import axios from 'axios'; // Uncomment if using real API calls
+import { ref, computed, onMounted, watch } from 'vue'
 
 // Interfaces (must match your backend or mock data structure)
 interface ITADocument {
   id: number
   name: string // Document title
   path: string // URL to the document file
-  // CHANGED: quarter can now be a number or string (e.g., '1', '2' or 'Q1', 'Q2')
-  // To strictly enforce numbers for 'ไตรมาส 1' display, you might use 'number' type here
-  quarter: string // Changed to string for flexibility, but will ensure only number is displayed
+  quarter: string // Changed to string for flexibility
   topicId: number // Links to the ITATopic
   year: number // Year of the document
   description?: string // Optional description for the document
@@ -127,6 +156,8 @@ const itaTopics = ref<ITATopic[]>([]) // This will hold our fetched/mocked ITA d
 const loading = ref(true) // Initial loading state
 const error = ref<string | null>(null) // Error message
 const selectedYear = ref<number | null>(null) // Year selected by the user
+// State to manage which quarters are expanded. Key is 'topicId-quarterName'
+const expandedQuarters = ref<{ [key: string]: boolean }>({})
 
 // Mock Data (simulating data that would come from an API)
 const mockITATopics: ITATopic[] = [
@@ -146,7 +177,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 1,
         year: 2567,
         subTopic: 'คำสั่ง',
-      }, // CHANGED: quarter to '1'
+      },
       {
         id: 102,
         name: 'ประกาศช่องทางการเผยแพร่ข้อมูล 2567',
@@ -155,7 +186,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 1,
         year: 2567,
         subTopic: 'ประกาศ',
-      }, // CHANGED: quarter to '1'
+      },
       {
         id: 103,
         name: 'รายงานสรุปการเผยแพร่ข้อมูล Q2/2567',
@@ -164,7 +195,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 1,
         year: 2567,
         subTopic: 'รายงานผล',
-      }, // CHANGED: quarter to '2'
+      },
       {
         id: 104,
         name: 'มาตรการเสริมสร้างความโปร่งใส',
@@ -173,7 +204,16 @@ const mockITATopics: ITATopic[] = [
         topicId: 1,
         year: 2567,
         subTopic: 'มาตรการ',
-      }, // CHANGED: quarter to '2'
+      },
+      {
+        id: 105,
+        name: 'เอกสารอื่นๆ Q4/2567',
+        path: 'https://www.africau.edu/images/default/sample.pdf',
+        quarter: '4',
+        topicId: 1,
+        year: 2567,
+        subTopic: 'ประกาศ',
+      },
     ],
   },
   {
@@ -190,7 +230,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 2,
         year: 2567,
         subTopic: 'รายงานผล',
-      }, // CHANGED: quarter to '1'
+      },
       {
         id: 202,
         name: 'แผนการปรับปรุงเว็บไซต์ 2567',
@@ -199,7 +239,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 2,
         year: 2567,
         subTopic: 'แผนปฏิบัติการ',
-      }, // CHANGED: quarter to '2'
+      },
     ],
   },
   {
@@ -216,7 +256,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 3,
         year: 2567,
         subTopic: 'รายงานผล',
-      }, // CHANGED: quarter to '2'
+      },
       {
         id: 302,
         name: 'ประกาศแผนจัดซื้อจัดจ้างประจำปี 2567',
@@ -225,11 +265,11 @@ const mockITATopics: ITATopic[] = [
         topicId: 3,
         year: 2567,
         subTopic: 'ประกาศ',
-      }, // CHANGED: quarter to '1'
+      },
     ],
   },
   {
-    id: 12, // ID สำหรับ MOIT 13 (ใน mock data นี้ใช้ ID 12 เพื่อให้ไม่ซ้ำกับ MOIT 1-11)
+    id: 12,
     year: 2567,
     title: 'MOIT 13: หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณ',
     description: 'เอกสารเกี่ยวกับการประเมินแนวทางปฏิบัติของหน่วยงาน.',
@@ -242,7 +282,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 12,
         year: 2567,
         subTopic: 'รายงานผล',
-      }, // CHANGED: quarter to '2'
+      },
       {
         id: 1302,
         name: 'คู่มือการประเมินตนเอง ITA 2567',
@@ -251,7 +291,7 @@ const mockITATopics: ITATopic[] = [
         topicId: 12,
         year: 2567,
         subTopic: 'คู่มือ',
-      }, // CHANGED: quarter to '1'
+      },
       {
         id: 1303,
         name: 'สรุปการประชุมคณะกรรมการ ITA',
@@ -260,12 +300,12 @@ const mockITATopics: ITATopic[] = [
         topicId: 12,
         year: 2567,
         subTopic: 'อื่นๆ',
-      }, // CHANGED: quarter to '1'
+      },
     ],
   },
   // --- MOIT Topics for Year 2566 ---
   {
-    id: 14, // ID ใหม่สำหรับปี 2566
+    id: 14,
     year: 2566,
     title:
       'MOIT 1: หน่วยงานมีการกำหนดมาตรการ และวางระบบการเผยแพร่ข้อมูลต่อสาธารณะผ่านเว็บไซต์ ของหน่วยงาน (ปี 2566)',
@@ -279,11 +319,11 @@ const mockITATopics: ITATopic[] = [
         topicId: 14,
         year: 2566,
         subTopic: 'ประกาศ',
-      }, // CHANGED: quarter to '1'
+      },
     ],
   },
   {
-    id: 15, // ID ใหม่สำหรับปี 2566
+    id: 15,
     year: 2566,
     title: 'MOIT 2: หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน (ปี 2566)',
     description: 'เอกสารที่เกี่ยวข้องกับการเปิดเผยข้อมูลข่าวสารที่อัปเดต ปี 2566.',
@@ -296,75 +336,84 @@ const mockITATopics: ITATopic[] = [
         topicId: 15,
         year: 2566,
         subTopic: 'รายงานผล',
-      }, // CHANGED: quarter to '4'
+      },
     ],
   },
-  // Add more MOIT topics for 2566 or other years as needed, with documents and subTopics
 ]
 
-// Computed Properties
 const availableYears = computed(() => {
   const years = new Set(mockITATopics.map((topic) => topic.year))
-  return Array.from(years).sort((a, b) => b - a) // Sort descending
+  return Array.from(years).sort((a, b) => b - a)
 })
 
 const filteredTopics = computed(() => {
   if (!selectedYear.value) {
     return []
   }
-  // Filter topics by selected year
   return itaTopics.value.filter((topic) => topic.year === selectedYear.value)
 })
 
-// New computed property to group documents by subTopic within each main topic
-const groupedTopicsBySubTopic = computed(() => {
+const groupedTopicsByQuarterThenSubTopic = computed(() => {
   return filteredTopics.value.map((topic) => {
-    const subTopics: { [key: string]: ITADocument[] } = {}
+    const groupedByQuarter: { [quarter: string]: { [subTopicName: string]: ITADocument[] } } = {}
 
-    // Group documents by their subTopic
     topic.documents.forEach((doc) => {
-      const sTopic = doc.subTopic || 'เอกสารทั่วไป' // Default if subTopic is not set
-      if (!subTopics[sTopic]) {
-        subTopics[sTopic] = []
+      const quarter = doc.quarter || 'ไม่ระบุไตรมาส'
+      const sTopic = doc.subTopic || 'เอกสารทั่วไป'
+
+      if (!groupedByQuarter[quarter]) {
+        groupedByQuarter[quarter] = {}
       }
-      subTopics[sTopic].push(doc)
+      if (!groupedByQuarter[quarter][sTopic]) {
+        groupedByQuarter[quarter][sTopic] = []
+      }
+      groupedByQuarter[quarter][sTopic].push(doc)
     })
 
     return {
-      ...topic, // Copy all properties from the original topic
-      subTopics: subTopics, // Add the new grouped subTopics object
+      ...topic,
+      groupedByQuarter: groupedByQuarter,
     }
   })
 })
 
-// Function to sort documents by quarter (1, 2, 3, 4)
-// This function needs to handle string '1', '2' etc. as numbers for sorting
 const sortedDocuments = (documents: ITADocument[]) => {
-  const quarterOrder: { [key: string]: number } = { '1': 1, '2': 2, '3': 3, '4': 4 }
-  return [...documents].sort((a, b) => {
-    // Convert string quarter to number for sorting, or default to 0 if not a valid quarter
-    const aQuarterValue = a.quarter ? quarterOrder[a.quarter] || 0 : 0
-    const bQuarterValue = b.quarter ? quarterOrder[b.quarter] || 0 : 0
-    return aQuarterValue - bQuarterValue
-  })
+  return [...documents].sort((a, b) => a.id - b.id)
 }
 
-// Functions (simulating API calls)
+const sortQuarters = (quarters: { [quarter: string]: any }) => {
+  const quarterOrder: { [key: string]: number } = {
+    '1': 1,
+    '2': 2,
+    '3': 3,
+    '4': 4,
+    ไม่ระบุไตรมาส: 99,
+  }
+  return Object.keys(quarters)
+    .sort((a, b) => {
+      const aValue = quarterOrder[a] || 99
+      const bValue = quarterOrder[b] || 99
+      return aValue - bValue
+    })
+    .reduce((obj: { [key: string]: any }, key) => {
+      obj[key] = quarters[key]
+      return obj
+    }, {})
+}
+const toggleQuarter = (topicId: number, quarterName: string | number) => {
+  const key = `${topicId}-${String(quarterName)}`
+  expandedQuarters.value = {
+    ...expandedQuarters.value,
+    [key]: !expandedQuarters.value[key],
+  }
+}
+
 const fetchITATopics = async () => {
   loading.value = true
   error.value = null
   try {
-    // In a real application, you'd fetch from your backend here.
-    // const response = await axios.get<ITATopic[]>('/api/public-ita-topics');
-    // itaTopics.value = response.data;
-
-    // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 700))
-
-    // Assign mock data
     itaTopics.value = mockITATopics
-
-    // Set default selected year to the latest available year
     if (!selectedYear.value && availableYears.value.length > 0) {
       selectedYear.value = availableYears.value[0]
     }
@@ -376,22 +425,13 @@ const fetchITATopics = async () => {
   }
 }
 
-// Lifecycle Hooks
+watch(selectedYear, () => {
+  expandedQuarters.value = {}
+})
+
 onMounted(() => {
   fetchITATopics()
 })
 </script>
 
-<style scoped>
-/* Custom colors can be defined in your tailwind.config.js */
-/* Example:
-theme: {
-  extend: {
-    colors: {
-      'my-custom-blue': '#2563eb',
-      'my-custom-gray': '#334155',
-    }
-  }
-}
-*/
-</style>
+<style scoped></style>

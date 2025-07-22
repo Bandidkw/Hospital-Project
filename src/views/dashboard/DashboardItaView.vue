@@ -50,10 +50,14 @@
               required
             >
               <option value="">-- เลือกไตรมาส --</option>
-              <option value="Q1">ไตรมาส 1</option>
-              <option value="Q2">ไตรมาส 2</option>
-              <option value="Q3">ไตรมาส 3</option>
-              <option value="Q4">ไตรมาส 4</option>
+              <option value="1">ไตรมาส 1</option>
+              <!-- CHANGED: value to '1' -->
+              <option value="2">ไตรมาส 2</option>
+              <!-- CHANGED: value to '2' -->
+              <option value="3">ไตรมาส 3</option>
+              <!-- CHANGED: value to '3' -->
+              <option value="4">ไตรมาส 4</option>
+              <!-- CHANGED: value to '4' -->
             </select>
           </div>
         </div>
@@ -234,7 +238,7 @@ interface ITADocument {
   id: number
   title: string
   year: number
-  quarter: string
+  quarter: string // Changed to string for flexibility
   topic: string // Main MOIT topic, e.g., 'MOIT 1: ...'
   subTopic?: string // New field for sub-topic, e.g., 'คำสั่ง', 'รายงานผล'
   description?: string
@@ -247,7 +251,7 @@ const itaDocuments = ref<ITADocument[]>([
     id: 1,
     title: 'เอกสารโครงสร้างองค์กร 2567',
     year: 2567,
-    quarter: 'Q1',
+    quarter: '1', // CHANGED: from 'Q1' to '1'
     topic:
       'MOIT 1 หน่วยงานมีการวางระบบโดยการกำหนดมาตรการการเผยแพร่ข้อมูลต่อสาธารณะ ผ่านเว็บไซต์ของหน่วยงาน',
     subTopic: 'คำสั่ง', // Example subTopic
@@ -258,7 +262,7 @@ const itaDocuments = ref<ITADocument[]>([
     id: 2,
     title: 'แผนการจัดซื้อจัดจ้าง 2567',
     year: 2567,
-    quarter: 'Q1',
+    quarter: '1', // CHANGED: from 'Q1' to '1'
     topic: 'MOIT 3 หน่วยงานมีรายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
     subTopic: 'แผนปฏิบัติการ', // Example subTopic
     description: 'แผนการจัดซื้อจัดจ้างประจำปี',
@@ -268,7 +272,7 @@ const itaDocuments = ref<ITADocument[]>([
     id: 3,
     title: 'รายงานผลการดำเนินงาน Q2 2567',
     year: 2567,
-    quarter: 'Q2',
+    quarter: '2', // CHANGED: from 'Q2' to '2'
     topic: 'MOIT 5 หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
     subTopic: 'รายงานผล', // Example subTopic
     description: 'รายงานผลการดำเนินงานไตรมาส 2',
@@ -278,7 +282,7 @@ const itaDocuments = ref<ITADocument[]>([
     id: 4,
     title: 'นโยบาย No Gift Policy 2566',
     year: 2566,
-    quarter: 'Q1',
+    quarter: '1', // CHANGED: from 'Q1' to '1'
     topic: 'MOIT 12 หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ',
     subTopic: 'ประกาศ', // Example subTopic
     description: 'นโยบายไม่รับของขวัญปี 2566',
@@ -288,7 +292,7 @@ const itaDocuments = ref<ITADocument[]>([
     id: 5,
     title: 'งบประมาณรายรับ-รายจ่าย 2565',
     year: 2565,
-    quarter: 'Q3',
+    quarter: '3', // CHANGED: from 'Q3' to '3'
     topic: 'MOIT 2 หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
     subTopic: 'รายงานผล', // Example subTopic
     description: 'สรุปงบประมาณปี 2565',
@@ -298,7 +302,7 @@ const itaDocuments = ref<ITADocument[]>([
     id: 6,
     title: 'นโยบายป้องกันการรับสินบน 2567',
     year: 2567,
-    quarter: 'Q1',
+    quarter: '1', // CHANGED: from 'Q1' to '1'
     topic: 'MOIT 13 หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณ',
     subTopic: 'นโยบาย', // Example subTopic for MOIT 13
     description: 'นโยบายป้องกันการรับสินบนล่าสุดสำหรับปี 2567',
@@ -337,7 +341,7 @@ const currentDocument = ref<ITADocument>({
   id: 0,
   title: '',
   year: new Date().getFullYear() + 543, // Default to current Thai year
-  quarter: 'Q1',
+  quarter: '1', // CHANGED: Default to '1'
   topic: '',
   subTopic: '', // Initialize new subTopic field
   description: '',
@@ -364,17 +368,17 @@ const getYearsList = () => {
 
 // Computed property to sort documents by year (descending) and then quarter
 const sortedITADocuments = computed(() => {
-  const quarterOrder = { Q1: 1, Q2: 2, Q3: 3, Q4: 4 }
+  // CHANGED: quarterOrder to reflect numeric string values
+  const quarterOrder: { [key: string]: number } = { '1': 1, '2': 2, '3': 3, '4': 4 }
   return [...itaDocuments.value].sort((a, b) => {
     // Sort by year descending first
     if (b.year !== a.year) {
       return b.year - a.year
     }
     // If years are the same, sort by quarter
-    return (
-      quarterOrder[a.quarter as keyof typeof quarterOrder] -
-      quarterOrder[b.quarter as keyof typeof quarterOrder]
-    )
+    const aQuarterValue = quarterOrder[a.quarter] || 0
+    const bQuarterValue = quarterOrder[b.quarter] || 0
+    return aQuarterValue - bQuarterValue
   })
 })
 
@@ -423,37 +427,31 @@ const deleteITADocument = () => {
     itaDocuments.value = itaDocuments.value.filter((doc) => doc.id !== documentToDeleteId.value)
     toast.success('ลบเอกสาร ITA สำเร็จ!')
   }
-  resetDeleteConfirm() // Reset confirmation modal state
+  resetDeleteConfirm()
 }
 
-// Function to cancel the delete operation
 const cancelDelete = () => {
   resetDeleteConfirm()
 }
 
-// Function to reset the form to its initial state
 const resetForm = () => {
   currentDocument.value = {
     id: 0,
     title: '',
     year: new Date().getFullYear() + 543,
-    quarter: 'Q1',
+    quarter: '', // CHANGED: Default to '1'
     topic: '',
-    subTopic: '', // Reset subTopic
+    subTopic: '',
     description: '',
     url: '',
   }
   editingDocument.value = false
 }
 
-// Function to reset the delete confirmation modal state
 const resetDeleteConfirm = () => {
   documentToDeleteId.value = null
   showConfirmModal.value = false
 }
 </script>
 
-<style scoped>
-/* No specific scoped styles needed for this component based on current design.
-   Tailwind CSS handles most of the styling. */
-</style>
+<style scoped></style>
