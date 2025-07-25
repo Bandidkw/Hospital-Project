@@ -1,9 +1,9 @@
 // src/router/index.ts
-import { createRouter, createWebHistory } from 'vue-router';
+
+import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
 import { useAuthStore } from '@/stores/auth';
-
-
+import { useToast } from 'vue-toastification';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,162 +27,201 @@ const router = createRouter({
     // Routes อื่นๆ
     { path: '/news', name: 'news', component: () => import('@/views/NewsView.vue') },
     { path: '/contact', name: 'contact', component: () => import('@/views/ContactView.vue') },
-    {path: '/contact',name: 'contact',component:() => import("@/views/ContactView.vue"),},
-    // {path: '/ita-documents-public',name: 'ita-documents-public',component:() => import("@/views/ita/ITADocumentsView.vue"),},
-    {path: '/ita-documents-public',name: 'ita-documents-public',component:() => import("@/views/ita/ItaPublicView.vue"),},
+    { path: '/ita-documents-public', name: 'ita-documents-public', component: () => import('@/views/ita/ItaPublicView.vue') },
 
     // **Dashboard และ Nested Routes**
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: () => import('../views/staff/DashboardView.vue'),
-      meta: { requiresAuth: true, requiredRole: 'admin' }, // กำหนดให้เข้าถึงได้เฉพาะ admin
+      component: () => import('../views/staff/DashboardView.vue'), // คอมโพเนนต์หลักของ Dashboard Layout
+      // บทบาทที่สามารถเข้าถึง Dashboard หลักได้: user, admin, superadmin
+      meta: { requiresAuth: true, roles: ['user', 'admin', 'superadmin'] },
       children: [
         {
-          path: '', // /dashboard
+          path: '', // /dashboard (หน้าแรกของ Dashboard)
           name: 'dashboard-home',
           component: () => import('../views/dashboard/DashboardHomeView.vue'),
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          meta: { requiresAuth: true, roles: ['user', 'admin', 'superadmin'] }
         },
         {
           path: 'news', // /dashboard/news
           name: 'dashboard-news',
           component: () => import('../views/dashboard/DashboardNewsView.vue'),
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] } // เฉพาะ Admin และ SuperAdmin
         },
         {
           path: 'categories', // /dashboard/categories
           name: 'dashboard-categories',
-          component: () => import('../views/dashboard/DashboardCategoriesView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardCategoriesView.vue'),
+          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] } // เฉพาะ Admin และ SuperAdmin
         },
         {
           path: 'ita', // /dashboard/ita
           name: 'dashboard-ita',
-          component: () => import('../views/dashboard/DashboardItaView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardItaView.vue'),
+          meta: { requiresAuth: true, roles: ['user', 'admin', 'superadmin'] } // user, admin, superadmin
         },
         {
           path: 'slides', // /dashboard/slides
           name: 'dashboard-slides',
-          component: () => import('../views/dashboard/DashboardSlidesView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardSlidesView.vue'),
+          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] } // เฉพาะ Admin และ SuperAdmin
         },
         {
           path: 'footer-links', // /dashboard/footer-links
           name: 'dashboard-footer-links',
-          component: () => import('../views/dashboard/DashboardFooterLinksView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardFooterLinksView.vue'),
+          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] } // เฉพาะ Admin และ SuperAdmin
         },
         {
           path: 'org-structure', // /dashboard/org-structure
           name: 'dashboard-org-structure',
-          component: () => import('../views/dashboard/DashboardOrgStructureView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardOrgStructureView.vue'),
+          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] } // เฉพาะ Admin และ SuperAdmin
         },
         {
           path: 'media-files', // /dashboard/media-files
           name: 'dashboard-media-files',
-          component: () => import('../views/dashboard/DashboardMediaFilesView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardMediaFilesView.vue'),
+          meta: { requiresAuth: true, roles: ['superadmin'] } // เฉพาะ SuperAdmin
         },
         {
           path: 'page-images', // /dashboard/page-images
           name: 'dashboard-page-images',
-          component: () => import('../views/dashboard/DashboardPageImagesView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardPageImagesView.vue'),
+          meta: { requiresAuth: true, roles: ['superadmin'] } // เฉพาะ SuperAdmin
         },
         {
           path: 'audit-logs', // /dashboard/audit-logs
           name: 'dashboard-audit-logs',
-          component: () => import('../views/dashboard/DashboardAuditLogsView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardAuditLogsView.vue'),
+          meta: { requiresAuth: true, roles: ['superadmin'] } // เฉพาะ SuperAdmin
         },
         {
           path: 'website-settings', // /dashboard/website-settings
           name: 'dashboard-website-settings',
-          component: () => import('../views/dashboard/DashboardWebsiteSettingsView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardWebsiteSettingsView.vue'),
+          meta: { requiresAuth: true, roles: ['superadmin'] } // เฉพาะ SuperAdmin
         },
         {
           path: 'reports', // /dashboard/reports
           name: 'dashboard-reports',
-          component: () => import('../views/dashboard/DashboardReportsView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardReportsView.vue'),
+          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] } // เฉพาะ Admin และ SuperAdmin
         },
         {
           path: 'statistics', // /dashboard/statistics
           name: 'dashboard-statistics',
-          component: () => import('../views/dashboard/DashboardStatisticsView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardStatisticsView.vue'),
+          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] } // เฉพาะ Admin และ SuperAdmin
         },
         {
           path: 'profile', // /dashboard/profile
           name: 'dashboard-profile',
-          component: () => import('../views/dashboard/DashboardProfileView.vue'), // <--- Component ใหม่
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          component: () => import('../views/dashboard/DashboardProfileView.vue'),
+          meta: { requiresAuth: true, roles: ['user', 'admin', 'superadmin'] } // user, admin, superadmin
         },
         {
-          path: 'users', // /dashboard/users (เดิมคือ manage_users)
+          path: 'users', // /dashboard/users
           name: 'dashboard-users',
           component: () => import('../views/dashboard/DashboardUsersView.vue'),
-          meta: { requiresAuth: true, requiredRole: 'admin' }
+          meta: { requiresAuth: true, roles: ['superadmin'] } // เฉพาะ SuperAdmin
         },
       ]
     },
-
-    // Routes อื่นๆ ที่ต้องการ Login (ถ้ามีและยังต้องการแยกหน้า)
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/components/LoginModal.vue'),
+    },
+    // Routes สำหรับระบบงานภายใน (แยก Login) - ตั้งค่า requiresAuth เป็น false
     {
       path: '/personnel-login',
       name: 'personnel-login',
       component: () => import('@/views/staff/PersonnelLoginView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: false }
     },
     {
       path: '/pharmacy-login',
       name: 'pharmacy-login',
       component: () => import('@/views/staff/PharmacyLoginView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: false }
     },
     {
       path: '/finance-login',
       name: 'finance-login',
       component: () => import('@/views/staff/FinanceLoginView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: false }
     },
     {
       path: '/other-systems-login',
       name: 'other-systems-login',
       component: () => import('@/views/staff/OtherSystemsLoginView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: false }
     },
+    // Catch-all route for 404
   ]
 });
 
-// Global Navigation Guard (เหมือนเดิม)
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next) => {
   const authStore = useAuthStore();
+  const toast = useToast();
+  if (!authStore.isAuthenticated && !authStore.isAuthenticating) {
+    console.log('[Router Guard] User not authenticated, attempting to fetch user from localStorage...');
+    authStore.fetchUser();
+  }
 
-  if (to.meta.requiresAuth) {
+  const requiresAuth = to.meta.requiresAuth as boolean | undefined;
+  const requiredRoles = to.meta.roles as string[] | undefined;
+
+  console.log('--- Router Guard Check ---');
+  console.log('กำลังนำทางจาก:', from.fullPath, 'ไปยัง:', to.fullPath);
+  console.log('ชื่อ Route ปลายทาง:', to.name);
+  console.log('Route ต้องการการยืนยันตัวตน (requiresAuth):', requiresAuth);
+  console.log('Route ต้องการบทบาท (requiredRoles):', requiredRoles ? requiredRoles.join(', ') : 'None');
+  console.log('บทบาทผู้ใช้ปัจจุบัน (authStore.user?.role):', authStore.user?.role || 'None');
+  console.log('ผู้ใช้ล็อกอินแล้ว (authStore.isAuthenticated):', authStore.isAuthenticated);
+  console.log('กำลังตรวจสอบสิทธิ์ (authStore.isAuthenticating):', authStore.isAuthenticating);
+  console.log('--------------------------');
+
+  if (requiresAuth) {
     if (!authStore.isAuthenticated) {
-      console.log("Access denied. Redirecting to home for login.");
-      next('/');
+      console.log('Guard: เข้าถึงถูกปฏิเสธ. ต้องการการยืนยันตัวตนแต่ยังไม่ได้ล็อกอิน. กำลังนำทางไปหน้า Home.');
+      toast.error('กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้');
+      // นำทางไปหน้า Home แทนหน้า Login Modal โดยตรง
+      next({ name: 'home' });
     } else {
-      // ตรวจสอบ Role ถ้ามีการกำหนด requiredRole
-      if (to.meta.requiredRole && authStore.user?.role !== to.meta.requiredRole) {
-        console.log(`Access denied. Insufficient role. Required: ${to.meta.requiredRole}, User role: ${authStore.user?.role}`);
-        next('/'); // Redirect ไปหน้าแรกหรือหน้าแจ้งเตือนสิทธิ์ไม่พอ
+      // ผู้ใช้ล็อกอินแล้ว
+      if (requiredRoles && requiredRoles.length > 0) {
+        // ถ้า Route มีการกำหนดบทบาทที่ต้องการ
+        if (authStore.user && requiredRoles.includes(authStore.user.role)) {
+          // ถ้าบทบาทของผู้ใช้ตรงกับบทบาทที่ Route ต้องการ
+          console.log(`Guard: อนุญาต. บทบาทผู้ใช้ '${authStore.user.role}' ตรงกับบทบาทที่ต้องการ.`);
+          next();
+        } else {
+          // ถ้าบทบาทของผู้ใช้ไม่ตรงกับบทบาทที่ Route ต้องการ
+          console.log(`Guard: เข้าถึงถูกปฏิเสธ. บทบาทไม่เพียงพอ. ต้องการ: ${JSON.stringify(requiredRoles)}, บทบาทผู้ใช้: ${authStore.user?.role}`);
+          toast.error('คุณไม่มีสิทธิ์เข้าถึงหน้านี้!');
+          next({ name: 'home' }); // นำทางกลับไปหน้า Home
+        }
       } else {
+        // ต้องการการยืนยันตัวตน แต่ไม่ได้กำหนดบทบาทเฉพาะ (แค่ล็อกอินก็พอ)
+        console.log('Guard: อนุญาต. ต้องการการยืนยันตัวตนแต่ไม่มีบทบาทเฉพาะที่กำหนดไว้สำหรับ Route นี้.');
         next();
       }
     }
   } else {
-    next();
+    // ถ้า Route ไม่ต้องการการยืนยันตัวตน (Public routes)
+    // ตรวจสอบว่าผู้ใช้ที่ล็อกอินแล้วพยายามเข้าถึงหน้า Login หรือไม่
+    const loginPages = ['login', 'personnel-login', 'pharmacy-login', 'finance-login', 'other-systems-login'];
+    if (authStore.isAuthenticated && loginPages.includes(to.name as string)) {
+      console.log('Guard: ผู้ใช้ล็อกอินแล้ว กำลังพยายามเข้าถึงหน้า Login. นำทางไป Dashboard.');
+      next({ name: 'dashboard-home' }); // นำทางไป Dashboard แทน
+    } else {
+      console.log('Guard: Route ไม่ต้องการการยืนยันตัวตน. ดำเนินการต่อ.');
+      next();
+    }
   }
 });
-interface WebsiteSettings {
-  slogan: string;
-  // เพิ่ม properties อื่นๆ ที่คาดว่าจะมี
-}
 
 export default router;

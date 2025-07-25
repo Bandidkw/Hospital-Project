@@ -28,3 +28,11 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# .gitignore
+
+# Environment variables files
+.env
+.env.*
+.env.local
+.env.*.local

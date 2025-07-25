@@ -7,15 +7,20 @@
       </div>
 
       <div class="flex items-center space-x-3">
-        <a href="#" class="text-white hover:text-blue-200 transition duration-300">
-          <i class="fab fa-facebook-f"></i> </a>
+        <a
+          href="https://www.facebook.com/maetaenghospital.cm"
+          target="_blank"
+          class="text-white hover:text-blue-200 transition duration-300"
+        >
+          <i class="fab fa-facebook-f"></i>
+        </a>
         <a href="#" class="text-white hover:text-blue-200 transition duration-300">
           <i class="fab fa-twitter"></i>
         </a>
         <a href="#" class="text-white hover:text-blue-200 transition duration-300">
           <i class="fab fa-line"></i>
         </a>
-        <a href="#" class="text-white hover:text-blue-200 transition duration-300">
+        <a href="#" target="_blank" class="text-white hover:text-blue-200 transition duration-300">
           <i class="fab fa-youtube"></i>
         </a>
       </div>
@@ -23,10 +28,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-// ไม่มี script logic ที่ซับซ้อนสำหรับ component นี้
-</script>
+<script setup lang="ts"></script>
 
-<style scoped>
-/* สามารถเพิ่ม CSS เฉพาะ component นี้ได้ */
-</style>
+<style scoped></style>
