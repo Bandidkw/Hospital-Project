@@ -115,7 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
             id: 'dev-user-1',
             username: 'dev_user',
             fullName: 'Dev User',
-            roleId: 1,
+            roleId: 10,
             role: 'user',
           }
           devToken = 'dev-user-token'
@@ -124,7 +124,7 @@ export const useAuthStore = defineStore('auth', () => {
             id: 'dev-admin-1',
             username: 'dev_admin',
             fullName: 'Dev Admin',
-            roleId: 2,
+            roleId: 50,
             role: 'admin',
           }
           devToken = 'dev-admin-token'
@@ -133,7 +133,7 @@ export const useAuthStore = defineStore('auth', () => {
             id: 'dev-superadmin-1',
             username: 'dev_superadmin',
             fullName: 'Dev Super Admin',
-            roleId: 3,
+            roleId: 90,
             role: 'superadmin',
           }
           devToken = 'dev-superadmin-token'
