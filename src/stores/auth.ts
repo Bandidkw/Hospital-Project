@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router' // <-- เพิ่มการ import useRouter เข้ามา
 
 // Interface สำหรับ User Object
 interface User {
@@ -11,7 +12,18 @@ interface User {
   role: string
 }
 
+// Mapping บทบาทจาก Backend ID เป็น Frontend String
+// (หาก Role ID จาก Backend แตกต่างจากที่คุณใช้ใน UI)
+const ROLE_MAPPING: { [key: number]: string } = {
+  10: 'user',        // ID 10 จาก Backend จะถูก Map เป็น Role 'user' ใน Frontend
+  50: 'admin',       // ID 50 จาก Backend จะถูก Map เป็น Role 'admin' ใน Frontend
+  90: 'superadmin',  // ID 90 จาก Backend จะถูก Map เป็น Role 'superadmin' ใน Frontend
+};
+
 export const useAuthStore = defineStore('auth', () => {
+  // ดึง router instance มาใช้งานใน Store
+  const router = useRouter() // <-- เรียกใช้ useRouter() ที่นี่
+
   // State
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
@@ -34,7 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticating.value = true
     loginError.value = null // Reset error on new login attempt
 
-    // Simulate API call
+    // Simulate API call (ใช้ axios.post สำหรับ API จริงตามที่เคยแนะนำ)
     return new Promise((resolve) => {
       setTimeout(() => {
         let loggedInUser: User | null = null;
@@ -45,7 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
             id: '1',
             username: 'user',
             fullName: 'User One',
-            roleId: 1,
+            roleId: 10, // ตรวจสอบให้ตรงกับ ROLE_MAPPING
             role: 'user',
           }
           authToken = 'user-token-123'
@@ -54,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
             id: '2',
             username: 'admin',
             fullName: 'Admin User',
-            roleId: 2,
+            roleId: 50, // ตรวจสอบให้ตรงกับ ROLE_MAPPING
             role: 'admin',
           }
           authToken = 'admin-token-456'
@@ -63,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
             id: '3',
             username: 'superadmin',
             fullName: 'Super Admin',
-            roleId: 3,
+            roleId: 90, // ตรวจสอบให้ตรงกับ ROLE_MAPPING
             role: 'superadmin',
           }
           authToken = 'superadmin-token-789'
@@ -73,17 +85,21 @@ export const useAuthStore = defineStore('auth', () => {
           user.value = loggedInUser;
           token.value = authToken;
           isAuthenticated.value = true;
-          // Save user and token to localStorage
-          localStorage.setItem('user', JSON.stringify(user.value));
-          localStorage.setItem('token', token.value);
+          // Save user and token to localStorage (เพิ่มการตรวจสอบ null ตามที่เคยแนะนำ)
+          if (user.value) {
+            localStorage.setItem('user', JSON.stringify(user.value));
+          }
+          if (token.value) {
+            localStorage.setItem('token', token.value);
+          }
           resolve(true)
         } else {
           loginError.value = 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง'
           isAuthenticated.value = false
           user.value = null
           token.value = null
-          localStorage.removeItem('user'); // Clear localStorage on failed login
-          localStorage.removeItem('token'); // Clear localStorage on failed login
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
           resolve(false)
         }
         isAuthenticating.value = false
@@ -96,9 +112,10 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     isAuthenticated.value = false
     loginError.value = null
-    localStorage.removeItem('user'); // Remove user from localStorage
-    localStorage.removeItem('token'); // Remove token from localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     console.log('Logged out - localStorage cleared.')
+    router.push('/'); // <-- เพิ่มบรรทัดนี้
   }
 
   // Dev Login สำหรับการทดสอบ
@@ -143,16 +160,20 @@ export const useAuthStore = defineStore('auth', () => {
             user.value = devUser;
             token.value = devToken;
             isAuthenticated.value = true;
-            localStorage.setItem('user', JSON.stringify(user.value));
-            localStorage.setItem('token', token.value);
+            if (user.value) {
+              localStorage.setItem('user', JSON.stringify(user.value));
+            }
+            if (token.value) {
+              localStorage.setItem('token', token.value);
+            }
             resolve(true);
         } else {
             loginError.value = 'บทบาท Dev ไม่ถูกต้อง';
             isAuthenticated.value = false;
             user.value = null;
             token.value = null;
-            localStorage.removeItem('user'); // Clear localStorage on failed dev login
-            localStorage.removeItem('token'); // Clear localStorage on failed dev login
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
             resolve(false);
         }
         isAuthenticating.value = false;
@@ -169,8 +190,10 @@ export const useAuthStore = defineStore('auth', () => {
       try {
         const parsedUser = JSON.parse(storedUser);
         // Basic validation for parsedUser to ensure it's a valid User object
-        if (parsedUser && typeof parsedUser.id === 'string' && typeof parsedUser.username === 'string' && typeof parsedUser.role === 'string') {
-            user.value = parsedUser;
+        // และ Map roleId จาก Backend เป็น Role string
+        if (parsedUser && typeof parsedUser.id === 'string' && typeof parsedUser.username === 'string' && typeof parsedUser.roleId === 'number') {
+            const userRole = ROLE_MAPPING[parsedUser.roleId] || 'user'; // ใช้ ROLE_MAPPING
+            user.value = { ...parsedUser, role: userRole }; // อัปเดต role ให้ตรงกับ frontend
             token.value = storedToken;
             isAuthenticated.value = true;
             console.log('User fetched from localStorage:', user.value);

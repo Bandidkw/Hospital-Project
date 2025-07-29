@@ -132,7 +132,7 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/components/LoginModal.vue'),
+      component: () => import('@/components/LoginModal.vue'), // หรือหน้าที่เป็น Login จริงๆ
     },
     // Routes สำหรับระบบงานภายใน (แยก Login) - ตั้งค่า requiresAuth เป็น false
     {
@@ -159,19 +159,25 @@ const router = createRouter({
       component: () => import('@/views/staff/OtherSystemsLoginView.vue'),
       meta: { requiresAuth: false }
     },
-    // Catch-all route for 404
   ]
 });
+
+// กำหนดตัวแปร loginPages ให้อยู่ในขอบเขตที่เข้าถึงได้
+const loginPages = ['login', 'personnel-login', 'pharmacy-login', 'finance-login', 'other-systems-login'];
 
 router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized, next) => {
   const authStore = useAuthStore();
   const toast = useToast();
-  if (!authStore.isAuthenticated && !authStore.isAuthenticating) {
+
+  // ตรวจสอบว่าผู้ใช้มี Token ใน Local Storage หรือไม่เมื่อโหลดแอปครั้งแรก
+  // และยังไม่ได้ Authenticate หรือกำลัง Authenticate อยู่
+  if (!authStore.isAuthenticated && !authStore.isAuthenticating && localStorage.getItem('token')) {
     console.log('[Router Guard] User not authenticated, attempting to fetch user from localStorage...');
-    authStore.fetchUser();
+    await authStore.fetchUser(); // <-- สำคัญมาก: เพิ่ม await ที่นี่
   }
 
-  const requiresAuth = to.meta.requiresAuth as boolean | undefined;
+  const isAuthenticated = authStore.getIsAuthenticated; // ใช้ getter ที่เป็น reactive
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth as boolean);
   const requiredRoles = to.meta.roles as string[] | undefined;
 
   console.log('--- Router Guard Check ---');
@@ -180,47 +186,36 @@ router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormali
   console.log('Route ต้องการการยืนยันตัวตน (requiresAuth):', requiresAuth);
   console.log('Route ต้องการบทบาท (requiredRoles):', requiredRoles ? requiredRoles.join(', ') : 'None');
   console.log('บทบาทผู้ใช้ปัจจุบัน (authStore.user?.role):', authStore.user?.role || 'None');
-  console.log('ผู้ใช้ล็อกอินแล้ว (authStore.isAuthenticated):', authStore.isAuthenticated);
+  console.log('ผู้ใช้ล็อกอินแล้ว (authStore.isAuthenticated):', isAuthenticated); // ใช้ isAuthenticated ที่ดึงมาจาก getter
   console.log('กำลังตรวจสอบสิทธิ์ (authStore.isAuthenticating):', authStore.isAuthenticating);
   console.log('--------------------------');
 
-  if (requiresAuth) {
-    if (!authStore.isAuthenticated) {
-      console.log('Guard: เข้าถึงถูกปฏิเสธ. ต้องการการยืนยันตัวตนแต่ยังไม่ได้ล็อกอิน. กำลังนำทางไปหน้า Home.');
-      toast.error('กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้');
-      // นำทางไปหน้า Home แทนหน้า Login Modal โดยตรง
-      next({ name: 'home' });
-    } else {
-      // ผู้ใช้ล็อกอินแล้ว
-      if (requiredRoles && requiredRoles.length > 0) {
-        // ถ้า Route มีการกำหนดบทบาทที่ต้องการ
-        if (authStore.user && requiredRoles.includes(authStore.user.role)) {
-          // ถ้าบทบาทของผู้ใช้ตรงกับบทบาทที่ Route ต้องการ
-          console.log(`Guard: อนุญาต. บทบาทผู้ใช้ '${authStore.user.role}' ตรงกับบทบาทที่ต้องการ.`);
-          next();
-        } else {
-          // ถ้าบทบาทของผู้ใช้ไม่ตรงกับบทบาทที่ Route ต้องการ
-          console.log(`Guard: เข้าถึงถูกปฏิเสธ. บทบาทไม่เพียงพอ. ต้องการ: ${JSON.stringify(requiredRoles)}, บทบาทผู้ใช้: ${authStore.user?.role}`);
-          toast.error('คุณไม่มีสิทธิ์เข้าถึงหน้านี้!');
-          next({ name: 'home' }); // นำทางกลับไปหน้า Home
-        }
-      } else {
-        // ต้องการการยืนยันตัวตน แต่ไม่ได้กำหนดบทบาทเฉพาะ (แค่ล็อกอินก็พอ)
-        console.log('Guard: อนุญาต. ต้องการการยืนยันตัวตนแต่ไม่มีบทบาทเฉพาะที่กำหนดไว้สำหรับ Route นี้.');
-        next();
-      }
-    }
-  } else {
-    // ถ้า Route ไม่ต้องการการยืนยันตัวตน (Public routes)
-    // ตรวจสอบว่าผู้ใช้ที่ล็อกอินแล้วพยายามเข้าถึงหน้า Login หรือไม่
-    const loginPages = ['login', 'personnel-login', 'pharmacy-login', 'finance-login', 'other-systems-login'];
-    if (authStore.isAuthenticated && loginPages.includes(to.name as string)) {
-      console.log('Guard: ผู้ใช้ล็อกอินแล้ว กำลังพยายามเข้าถึงหน้า Login. นำทางไป Dashboard.');
-      next({ name: 'dashboard-home' }); // นำทางไป Dashboard แทน
-    } else {
-      console.log('Guard: Route ไม่ต้องการการยืนยันตัวตน. ดำเนินการต่อ.');
+  // ถ้าผู้ใช้ไม่ได้ล็อกอิน และกำลังพยายามเข้าถึงหน้า Dashboard หรือหน้า Protected อื่นๆ
+  if (!isAuthenticated && requiresAuth) {
+    console.log('Guard: เข้าถึงถูกปฏิเสธ. ต้องการการยืนยันตัวตนแต่ยังไม่ได้ล็อกอิน. กำลังนำทางไปหน้า Home.');
+    toast.error('กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้');
+    next({ name: 'home' }); // นำทางไปหน้า Home (หรือ Login)
+  }
+  // ถ้าผู้ใช้ล็อกอินแล้ว แต่พยายามเข้าหน้า Login
+  else if (isAuthenticated && (to.name === 'login' || loginPages.includes(to.name as string))) {
+    console.log('Guard: ผู้ใช้ล็อกอินแล้ว กำลังพยายามเข้าถึงหน้า Login. นำทางไป Dashboard.');
+    next({ name: 'dashboard-home' }); // นำทางไป Dashboard แทน
+  }
+  // จัดการสิทธิ์ตามบทบาท
+  else if (isAuthenticated && requiresAuth && requiredRoles && requiredRoles.length > 0) {
+    if (authStore.user && requiredRoles.includes(authStore.user.role)) {
+      console.log(`Guard: อนุญาต. บทบาทผู้ใช้ '${authStore.user.role}' ตรงกับบทบาทที่ต้องการ.`);
       next();
+    } else {
+      console.log(`Guard: เข้าถึงถูกปฏิเสธ. บทบาทไม่เพียงพอ. ต้องการ: ${JSON.stringify(requiredRoles)}, บทบาทผู้ใช้: ${authStore.user?.role}`);
+      toast.error('คุณไม่มีสิทธิ์เข้าถึงหน้านี้!');
+      next({ name: 'home' }); // นำทางกลับไปหน้า Home
     }
+  }
+  // กรณีอื่นๆ (Public Routes หรือ Protected Routes ที่ผ่านเงื่อนไขแล้ว)
+  else {
+    console.log('Guard: ดำเนินการต่อ.');
+    next();
   }
 });
 
