@@ -1,5 +1,4 @@
 // src/router/index.ts
-
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router';
 import HomeView from '@/views/HomeView.vue';
 import { useAuthStore } from '@/stores/auth';

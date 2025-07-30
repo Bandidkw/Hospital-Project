@@ -15,13 +15,7 @@
           <i class="fab fa-facebook-f"></i>
         </a>
         <a href="#" class="text-white hover:text-blue-200 transition duration-300">
-          <i class="fab fa-twitter"></i>
-        </a>
-        <a href="#" class="text-white hover:text-blue-200 transition duration-300">
           <i class="fab fa-line"></i>
-        </a>
-        <a href="#" target="_blank" class="text-white hover:text-blue-200 transition duration-300">
-          <i class="fab fa-youtube"></i>
         </a>
       </div>
     </div>

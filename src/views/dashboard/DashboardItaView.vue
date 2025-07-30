@@ -1,3 +1,4 @@
+<!-- DashboardItaView.vue -->
 <template>
   <div class="p-6 bg-white rounded-lg shadow-md">
     <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
@@ -7,20 +8,23 @@
       หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบเอกสารการประเมินคุณธรรมและความโปร่งใส (ITA).
     </p>
 
-    <!-- ส่วนฟอร์มเพิ่ม/แก้ไขเอกสาร -->
-    <!-- แสดงฟอร์มนี้เฉพาะ Admin และ SuperAdmin เท่านั้น -->
-    <div v-if="authStore.isAdmin || authStore.isSuperAdmin" class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
+    <div
+      v-if="authStore.isAdmin || authStore.isSuperAdmin"
+      class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8"
+    >
       <h3 class="text-xl font-semibold text-gray-800 mb-4">
         {{ editingDocument ? 'แก้ไขเอกสาร ITA' : 'เพิ่มเอกสาร ITA ใหม่' }}
       </h3>
       <form @submit.prevent="saveITADocument" class="space-y-4">
         <div>
-          <label for="documentTitle" class="block text-sm font-medium text-gray-700">ชื่อเอกสาร:</label>
+          <label for="documentTitle" class="block text-sm font-medium text-gray-700"
+            >ชื่อเอกสาร:</label
+          >
           <input
             type="text"
             id="documentTitle"
             v-model="currentDocument.title"
-            :readonly="authStore.isUser" <!-- User เป็น Read-Only -->
+            :readonly="authStore.isUser"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
             required
@@ -28,11 +32,13 @@
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label for="documentYear" class="block text-sm font-medium text-gray-700">ปีงบประมาณ:</label>
+            <label for="documentYear" class="block text-sm font-medium text-gray-700"
+              >ปีงบประมาณ:</label
+            >
             <select
               id="documentYear"
               v-model="currentDocument.year"
-              :disabled="authStore.isUser" <!-- User เป็น Read-Only -->
+              :disabled="authStore.isUser"
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
               :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
               required
@@ -42,11 +48,13 @@
             </select>
           </div>
           <div>
-            <label for="documentQuarter" class="block text-sm font-medium text-gray-700">ไตรมาส:</label>
+            <label for="documentQuarter" class="block text-sm font-medium text-gray-700"
+              >ไตรมาส:</label
+            >
             <select
               id="documentQuarter"
               v-model="currentDocument.quarter"
-              :disabled="authStore.isUser" <!-- User เป็น Read-Only -->
+              :disabled="authStore.isUser"
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
               :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
               required
@@ -60,11 +68,13 @@
           </div>
         </div>
         <div>
-          <label for="documentTopic" class="block text-sm font-medium text-gray-700">หัวข้อ ITA (MOIT):</label>
+          <label for="documentTopic" class="block text-sm font-medium text-gray-700"
+            >หัวข้อ ITA (MOIT):</label
+          >
           <select
             id="documentTopic"
             v-model="currentDocument.topic"
-            :disabled="authStore.isUser" <!-- User เป็น Read-Only -->
+            :disabled="authStore.isUser"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
             required
@@ -74,11 +84,13 @@
           </select>
         </div>
         <div>
-          <label for="documentSubTopic" class="block text-sm font-medium text-gray-700">หัวข้อย่อย (ประเภทเอกสาร):</label>
+          <label for="documentSubTopic" class="block text-sm font-medium text-gray-700"
+            >หัวข้อย่อย (ประเภทเอกสาร):</label
+          >
           <select
             id="documentSubTopic"
             v-model="currentDocument.subTopic"
-            :disabled="authStore.isUser" <!-- User เป็น Read-Only -->
+            :disabled="authStore.isUser"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
           >
@@ -93,23 +105,27 @@
           </select>
         </div>
         <div>
-          <label for="documentDescription" class="block text-sm font-medium text-gray-700">คำอธิบาย (Optional):</label>
+          <label for="documentDescription" class="block text-sm font-medium text-gray-700"
+            >คำอธิบาย (Optional):</label
+          >
           <textarea
             id="documentDescription"
             v-model="currentDocument.description"
-            :readonly="authStore.isUser" <!-- User เป็น Read-Only -->
+            :readonly="authStore.isUser"
             rows="3"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
           ></textarea>
         </div>
         <div>
-          <label for="documentUrl" class="block text-sm font-medium text-gray-700">URL ไฟล์เอกสาร (PDF/Doc):</label>
+          <label for="documentUrl" class="block text-sm font-medium text-gray-700"
+            >URL ไฟล์เอกสาร (PDF/Doc):</label
+          >
           <input
             type="url"
             id="documentUrl"
             v-model="currentDocument.url"
-            :readonly="authStore.isUser" <!-- User เป็น Read-Only -->
+            :readonly="authStore.isUser"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
             placeholder="เช่น https://example.com/document.pdf"
@@ -120,7 +136,6 @@
           </p>
         </div>
         <div class="flex justify-end space-x-3">
-          <!-- ปุ่มบันทึก/แก้ไข - แสดงเฉพาะ Admin และ SuperAdmin -->
           <button
             type="submit"
             v-if="authStore.isAdmin || authStore.isSuperAdmin"
@@ -129,7 +144,6 @@
             <i class="fas fa-save mr-2"></i>
             {{ editingDocument ? 'บันทึกการแก้ไข' : 'เพิ่มเอกสาร' }}
           </button>
-          <!-- ปุ่มยกเลิก - แสดงเฉพาะ Admin และ SuperAdmin ถ้ากำลังแก้ไข -->
           <button
             v-if="editingDocument && (authStore.isAdmin || authStore.isSuperAdmin)"
             type="button"
@@ -142,7 +156,6 @@
       </form>
     </div>
 
-    <!-- ส่วนแสดงรายการเอกสาร ITA -->
     <div class="card bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการเอกสาร ITA</h3>
       <div class="overflow-x-auto">
@@ -154,7 +167,7 @@
               <th class="py-3 px-6 text-left">ไตรมาส</th>
               <th class="py-3 px-6 text-left">หัวข้อ MOIT</th>
               <th class="py-3 px-6 text-left">หัวข้อย่อย</th>
-              <th class="py-3 px-6 text-center" v-if="authStore.isAdmin || authStore.isSuperAdmin">การจัดการ</th> <!-- แสดงคอลัมน์นี้เฉพาะ Admin/SuperAdmin -->
+              <th class="py-3 px-6 text-center">การจัดการ</th>
             </tr>
           </thead>
           <tbody class="text-gray-600 text-sm font-light">
@@ -176,7 +189,7 @@
               <td class="py-3 px-6 text-left">{{ doc.quarter }}</td>
               <td class="py-3 px-6 text-left">{{ doc.topic }}</td>
               <td class="py-3 px-6 text-left">{{ doc.subTopic || '-' }}</td>
-              <td class="py-3 px-6 text-center" v-if="authStore.isAdmin || authStore.isSuperAdmin"> <!-- แสดงปุ่มเฉพาะ Admin/SuperAdmin -->
+              <td class="py-3 px-6 text-center">
                 <button
                   @click="editITADocument(doc)"
                   v-if="authStore.isAdmin || authStore.isSuperAdmin"
@@ -186,7 +199,7 @@
                 </button>
                 <button
                   @click="confirmDeleteITADocument(doc.id)"
-                  v-if="authStore.isSuperAdmin" <!-- เฉพาะ SuperAdmin ที่ลบได้ -->
+                  v-if="authStore.isSuperAdmin"
                   class="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
                 >
                   <i class="fas fa-trash-alt"></i> ลบ
@@ -194,14 +207,15 @@
               </td>
             </tr>
             <tr v-if="itaDocuments.length === 0">
-              <td :colspan="authStore.isAdmin || authStore.isSuperAdmin ? 6 : 5" class="py-8 text-center text-gray-500">ยังไม่มีเอกสาร ITA ในระบบ.</td>
+              <td :colspan="6" class="py-8 text-center text-gray-500">
+                ยังไม่มีเอกสาร ITA ในระบบ.
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Modal ยืนยันการลบ -->
     <div
       v-if="showConfirmModal"
       class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
@@ -231,11 +245,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import { useAuthStore } from '@/stores/auth'; // <--- นำเข้า Auth Store
+import { useAuthStore } from '@/stores/auth'
 
 const toast = useToast()
-const authStore = useAuthStore(); // <--- เรียกใช้ Auth Store
+const authStore = useAuthStore()
 
+// กำหนด Interface สำหรับโครงสร้างข้อมูลเอกสาร ITA
 interface ITADocument {
   id: number
   title: string
@@ -247,6 +262,7 @@ interface ITADocument {
   url: string
 }
 
+// ข้อมูลจำลองของเอกสาร ITA
 const itaDocuments = ref<ITADocument[]>([
   {
     id: 1,
@@ -311,7 +327,7 @@ const itaDocuments = ref<ITADocument[]>([
   },
 ])
 
-// List of predefined ITA topics for the main topic dropdown
+// รายการหัวข้อ ITA (MOIT)
 const itaTopics = ref([
   'MOIT 1 หน่วยงานมีการวางระบบโดยการกำหนดมาตรการการเผยแพร่ข้อมูลต่อสาธารณะ ผ่านเว็บไซต์ของหน่วยงาน',
   'MOIT 2 หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
@@ -337,10 +353,11 @@ const itaTopics = ref([
   'MOIT 22 หน่วยงานมีแนวปฏิบัติที่เคารพสิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงาน และรายงานการป้องกันและแก้ไขปัญหาการล่วงละเมิดหรือคุกคามทางเพศในการทำงาน ประจำปีงบประมาณ',
 ])
 
+// สถานะของเอกสารปัจจุบันที่กำลังเพิ่มหรือแก้ไข
 const currentDocument = ref<ITADocument>({
   id: 0,
   title: '',
-  year: new Date().getFullYear() + 543,
+  year: new Date().getFullYear() + 543, // กำหนดปีเริ่มต้นเป็นปีปัจจุบันในพุทธศักราช
   quarter: '1',
   topic: '',
   subTopic: '',
@@ -348,12 +365,20 @@ const currentDocument = ref<ITADocument>({
   url: '',
 })
 
+// สถานะการแก้ไขเอกสาร (true ถ้ากำลังแก้ไข, false ถ้ากำลังเพิ่มใหม่)
 const editingDocument = ref(false)
+// ID ของเอกสารที่ต้องการลบ
 const documentToDeleteId = ref<number | null>(null)
+// สถานะการแสดง Modal ยืนยันการลบ
 const showConfirmModal = ref(false)
 
+/**
+ * @function getYearsList
+ * @description สร้างรายการปีงบประมาณสำหรับ Dropdown โดยเริ่มจาก 2 ปีข้างหน้าถึง 5 ปีที่ผ่านมา (พุทธศักราช)
+ * @returns {number[]} อาร์เรย์ของปีงบประมาณ
+ */
 const getYearsList = () => {
-  const currentYear = new Date().getFullYear() + 543
+  const currentYear = new Date().getFullYear() + 543 // แปลงเป็นพุทธศักราช
   const years = []
   for (let i = currentYear + 2; i >= currentYear - 5; i--) {
     years.push(i)
@@ -361,84 +386,122 @@ const getYearsList = () => {
   return years
 }
 
+/**
+ * @computed sortedITADocuments
+ * @description Computed property สำหรับเรียงลำดับเอกสาร ITA ตามปี (จากมากไปน้อย) และไตรมาส (จากน้อยไปมาก)
+ * @returns {ITADocument[]} อาร์เรย์ของเอกสาร ITA ที่เรียงลำดับแล้ว
+ */
 const sortedITADocuments = computed(() => {
   const quarterOrder: { [key: string]: number } = { '1': 1, '2': 2, '3': 3, '4': 4 }
   return [...itaDocuments.value].sort((a, b) => {
+    // เรียงตามปีจากมากไปน้อย
     if (b.year !== a.year) {
       return b.year - a.year
     }
+    // ถ้าปีเท่ากัน ให้เรียงตามไตรมาสจากน้อยไปมาก
     const aQuarterValue = quarterOrder[a.quarter] || 0
     const bQuarterValue = quarterOrder[b.quarter] || 0
     return aQuarterValue - bQuarterValue
   })
 })
 
+/**
+ * @function saveITADocument
+ * @description บันทึกหรือแก้ไขเอกสาร ITA ลงในรายการ
+ * - หากอยู่ในโหมดแก้ไข จะอัปเดตเอกสารที่มีอยู่
+ * - หากอยู่ในโหมดเพิ่มใหม่ จะเพิ่มเอกสารใหม่และกำหนด ID
+ * - แสดง Toast Notification เพื่อยืนยันการดำเนินการ
+ */
 const saveITADocument = () => {
-  // ป้องกันการบันทึกสำหรับ User
   if (authStore.isUser) {
-    toast.error('คุณไม่มีสิทธิ์ในการบันทึกข้อมูล');
-    return;
+    toast.error('คุณไม่มีสิทธิ์ในการบันทึกข้อมูล')
+    return
   }
 
-  // Logic การบันทึกข้อมูล (เพิ่ม/แก้ไข)
   if (editingDocument.value) {
+    // โหมดแก้ไข: ค้นหาเอกสารและอัปเดตข้อมูล
     const index = itaDocuments.value.findIndex((doc) => doc.id === currentDocument.value.id)
     if (index !== -1) {
       itaDocuments.value[index] = { ...currentDocument.value }
     }
     toast.success('แก้ไขเอกสาร ITA สำเร็จ!')
   } else {
+    // โหมดเพิ่มใหม่: กำหนด ID และเพิ่มเอกสารเข้าในอาร์เรย์
     currentDocument.value.id =
       itaDocuments.value.length > 0 ? Math.max(...itaDocuments.value.map((doc) => doc.id)) + 1 : 1
     itaDocuments.value.push({ ...currentDocument.value })
     toast.success('เพิ่มเอกสาร ITA ใหม่สำเร็จ!')
   }
-  resetForm()
+  resetForm() // รีเซ็ตฟอร์มหลังจากบันทึก
 }
 
+/**
+ * @function editITADocument
+ * @description ตั้งค่าฟอร์มเพื่อแก้ไขเอกสาร ITA ที่เลือก
+ * @param {ITADocument} doc - เอกสาร ITA ที่ต้องการแก้ไข
+ */
 const editITADocument = (doc: ITADocument) => {
-  // ผู้ใช้ (User) ไม่สามารถแก้ไขได้
   if (authStore.isUser) {
-    toast.error('คุณไม่มีสิทธิ์ในการแก้ไขข้อมูล');
-    return;
+    toast.error('คุณไม่มีสิทธิ์ในการแก้ไขข้อมูล')
+    return
   }
-  currentDocument.value = { ...doc }
-  editingDocument.value = true
+  currentDocument.value = { ...doc } // คัดลอกข้อมูลเอกสารมายัง currentDocument
+  editingDocument.value = true // ตั้งค่าสถานะเป็นโหมดแก้ไข
 }
 
+/**
+ * @function cancelEdit
+ * @description ยกเลิกการแก้ไขและรีเซ็ตฟอร์ม
+ */
 const cancelEdit = () => {
   resetForm()
 }
 
+/**
+ * @function confirmDeleteITADocument
+ * @description เปิด Modal ยืนยันการลบและเก็บ ID ของเอกสารที่ต้องการลบ
+ * @param {number} id - ID ของเอกสาร ITA ที่ต้องการลบ
+ */
 const confirmDeleteITADocument = (id: number) => {
-  // ป้องกันการลบสำหรับ Admin และ User
-  if (!authStore.isSuperAdmin) { // เฉพาะ SuperAdmin เท่านั้นที่ลบได้
-    toast.error('คุณไม่มีสิทธิ์ในการลบข้อมูล');
-    return;
+  if (!authStore.isSuperAdmin) {
+    toast.error('คุณไม่มีสิทธิ์ในการลบข้อมูล')
+    return
   }
   documentToDeleteId.value = id
   showConfirmModal.value = true
 }
 
+/**
+ * @function deleteITADocument
+ * @description ลบเอกสาร ITA ออกจากรายการหลังจากยืนยัน
+ * - แสดง Toast Notification เพื่อยืนยันการดำเนินการ
+ */
 const deleteITADocument = () => {
-  // ป้องกันการลบสำหรับ Admin และ User (ซ้ำอีกครั้งเพื่อความปลอดภัย)
   if (!authStore.isSuperAdmin) {
-    toast.error('คุณไม่มีสิทธิ์ในการลบข้อมูล');
-    resetDeleteConfirm(); // ปิด modal หากไม่มีสิทธิ์
-    return;
+    toast.error('คุณไม่มีสิทธิ์ในการลบข้อมูล')
+    resetDeleteConfirm() // ปิด modal แม้ไม่มีสิทธิ์
+    return
   }
 
   if (documentToDeleteId.value !== null) {
     itaDocuments.value = itaDocuments.value.filter((doc) => doc.id !== documentToDeleteId.value)
     toast.success('ลบเอกสาร ITA สำเร็จ!')
   }
-  resetDeleteConfirm()
+  resetDeleteConfirm() // รีเซ็ตสถานะการลบและปิด Modal
 }
 
+/**
+ * @function cancelDelete
+ * @description ยกเลิกการลบและปิด Modal ยืนยัน
+ */
 const cancelDelete = () => {
   resetDeleteConfirm()
 }
 
+/**
+ * @function resetForm
+ * @description รีเซ็ตค่าในฟอร์มกลับสู่สถานะเริ่มต้น
+ */
 const resetForm = () => {
   currentDocument.value = {
     id: 0,
@@ -450,9 +513,13 @@ const resetForm = () => {
     description: '',
     url: '',
   }
-  editingDocument.value = false
+  editingDocument.value = false // ตั้งค่าสถานะเป็นโหมดเพิ่มใหม่
 }
 
+/**
+ * @function resetDeleteConfirm
+ * @description รีเซ็ตสถานะที่เกี่ยวข้องกับการยืนยันการลบ (ID เอกสารและสถานะ Modal)
+ */
 const resetDeleteConfirm = () => {
   documentToDeleteId.value = null
   showConfirmModal.value = false
