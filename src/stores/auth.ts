@@ -19,7 +19,7 @@ const ROLE_MAPPING: { [key: number]: string } = {
 };
 
 // VITE_API_BASE_URL มาจากไฟล์ .env.development
-const API_BASE_URL = 'https://test-hospital-project-backend.wnimqo.easypanel.host';
+const API_BASE_URL = 'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1/';
 console.log('API_BASE_URL loaded from .env:', API_BASE_URL);
 
 export const useAuthStore = defineStore('auth', () => {
