@@ -81,32 +81,6 @@
               ยกเลิก
             </button>
           </div>
-          <div v-if="!isProduction" class="mt-6 pt-4 border-t border-gray-200">
-            <h4 class="text-md font-semibold text-gray-700 mb-2">Dev Login (สำหรับทดสอบ)</h4>
-            <div class="flex justify-around space-x-2">
-              <button
-                type="button"
-                @click="handleDevLogin('user')"
-                class="bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded"
-              >
-                เข้าสู่ระบบ User
-              </button>
-              <button
-                type="button"
-                @click="handleDevLogin('admin')"
-                class="bg-purple-500 hover:bg-purple-700 text-white text-xs font-bold py-2 px-3 rounded"
-              >
-                เข้าสู่ระบบ Admin
-              </button>
-              <button
-                type="button"
-                @click="handleDevLogin('superadmin')"
-                class="bg-indigo-500 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-3 rounded"
-              >
-                เข้าสู่ระบบ SuperAdmin
-              </button>
-            </div>
-          </div>
         </form>
       </div>
     </div>
