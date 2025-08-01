@@ -5,7 +5,7 @@
     @click.self="closeModal"
   >
     <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
-      <h2 class="text-2xl font-bold mb-4 text-center text-my-custom-gray">
+      <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">
         {{ authStore.isAuthenticated ? 'ข้อมูลผู้ใช้งาน' : 'เข้าสู่ระบบ' }}
       </h2>
 
@@ -30,7 +30,7 @@
       <div v-else>
         <form @submit.prevent="submitLogin">
           <div class="mb-4">
-            <label for="username" class="block text-my-custom-gray text-sm font-bold mb-2"
+            <label for="username" class="block text-gray-800 text-sm font-bold mb-2"
               >ชื่อผู้ใช้งาน:</label
             >
             <input
@@ -42,7 +42,7 @@
             />
           </div>
           <div class="mb-6">
-            <label for="password" class="block text-my-custom-gray text-sm font-bold mb-2"
+            <label for="password" class="block text-gray-800 text-sm font-bold mb-2"
               >รหัสผ่าน:</label
             >
             <div class="relative">
@@ -82,6 +82,20 @@
             </button>
           </div>
         </form>
+
+        <!-- Dev Login Buttons (ONLY IN DEVELOPMENT) -->
+        <div v-if="!isProduction" class="mt-6 pt-4 border-t border-gray-200">
+          <button
+            @click="handleDevLogin('superadmin')"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out mb-2"
+          >
+            เข้าสู่ระบบในฐานะ SuperAdmin
+          </button>
+          <p class="text-yellow-600 text-xs mt-3 text-center">
+            <span class="font-bold">**คำเตือน:**</span>
+            ฟังก์ชันนี้จะใช้งานได้เฉพาะในโหมดพัฒนาเท่านั้น
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -103,6 +117,8 @@ const authStore = useAuthStore()
 const toast = useToast()
 const router = useRouter()
 
+// Check if the application is running in production mode
+// This is a standard way to check environment variables in Vite/Vue CLI
 const isProduction = import.meta.env.PROD
 
 const username = ref('')
@@ -159,11 +175,16 @@ const submitLogin = async () => {
   }
 }
 
+// New handler for Dev Login buttons
 const handleDevLogin = async (role: 'user' | 'admin' | 'superadmin') => {
-  const success = await authStore.devLogin(role)
+  isLoading.value = true // Set loading state for dev login
+  const success = await authStore.devLogin(role) // Call the new devLogin method in your store
+  isLoading.value = false // Reset loading state
+
   if (success) {
     toast.success(`เข้าสู่ระบบในฐานะ ${role} สำเร็จ!`)
-    if (role === 'admin' || role === 'superadmin') {
+    // Redirect based on role, similar to regular login
+    if (authStore.isAdmin || authStore.isSuperAdmin) {
       router.push('/dashboard').catch((err) => {
         console.error('เกิดข้อผิดพลาดในการนำทางไป Dashboard (Dev Login):', err)
       })
@@ -172,7 +193,7 @@ const handleDevLogin = async (role: 'user' | 'admin' | 'superadmin') => {
         console.error('เกิดข้อผิดพลาดในการนำทางไป Home (Dev Login):', err)
       })
     }
-    closeModal()
+    closeModal() // Close the modal after successful dev login
   } else {
     toast.error('Dev Login ไม่สำเร็จ')
   }
@@ -198,4 +219,7 @@ watch(
 )
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Tailwind CSS classes are used directly in the template.
+   You can add custom styles here if needed. */
+</style>
