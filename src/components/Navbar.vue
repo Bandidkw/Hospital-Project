@@ -170,6 +170,7 @@
               target="_blank"
               class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
               @click="closeAllDropdowns()"
+              เจ้าหน้าที่
             >
               <i class="fas fa-link"></i><span>บริการเสริม 1</span>
             </a>
