@@ -30,7 +30,7 @@
             <i class="fas fa-folder mr-2"></i> จัดการเนื้อหา
           </div>
         </li>
-        <!-- ข่าวสาร - เฉพาะ Admin และ SuperAdmin -->
+        <!-- ข่าวสาร - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/news"
@@ -41,7 +41,7 @@
             <span class="text-gray-300">ข่าวสาร</span>
           </RouterLink>
         </li>
-        <!-- หมวดหมู่ - เฉพาะ Admin และ SuperAdmin -->
+        <!-- หมวดหมู่ - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/categories"

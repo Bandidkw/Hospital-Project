@@ -149,7 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
     profileError.value = null; // เคลียร์ error เก่าก่อนเริ่ม
 
     try {
-      const response = await apiService.get('/users/profile'); // เปลี่ยน Endpoint ตาม Backend ของคุณ
+      const response = await apiService.get('/profile'); // เปลี่ยน Endpoint ตาม Backend ของคุณ
       const backendUser = response.data.data; // สมมติว่าข้อมูลผู้ใช้อยู่ใน response.data.data
 
       if (backendUser) {
