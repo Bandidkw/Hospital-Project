@@ -39,10 +39,15 @@
       </div>
     </div>
 
-    <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
+    <!-- ส่วน "การดำเนินการด่วน" - แสดงเฉพาะผู้ดูแลระบบและผู้ดูแลระบบสูงสุดเท่านั้น -->
+    <div
+      v-if="authStore.isAdmin || authStore.isSuperAdmin"
+      class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8"
+    >
       <h3 class="text-xl font-semibold text-gray-800 mb-4">การดำเนินการด่วน</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
+          v-if="authStore.isSuperAdmin"
           @click="quickAction('add_news')"
           class="bg-indigo-500 text-white p-4 rounded-lg shadow hover:bg-indigo-600 transition duration-300 flex items-center justify-center"
         >
@@ -55,6 +60,7 @@
           <i class="fas fa-upload mr-2"></i> อัปโหลดเอกสาร ITA
         </button>
         <button
+          v-if="authStore.isSuperAdmin"
           @click="quickAction('view_reports')"
           class="bg-orange-500 text-white p-4 rounded-lg shadow hover:bg-orange-600 transition duration-300 flex items-center justify-center"
         >
@@ -63,10 +69,27 @@
       </div>
     </div>
 
+    <!-- ส่วน "การดำเนินการด่วน" สำหรับผู้ใช้ทั่วไป - ตัวอย่างสิ่งที่พวกเขาอาจเห็น -->
+    <div v-else-if="authStore.isUser" class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">เข้าถึงส่วนที่ได้รับอนุญาต</h3>
+      <p class="text-gray-700">คุณมีสิทธิ์เข้าถึงข้อมูลเบื้องต้นของระบบ</p>
+      <!-- คุณสามารถเพิ่มปุ่มเฉพาะสำหรับผู้ใช้ทั่วไปได้ที่นี่ -->
+      <button
+        @click="quickAction('view_my_docs')"
+        class="bg-green-500 text-white p-4 rounded-lg shadow hover:bg-green-600 transition duration-300 flex items-center justify-center mt-4"
+      >
+        <i class="fas fa-folder-open mr-2"></i> ดูเอกสารส่วนตัว
+      </button>
+    </div>
+
     <div class="card bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">กิจกรรมล่าสุด</h3>
+      <!-- ตัวอย่างการแสดงผลแบบมีเงื่อนไขสำหรับรายการเฉพาะ -->
       <ul class="space-y-3">
-        <li class="flex items-center text-gray-700">
+        <li
+          v-if="authStore.isAdmin || authStore.isSuperAdmin"
+          class="flex items-center text-gray-700"
+        >
           <i class="fas fa-check-circle text-green-500 mr-3"></i>
           <span
             ><span class="font-semibold">Admin</span> ได้เพิ่มข่าวสารใหม่:
@@ -96,25 +119,51 @@
 </template>
 
 <script setup lang="ts">
-import { useToast } from 'vue-toastification' // นำเข้า useToast
-import { useRouter } from 'vue-router' // นำเข้า useRouter
+import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-const toast = useToast() // สร้าง instance ของ toast
+const authStore = useAuthStore()
+const toast = useToast()
 const router = useRouter()
 
 const quickAction = (action: string) => {
   switch (action) {
     case 'add_news':
-      toast.info('กำลังนำทางไปยังหน้าเพิ่มข่าวสาร...')
-      router.push({ name: 'dashboard-news' })
+      // ตรวจสอบบทบาทก่อนอนุญาตให้ดำเนินการ
+      if (authStore.isSuperAdmin) {
+        toast.info('กำลังนำทางไปยังหน้าเพิ่มข่าวสาร...')
+        router.push({ name: 'dashboard-news' })
+      } else {
+        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
+      }
       break
     case 'upload_ita':
-      toast.info('กำลังนำทางไปยังหน้าจัดการเอกสาร ITA...')
-      router.push({ name: 'dashboard-ita' })
+      // ตรวจสอบบทบาทก่อนอนุญาตให้ดำเนินการ
+      if (authStore.isAdmin || authStore.isSuperAdmin) {
+        toast.info('กำลังนำทางไปยังหน้าจัดการเอกสาร ITA...')
+        router.push({ name: 'dashboard-ita' })
+      } else {
+        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
+      }
       break
     case 'view_reports':
-      toast.info('กำลังนำทางไปยังหน้าดูรายงานสถิติ...')
-      router.push({ name: 'dashboard-statistics' })
+      // ตรวจสอบบทบาทก่อนอนุญาตให้ดำเนินการ
+      if (authStore.isSuperAdmin) {
+        toast.info('กำลังนำทางไปยังหน้าดูรายงานสถิติ...')
+        router.push({ name: 'dashboard-statistics' })
+      } else {
+        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
+      }
+      break
+    case 'view_my_docs':
+      // ตรวจสอบบทบาทสำหรับผู้ใช้ทั่วไป
+      if (authStore.isUser) {
+        toast.info('กำลังนำทางไปยังหน้าเอกสารส่วนตัว...')
+        router.push({ name: 'user-docs' }) // สมมติว่าคุณมี route ชื่อ 'user-docs'
+      } else {
+        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
+      }
       break
     default:
       toast.error('การดำเนินการไม่ถูกต้อง!')
