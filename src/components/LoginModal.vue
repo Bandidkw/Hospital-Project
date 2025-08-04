@@ -5,8 +5,14 @@
     @click.self="closeModal"
   >
     <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
-      <h2 class="text-2xl font-bold mb-4 text-center text-my-custom-gray">
-        {{ authStore.isAuthenticated ? 'ข้อมูลผู้ใช้งาน' : 'เข้าสู่ระบบ' }}
+      <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">
+        {{
+          authStore.isAuthenticated
+            ? 'ข้อมูลผู้ใช้งาน'
+            : isForgotPasswordMode
+              ? 'รีเซ็ตรหัสผ่าน'
+              : 'เข้าสู่ระบบ'
+        }}
       </h2>
 
       <div v-if="authStore.isAuthenticated" class="text-center">
@@ -28,9 +34,10 @@
       </div>
 
       <div v-else>
-        <form @submit.prevent="submitLogin">
+        <!-- Login Form -->
+        <form v-if="!isForgotPasswordMode" @submit.prevent="submitLogin">
           <div class="mb-4">
-            <label for="username" class="block text-my-custom-gray text-sm font-bold mb-2"
+            <label for="username" class="block text-gray-800 text-sm font-bold mb-2"
               >ชื่อผู้ใช้งาน:</label
             >
             <input
@@ -42,7 +49,7 @@
             />
           </div>
           <div class="mb-6">
-            <label for="password" class="block text-my-custom-gray text-sm font-bold mb-2"
+            <label for="password" class="block text-gray-800 text-sm font-bold mb-2"
               >รหัสผ่าน:</label
             >
             <div class="relative">
@@ -81,33 +88,75 @@
               ยกเลิก
             </button>
           </div>
-          <div v-if="!isProduction" class="mt-6 pt-4 border-t border-gray-200">
-            <h4 class="text-md font-semibold text-gray-700 mb-2">Dev Login (สำหรับทดสอบ)</h4>
-            <div class="flex justify-around space-x-2">
-              <button
-                type="button"
-                @click="handleDevLogin('user')"
-                class="bg-green-500 hover:bg-green-700 text-white text-xs font-bold py-2 px-3 rounded"
-              >
-                เข้าสู่ระบบ User
-              </button>
-              <button
-                type="button"
-                @click="handleDevLogin('admin')"
-                class="bg-purple-500 hover:bg-purple-700 text-white text-xs font-bold py-2 px-3 rounded"
-              >
-                เข้าสู่ระบบ Admin
-              </button>
-              <button
-                type="button"
-                @click="handleDevLogin('superadmin')"
-                class="bg-indigo-500 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-3 rounded"
-              >
-                เข้าสู่ระบบ SuperAdmin
-              </button>
-            </div>
+          <div class="text-center mt-4">
+            <a
+              href="#"
+              @click.prevent="isForgotPasswordMode = true"
+              class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+            >
+              ลืมรหัสผ่าน?
+            </a>
           </div>
         </form>
+
+        <!-- Forgot Password Form -->
+        <form v-else @submit.prevent="submitForgotPassword">
+          <p class="text-sm text-gray-600 mb-4 text-center">
+            กรุณากรอกอีเมลของคุณ เราจะส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปให้
+          </p>
+          <div class="mb-4">
+            <label for="email" class="block text-gray-800 text-sm font-bold mb-2">อีเมล:</label>
+            <input
+              type="email"
+              id="email"
+              v-model="resetEmail"
+              class="shadow appearance-none border border-gray-700 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              required
+            />
+          </div>
+          <p v-if="resetError" class="text-red-500 text-xs italic mb-4">
+            {{ resetError }}
+          </p>
+          <div class="flex items-center justify-between">
+            <button
+              type="submit"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              :disabled="isLoading"
+            >
+              {{ isLoading ? 'กำลังส่งคำขอ...' : 'ส่งคำขอรีเซ็ต' }}
+            </button>
+            <button
+              type="button"
+              @click="((isForgotPasswordMode = false), (resetError = null))"
+              class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              กลับ
+            </button>
+          </div>
+        </form>
+
+        <!-- Dev Login Buttons (ONLY IN DEVELOPMENT) -->
+        <div
+          v-if="!isProduction && !isForgotPasswordMode"
+          class="mt-6 pt-4 border-t border-gray-200"
+        >
+          <button
+            @click="handleDevLogin('admin')"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out mb-2"
+          >
+            เข้าสู่ระบบในฐานะ Admin
+          </button>
+          <button
+            @click="handleDevLogin('superadmin')"
+            class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out mb-2"
+          >
+            เข้าสู่ระบบในฐานะ SuperAdmin
+          </button>
+          <p class="text-yellow-600 text-xs mt-3 text-center">
+            <span class="font-bold">**คำเตือน:**</span>
+            ฟังก์ชันนี้จะใช้งานได้เฉพาะในโหมดพัฒนาเท่านั้น
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -136,6 +185,11 @@ const password = ref('')
 const isLoading = ref(false)
 const showPassword = ref(false)
 
+// New state for Forgot Password functionality
+const isForgotPasswordMode = ref(false)
+const resetEmail = ref('')
+const resetError = ref<string | null>(null)
+
 const toggleShowPassword = () => {
   showPassword.value = !showPassword.value
 }
@@ -146,6 +200,9 @@ const closeModal = () => {
   password.value = ''
   authStore.loginError = null
   showPassword.value = false
+  isForgotPasswordMode.value = false // Reset mode when closing
+  resetEmail.value = '' // Clear email for reset
+  resetError.value = null // Clear reset error
 }
 
 const submitLogin = async () => {
@@ -185,11 +242,46 @@ const submitLogin = async () => {
   }
 }
 
+// New function for Forgot Password submission
+const submitForgotPassword = async () => {
+  if (!resetEmail.value) {
+    resetError.value = 'กรุณากรอกอีเมล'
+    return
+  }
+
+  isLoading.value = true
+  resetError.value = null // Clear previous errors
+
+  try {
+    // This assumes you will add a `requestPasswordReset` action to your authStore
+    // which makes an API call to your backend.
+    const success = await authStore.requestPasswordReset(resetEmail.value)
+
+    if (success) {
+      toast.success('ส่งคำขอรีเซ็ตรหัสผ่านสำเร็จ! กรุณาตรวจสอบอีเมลของคุณ')
+      closeModal() // Close modal after successful request
+    } else {
+      // The authStore.requestPasswordReset should set an error message if failed
+      resetError.value = authStore.loginError || 'ไม่สามารถส่งคำขอรีเซ็ตรหัสผ่านได้'
+      toast.error(resetError.value)
+    }
+  } catch (error: any) {
+    console.error('Error requesting password reset:', error)
+    resetError.value = error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ'
+    toast.error(resetError.value)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const handleDevLogin = async (role: 'user' | 'admin' | 'superadmin') => {
+  isLoading.value = true
   const success = await authStore.devLogin(role)
+  isLoading.value = false
+
   if (success) {
     toast.success(`เข้าสู่ระบบในฐานะ ${role} สำเร็จ!`)
-    if (role === 'admin' || role === 'superadmin') {
+    if (authStore.isAdmin || authStore.isSuperAdmin) {
       router.push('/dashboard').catch((err) => {
         console.error('เกิดข้อผิดพลาดในการนำทางไป Dashboard (Dev Login):', err)
       })
@@ -219,6 +311,9 @@ watch(
       password.value = ''
       authStore.loginError = null
       showPassword.value = false
+      isForgotPasswordMode.value = false // Ensure it resets to login mode when opened
+      resetEmail.value = ''
+      resetError.value = null
     }
   },
 )

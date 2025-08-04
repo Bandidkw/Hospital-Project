@@ -1,214 +1,250 @@
-<!-- DashboardItaView.vue -->
 <template>
-  <div class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-      <i class="fas fa-award mr-3 text-emerald-500"></i> จัดการเอกสาร ITA
-    </h2>
-    <p class="text-gray-700 mb-6">
-      หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบเอกสารการประเมินคุณธรรมและความโปร่งใส (ITA).
+  <div class="container mx-auto p-4 sm:p-6 lg:p-8 bg-white rounded-lg shadow-xl">
+    <h1
+      class="text-3xl sm:text-4xl font-extrabold text-blue-800 mb-4 border-b-4 border-blue-500 pb-2"
+    >
+      จัดการเอกสาร ITA
+    </h1>
+    <p class="text-gray-600 mb-8 text-lg">
+      เพิ่ม แก้ไข หรือลบเอกสาร ITA (การประเมินคุณธรรมและความโปร่งใส) สำหรับปีงบประมาณต่างๆ
     </p>
 
-    <div
-      v-if="authStore.isAdmin || authStore.isSuperAdmin"
-      class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8"
-    >
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">
+    <!-- ฟอร์มสำหรับเพิ่ม/แก้ไขเอกสาร ITA -->
+    <div class="bg-blue-50 p-6 rounded-lg shadow-md mb-8">
+      <h2 class="text-2xl font-semibold text-blue-700 mb-6">
         {{ editingDocument ? 'แก้ไขเอกสาร ITA' : 'เพิ่มเอกสาร ITA ใหม่' }}
-      </h3>
-      <form @submit.prevent="saveITADocument" class="space-y-4">
-        <div>
-          <label for="documentTitle" class="block text-sm font-medium text-gray-700"
-            >ชื่อเอกสาร:</label
-          >
-          <input
-            type="text"
-            id="documentTitle"
-            v-model="currentDocument.title"
-            :readonly="authStore.isUser"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
-            required
-          />
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label for="documentYear" class="block text-sm font-medium text-gray-700"
+      </h2>
+      <form @submit.prevent="saveITADocument">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="mb-4">
+            <label for="documentName" class="block text-gray-700 text-sm font-bold mb-2"
+              >ชื่อเอกสาร:</label
+            >
+            <input
+              type="text"
+              id="documentName"
+              v-model="currentDocument.name"
+              placeholder="เช่น รายงานผล ITA 2567"
+              class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div class="mb-4">
+            <label for="budgetYear" class="block text-gray-700 text-sm font-bold mb-2"
               >ปีงบประมาณ:</label
             >
             <select
-              id="documentYear"
+              id="budgetYear"
               v-model="currentDocument.year"
-              :disabled="authStore.isUser"
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-              :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
-              required
+              class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">-- เลือกปี --</option>
               <option v-for="year in getYearsList()" :key="year" :value="year">{{ year }}</option>
             </select>
           </div>
-          <div>
-            <label for="documentQuarter" class="block text-sm font-medium text-gray-700"
-              >ไตรมาส:</label
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="mb-4">
+            <label for="quarter" class="block text-gray-700 text-sm font-bold mb-2">ไตรมาส:</label>
+            <select
+              id="quarter"
+              v-model="currentDocument.quarter"
+              class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="Q1">ไตรมาส 1</option>
+              <option value="Q2">ไตรมาส 2</option>
+              <option value="Q3">ไตรมาส 3</option>
+              <option value="Q4">ไตรมาส 4</option>
+            </select>
+          </div>
+          <!-- หัวข้อ ITA (MOIT) สำหรับ Dropdown -->
+          <div class="mb-4">
+            <label for="moitTopic" class="block text-gray-700 text-sm font-bold mb-2"
+              >หัวข้อ ITA (MOIT):</label
             >
             <select
-              id="documentQuarter"
-              v-model="currentDocument.quarter"
-              :disabled="authStore.isUser"
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-              :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
-              required
+              id="moitTopic"
+              v-model="currentDocument.moitTopic"
+              @change="resetSubTopic"
+              class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">-- เลือกไตรมาส --</option>
-              <option value="1">ไตรมาส 1</option>
-              <option value="2">ไตรมาส 2</option>
-              <option value="3">ไตรมาส 3</option>
-              <option value="4">ไตรมาส 4</option>
+              <option v-for="topic in itaTopics" :key="topic.value" :value="topic.value">
+                {{ topic.shortText }}
+              </option>
             </select>
           </div>
         </div>
-        <div>
-          <label for="documentTopic" class="block text-sm font-medium text-gray-700"
-            >หัวข้อ ITA (MOIT):</label
+
+        <!-- หัวข้อย่อย / ประเภทเอกสาร (Dynamic Dropdown) -->
+        <div class="mb-4">
+          <label for="subTopic" class="block text-gray-700 text-sm font-bold mb-2"
+            >หัวข้อย่อย / ประเภทเอกสาร:</label
           >
           <select
-            id="documentTopic"
-            v-model="currentDocument.topic"
-            :disabled="authStore.isUser"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
-            required
-          >
-            <option value="">-- เลือกหัวข้อ MOIT --</option>
-            <option v-for="topic in itaTopics" :key="topic" :value="topic">{{ topic }}</option>
-          </select>
-        </div>
-        <div>
-          <label for="documentSubTopic" class="block text-sm font-medium text-gray-700"
-            >หัวข้อย่อย (ประเภทเอกสาร):</label
-          >
-          <select
-            id="documentSubTopic"
+            id="subTopic"
             v-model="currentDocument.subTopic"
-            :disabled="authStore.isUser"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
+            class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="">-- เลือกหัวข้อย่อย (ไม่บังคับ) --</option>
-            <option value="คำสั่ง">คำสั่ง</option>
-            <option value="ประกาศ">ประกาศ</option>
-            <option value="รายงานผล">รายงานผล</option>
-            <option value="แผนปฏิบัติการ">แผนปฏิบัติการ</option>
-            <option value="คู่มือ">คู่มือ</option>
-            <option value="แนวปฏิบัติ">แนวปฏิบัติ</option>
-            <option value="อื่นๆ">อื่นๆ</option>
+            <option value="">--- เลือกหัวข้อย่อย / ประเภทเอกสาร ---</option>
+            <option v-for="sub in availableSubTopics" :key="sub.value" :value="sub.value">
+              {{ sub.text }}
+            </option>
           </select>
         </div>
-        <div>
-          <label for="documentDescription" class="block text-sm font-medium text-gray-700"
-            >คำอธิบาย (Optional):</label
+
+        <div class="mb-4">
+          <label for="description" class="block text-gray-700 text-sm font-bold mb-2"
+            >คำอธิบาย:</label
           >
           <textarea
-            id="documentDescription"
+            id="description"
             v-model="currentDocument.description"
-            :readonly="authStore.isUser"
+            placeholder="คำอธิบายเพิ่มเติมเกี่ยวกับเอกสาร"
             rows="3"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
+            class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           ></textarea>
         </div>
-        <div>
-          <label for="documentUrl" class="block text-sm font-medium text-gray-700"
-            >URL ไฟล์เอกสาร (PDF/Doc):</label
+
+        <!-- อัปโหลดไฟล์เอกสาร -->
+        <div class="mb-6">
+          <label for="documentFile" class="block text-gray-700 text-sm font-bold mb-2"
+            >อัปโหลดไฟล์เอกสาร (PDF):</label
           >
           <input
-            type="url"
-            id="documentUrl"
-            v-model="currentDocument.url"
-            :readonly="authStore.isUser"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            :class="{ 'bg-gray-100 cursor-not-allowed': authStore.isUser }"
-            placeholder="เช่น https://example.com/document.pdf"
-            required
+            type="file"
+            id="documentFile"
+            accept=".pdf"
+            @change="handleFileUpload"
+            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer rounded-lg"
           />
+          <p v-if="selectedFileName" class="text-sm text-gray-600 mt-2">
+            ไฟล์ที่เลือก: <span class="font-medium text-blue-800">{{ selectedFileName }}</span>
+          </p>
+          <p v-else-if="currentDocument.url" class="text-sm text-gray-600 mt-2">
+            ไฟล์ปัจจุบัน:
+            <span class="font-medium text-blue-800">{{
+              currentDocument.url.split('/').pop()
+            }}</span>
+          </p>
           <p class="text-xs text-gray-500 mt-1">
-            สำหรับตอนนี้ใช้ URL ตรงๆ เมื่อมี Backend จะเปลี่ยนเป็นระบบอัปโหลดไฟล์
+            รองรับเฉพาะไฟล์ PDF เท่านั้น (การอัปโหลดจริงต้องมี Backend)
           </p>
         </div>
-        <div class="flex justify-end space-x-3">
+
+        <div class="flex items-center justify-end space-x-4">
           <button
             type="submit"
-            v-if="authStore.isAdmin || authStore.isSuperAdmin"
-            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full focus:outline-none focus:shadow-outline transform transition duration-300 hover:scale-105 shadow-lg"
           >
-            <i class="fas fa-save mr-2"></i>
             {{ editingDocument ? 'บันทึกการแก้ไข' : 'เพิ่มเอกสาร' }}
           </button>
           <button
-            v-if="editingDocument && (authStore.isAdmin || authStore.isSuperAdmin)"
             type="button"
             @click="cancelEdit"
-            class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300"
+            v-if="editingDocument"
+            class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-full focus:outline-none focus:shadow-outline transform transition duration-300 hover:scale-105 shadow-lg"
           >
-            <i class="fas fa-times mr-2"></i> ยกเลิก
+            ยกเลิก
           </button>
         </div>
       </form>
     </div>
 
-    <div class="card bg-white p-6 rounded-lg shadow-md">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการเอกสาร ITA</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-          <thead>
-            <tr class="bg-gray-100 text-left text-gray-600 uppercase text-sm leading-normal">
-              <th class="py-3 px-6 text-left">ชื่อเอกสาร</th>
-              <th class="py-3 px-6 text-left">ปี</th>
-              <th class="py-3 px-6 text-left">ไตรมาส</th>
-              <th class="py-3 px-6 text-left">หัวข้อ MOIT</th>
-              <th class="py-3 px-6 text-left">หัวข้อย่อย</th>
-              <th class="py-3 px-6 text-center">การจัดการ</th>
+    <!-- ตารางแสดงรายการเอกสาร -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-semibold text-blue-700 mb-6 flex items-center">
+        รายการเอกสาร ITA ทั้งหมด
+        <span class="ml-auto text-base text-gray-500"
+          >รวม {{ sortedITADocuments.length }} รายการ</span
+        >
+      </h2>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-blue-100">
+            <tr>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              >
+                ชื่อเอกสาร
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              >
+                ปี
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              >
+                ไตรมาส
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              >
+                หัวข้อ MOIT
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              >
+                หัวข้อย่อย
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider"
+              >
+                การจัดการ
+              </th>
             </tr>
           </thead>
-          <tbody class="text-gray-600 text-sm font-light">
-            <tr
-              v-for="doc in sortedITADocuments"
-              :key="doc.id"
-              class="border-b border-gray-200 hover:bg-gray-50"
-            >
-              <td class="py-3 px-6 text-left">
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-if="sortedITADocuments.length === 0">
+              <td colspan="6" class="px-6 py-4 whitespace-nowrap text-center text-gray-500">
+                ยังไม่มีเอกสาร ITA ในระบบ.
+              </td>
+            </tr>
+            <tr v-for="doc in sortedITADocuments" :key="doc.id" class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
                 <a
                   :href="doc.url"
                   target="_blank"
-                  class="text-blue-600 hover:underline flex items-center"
+                  rel="noopener noreferrer"
+                  class="text-blue-600 hover:text-blue-800 font-medium flex items-center"
                 >
-                  <i class="fas fa-file-alt mr-2"></i> {{ doc.title }}
+                  {{ doc.name }}
                 </a>
+                <p v-if="doc.description" class="text-xs text-gray-500 mt-1">
+                  {{ doc.description }}
+                </p>
               </td>
-              <td class="py-3 px-6 text-left">{{ doc.year }}</td>
-              <td class="py-3 px-6 text-left">{{ doc.quarter }}</td>
-              <td class="py-3 px-6 text-left">{{ doc.topic }}</td>
-              <td class="py-3 px-6 text-left">{{ doc.subTopic || '-' }}</td>
-              <td class="py-3 px-6 text-center">
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                {{ doc.year }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                {{ doc.quarter }}
+              </td>
+              <td class="px-6 py-4 text-gray-700 max-w-xs overflow-hidden text-ellipsis">
+                <!-- แสดงชื่อเต็มในตาราง -->
+                {{ getMoitTopicText(doc.moitTopic) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+                {{ getSubTopicText(doc.moitTopic, doc.subTopic) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                 <button
                   @click="editITADocument(doc)"
-                  v-if="authStore.isAdmin || authStore.isSuperAdmin"
-                  class="bg-yellow-500 text-white px-3 py-1 rounded-md text-xs hover:bg-yellow-600 transition duration-300 mr-2"
+                  class="text-indigo-600 hover:text-indigo-900 mr-3 transform transition duration-300 hover:scale-110"
                 >
-                  <i class="fas fa-edit"></i> แก้ไข
+                  แก้ไข
                 </button>
                 <button
                   @click="confirmDeleteITADocument(doc.id)"
-                  v-if="authStore.isSuperAdmin"
-                  class="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
+                  class="text-red-600 hover:text-red-900 transform transition duration-300 hover:scale-110"
                 >
-                  <i class="fas fa-trash-alt"></i> ลบ
+                  ลบ
                 </button>
-              </td>
-            </tr>
-            <tr v-if="itaDocuments.length === 0">
-              <td :colspan="6" class="py-8 text-center text-gray-500">
-                ยังไม่มีเอกสาร ITA ในระบบ.
               </td>
             </tr>
           </tbody>
@@ -216,25 +252,30 @@
       </div>
     </div>
 
+    <!-- Modal ยืนยันการลบ -->
     <div
       v-if="showConfirmModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
     >
-      <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
-        <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบ</h3>
-        <p class="text-gray-700 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร ITA นี้?</p>
-        <div class="flex justify-center space-x-4">
-          <button
-            @click="deleteITADocument"
-            class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-300"
-          >
-            <i class="fas fa-trash-alt mr-2"></i> ลบ
-          </button>
+      <div
+        class="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full transform transition-all scale-100 opacity-100"
+      >
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">ยืนยันการลบ</h3>
+        <p class="text-gray-700 mb-6">
+          คุณแน่ใจหรือไม่ว่าต้องการลบเอกสารนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้
+        </p>
+        <div class="flex justify-end space-x-4">
           <button
             @click="cancelDelete"
-            class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300"
+            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-5 rounded-full focus:outline-none focus:shadow-outline transform transition duration-300 hover:scale-105"
           >
-            <i class="fas fa-times mr-2"></i> ยกเลิก
+            ยกเลิก
+          </button>
+          <button
+            @click="deleteITADocument"
+            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-full focus:outline-none focus:shadow-outline transform transition duration-300 hover:scale-105"
+          >
+            ลบ
           </button>
         </div>
       </div>
@@ -243,287 +284,535 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useToast } from 'vue-toastification'
-import { useAuthStore } from '@/stores/auth'
 
+// เริ่มต้นใช้งาน Toast
 const toast = useToast()
-const authStore = useAuthStore()
 
-// กำหนด Interface สำหรับโครงสร้างข้อมูลเอกสาร ITA
+// Interface สำหรับโครงสร้างเอกสาร ITA
 interface ITADocument {
   id: number
-  title: string
+  name: string
   year: number
   quarter: string
-  topic: string
-  subTopic?: string
-  description?: string
-  url: string
+  moitTopic: string // เก็บค่า 'value' เช่น "MOIT 1"
+  subTopic: string // เก็บค่า 'value' ของหัวข้อย่อย
+  description: string
+  url: string // เก็บ simulate file path/name
 }
 
-// ข้อมูลจำลองของเอกสาร ITA
+// หัวข้อ MOIT พร้อมข้อความเต็มและข้อความย่อสำหรับ dropdown
+const itaTopics = [
+  {
+    value: 'MOIT 1',
+    text: 'MOIT 1: หน่วยงานมีการวางระบบโดยการกำหนดมาตรการการเผยแพร่ข้อมูลต่อสาธารณะ ผ่านเว็บไซต์ของหน่วยงาน',
+    shortText: 'MOIT 1: การวางระบบเผยแพร่ข้อมูล',
+  },
+  {
+    value: 'MOIT 2',
+    text: 'MOIT 2: หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
+    shortText: 'MOIT 2: การเปิดเผยข้อมูลข่าวสาร',
+  },
+  {
+    value: 'MOIT 3',
+    text: 'MOIT 3: หน่วยงานมีรายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
+    shortText: 'MOIT 3: รายงานวิเคราะห์จัดซื้อจัดจ้าง',
+  },
+  {
+    value: 'MOIT 4',
+    text: 'MOIT 4: หน่วยงานมีการวางระบบการจัดซื้อจัดจ้างและการจัดหาพัสดุ ประจำปีงบประมาณ',
+    shortText: 'MOIT 4: การวางระบบจัดซื้อจัดจ้าง',
+  },
+  {
+    value: 'MOIT 5',
+    text: 'MOIT 5: หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
+    shortText: 'MOIT 5: สรุปผลจัดซื้อจัดจ้างรายเดือน',
+  },
+  {
+    value: 'MOIT 6',
+    text: 'MOIT 6: ผู้บริหารแสดงนโยบายการบริหารและพัฒนาทรัพยากรบุคคล',
+    shortText: 'MOIT 6: นโยบายบริหารทรัพยากรบุคคล',
+  },
+  {
+    value: 'MOIT 7',
+    text: 'MOIT 7: หน่วยงานมีการรายงานการประเมินและเกี่ยวกับการประเมินผลการปฏิบัติราชการของบุคลากรในหน่วยงาน และเปิดเผยผลการปฏิบัติราชการ ระดับดีเด่น และระดับดีมาก ในที่เปิดเผยให้ทราบ',
+    shortText: 'MOIT 7: รายงานประเมินผลปฏิบัติราชการ',
+  },
+  {
+    value: 'MOIT 8',
+    text: 'MOIT 8: หน่วยงานมีการอบรมให้ความรู้แก่เจ้าหน้าที่ภายในหน่วยงานเกี่ยวกับการเสริมสร้างและพัฒนาทางด้านจริยธรรม และการรักษาวินัยรวมทั้งการป้องกันมิให้กระทำผิดวินัย',
+    shortText: 'MOIT 8: อบรมจริยธรรมและวินัย',
+  },
+  {
+    value: 'MOIT 9',
+    text: 'MOIT 9: หน่วยงานมีแนวปฏิบัติการจัดการเรื่องร้องเรียน และช่องทางการร้องเรียน',
+    shortText: 'MOIT 9: แนวปฏิบัติจัดการเรื่องร้องเรียน',
+  },
+  {
+    value: 'MOIT 10',
+    text: 'MOIT 10: หน่วยงานมีสรุปผลการดำเนินงานเรื่องรัองเรียนการปฏิบัติงานหรือการให้บริการของเจ้าหน้าที่ภายในหน่วยงาน และเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ',
+    shortText: 'MOIT 10: สรุปผลเรื่องร้องเรียน',
+  },
+  {
+    value: 'MOIT 11',
+    text: 'MOIT 11: หน่วยงานของท่านเปิดโอกาสให้ผู้มีส่วนได้ส่วนเสียมีโอกาสเข้ามามีส่วนร่วมในการดำเนินงานตามภารกิจของหน่วยงาน',
+    shortText: 'MOIT 11: การมีส่วนร่วมของผู้มีส่วนได้ส่วนเสีย',
+  },
+  {
+    value: 'MOIT 12',
+    text: 'MOIT 12: หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ',
+    shortText: 'MOIT 12: มาตรการป้องกันการรับสินบน',
+  },
+  {
+    value: 'MOIT 13',
+    text: 'MOIT 13: หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณตามเกณฑ์จริยธรรมการจัดซื้อจัดหาและการส่งเสริมการขายยาและเวชภัณฑ์ที่มิใช่ยาของกระทรวงสาธารณสุข พ.ศ. 2564',
+    shortText: 'MOIT 13: ประเมินเกณฑ์จริยธรรมจัดซื้อยา',
+  },
+  {
+    value: 'MOIT 14',
+    text: 'MOIT 14: หน่วยงานมีแนวทางปฏิบัติเกี่ยวกับการใช้ทรัพย์สินของราชการ และมีขั้นตอนการขออนุญาตเพื่อยืมทรัพย์สินของราชการไปใช้ปฏิบัติในหน่วยงานที่ถูกต้อง',
+    shortText: 'MOIT 14: แนวทางใช้ทรัพย์สินราชการ',
+  },
+  {
+    value: 'MOIT 15',
+    text: 'MOIT 15: หน่วยงานมีแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ และแผนปฏิบัติการส่งเสริมคุณธรรมของชมรมจริยธรรม ประจำปีงบประมาณ',
+    shortText: 'MOIT 15: แผนป้องกันทุจริตและส่งเสริมคุณธรรม',
+  },
+  {
+    value: 'MOIT 16',
+    text: 'MOIT 16: หน่วยงานมีรายงานการกำกับติดตามการดำเนินงานตามแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ',
+    shortText: 'MOIT 16: รายงานติดตามแผนป้องกันทุจริต',
+  },
+  {
+    value: 'MOIT 17',
+    text: 'MOIT 17: หน่วยงานมีการประเมินความเสี่ยงการทุจริต ประจำปีงบประมาณอย่างเป็นระบบ',
+    shortText: 'MOIT 17: ประเมินความเสี่ยงการทุจริต',
+  },
+  {
+    value: 'MOIT 18',
+    text: 'MOIT 18: หน่วยงานมีการปฏิบัติตามมาตรการป้องกันการทุจริต (การควบคุมความเสี่ยงการทุจริต)',
+    shortText: 'MOIT 18: ปฏิบัติตามมาตรการป้องกันทุจริต',
+  },
+  {
+    value: 'MOIT 19',
+    text: 'MOIT 19: หน่วยงานมีการรายงานผลการส่งเสริมการปฏิบัติตามประมวลจริยธรรมข้าราชการพลเรือน:กรณีการเรี่ยไรและกรณีการให้หรือรับของขวัญหรือประโยชน์อื่นใด ประจำปีงบประมาณ',
+    shortText: 'MOIT 19: รายงานส่งเสริมจริยธรรมข้าราชการ',
+  },
+  {
+    value: 'MOIT 20',
+    text: 'MOIT 20: หน่วยงานมีการอบรมให้ความรู้ภายในหน่วยงาน เรื่อง ผลประโยชน์ทับซ้อนในหลักสูตร ต้านทุจริตศึกษา(Anti-Corruption Education)กระทรวงสาธารณสุข (ฉบับปรับปรุง)',
+    shortText: 'MOIT 20: อบรมผลประโยชน์ทับซ้อน',
+  },
+  {
+    value: 'MOIT 21',
+    text: 'MOIT 21: หน่วยงานมีการเผยแพร่เจตจำนงสุจริตของการปฏิบัติหน้าที่ราชการ และนโยบายที่เคารพ สิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงานและของผู้บริหาร ต่อสาธารณชน',
+    shortText: 'MOIT 21: เผยแพร่เจตจำนงสุจริต',
+  },
+  {
+    value: 'MOIT 22',
+    text: 'MOIT 22: หน่วยงานมีแนวปฏิบัติที่เคารพสิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงาน และรายงานการป้องกันและแก้ไขปัญหาการล่วงละเมิดหรือคุกคามทางเพศในการทำงาน ประจำปีงบประมาณ',
+    shortText: 'MOIT 22: แนวปฏิบัติเคารพสิทธิและป้องกันคุกคามทางเพศ',
+  },
+]
+
+// กำหนดการจับคู่หัวข้อ MOIT กับหัวข้อย่อยที่เกี่ยวข้อง
+const moitSubTopicMapping: { [key: string]: { value: string; text: string }[] } = {
+  'MOIT 1': [
+    { value: 'COMMAND_ANNOUNCE_FRAMEWORK', text: 'คำสั่ง / ประกาศ ที่ระบุกรอบแนวทาง' },
+    {
+      value: 'PUB_INFO_TRACKING_REPORT',
+      text: 'รายงานผลการกำกับติดตามการเผยแพร่ข้อมูลต่อสาธารณะผ่านเว็บไซต์ของหน่วยงานในปีที่ผ่านมา',
+    },
+    { value: 'O1', text: 'O1: โครงสร้างข้อมูล (ทั่วไป)' },
+    { value: 'O2', text: 'O2: การเปิดเผยข้อมูล (ทั่วไป)' },
+    { value: 'OTHER_MOIT1', text: 'อื่นๆ (สำหรับ MOIT 1)' },
+  ],
+  'MOIT 2': [
+    { value: 'CURRENT_BASIC_INFO', text: 'ข้อมูลพื้นฐานที่เป็นปัจจุบัน' },
+    { value: 'MOPH_VISION_MISSION_VALUES', text: 'วิสัยทัศน์ พันธกิจ ค่านิยม MOPH' },
+    { value: 'ETHICS_ACT_2562', text: 'พระราชบัญญัติมาตรฐานทางจริยธรรม พ.ศ. 2562' },
+    { value: 'CIVIL_SERVANT_ETHICS_CODE_2564', text: 'ประมวลจริยธรรมข้าราชการพลเรือน พ.ศ. 2564' },
+    {
+      value: 'MOPH_OFFICIAL_ETHICS_2564',
+      text: 'ข้อกำหนดจริยธรรมเจ้าหน้าที่ของรัฐ สำนักงานปลัดกระทรวงสาธารณสุข พ.ศ. 2564',
+    },
+    { value: 'NATIONAL_STRATEGY_3_LEVELS', text: 'ยุทธศาสตร์และแผนระดับชาติ จำนวน 3 ระดับ' },
+    {
+      value: 'MOPH_ANTI_CORRUPTION_PLAN',
+      text: 'แผนปฏิบัติการด้านการป้องกันปราบปรามการทุจริตและประพฤติมิชอบและการส่งเสริมคุณธรรม จริยธรรมของกระทรวงสาธารณสุข',
+    },
+    { value: 'UNIT_POLICY_STRATEGY', text: 'นโยบายและยุทธศาสตร์ของหน่วยงาน' },
+    { value: 'UNIT_ANNUAL_ACTION_PLAN', text: 'แผนปฏิบัติการประจำปีของหน่วยงาน' },
+    { value: 'UNIT_ANNUAL_ACTION_REPORT', text: 'รายงานผลการดำเนินงานตามแผนปฏิบัติการประจำปี' },
+    {
+      value: 'UNIT_ANNUAL_BUDGET_PLAN_REPORT',
+      text: 'แผนการใช้จ่ายงบประมาณประจำปีของหน่วยงาน และผลการใช้จ่ายงบประมาณประจำปีของหน่วยงาน ตามแผนการใช้จ่ายงบประมาณประจำปีของหน่วยงาน',
+    },
+    { value: 'DISCLOSURE_FORM', text: 'แบบฟอร์มการเผยแพร่ฯ' },
+    {
+      value: 'COMPLAINT_HANDLING_MANUAL',
+      text: 'คู่มือการปฏิบัติงานการร้องเรียนการปฏิบัติงานหรือให้บริการของเจ้าหน้าที่',
+    },
+    {
+      value: 'CORRUPTION_COMPLAINT_MANUAL',
+      text: 'คู่มือการปฏิบัติงานการร้องเรียนเรื่องการทุจริตและประพฤติมิชอบ',
+    },
+    {
+      value: 'MAIN_SUPPORT_MISSION_MANUAL',
+      text: 'คู่มือการปฏิบัติงานตามภารกิจหลักและภารกิจสนับสนุนของหน่วยงาน',
+    },
+    {
+      value: 'SERVICE_PROCEDURE_MANUAL',
+      text: 'คู่มือขั้นตอนการให้บริการ (ภารกิจให้บริการประชาชนตามพระราชบัญญัติ การอํานวยความสะดวกในการพิจารณาอนุญาตของทางราชการ พ.ศ. 2558) (เฉพาะสำนักงานสาธารณสุขจังหวัด และสำนักงานสาธารณสุขอำเภอ)',
+    },
+    {
+      value: 'SERVICE_COMPLAINT_REPORT_12M',
+      text: 'รายงานผลการดำเนินการเกี่ยวกับเรื่องร้องเรียนการปฏิบัติงานหรือการให้บริการ ประจำปีงบประมาณ (รายงานผลการดำเนินการรอบ 12 เดือน)',
+    },
+    {
+      value: 'CORRUPTION_COMPLAINT_REPORT_12M',
+      text: 'รายงานผลการดำเนินการเกี่ยวกับเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ ประจำปีงบประมาณ(รายงานผลการดำเนินการรอบ 12 เดือน)',
+    },
+    { value: 'PROCUREMENT_DATA', text: 'ข้อมูลการจัดซื้อจัดจ้าง' },
+    { value: 'OTHER_MOIT2', text: 'อื่นๆ (สำหรับ MOIT 2)' },
+  ],
+  'MOIT 3': [
+    {
+      value: 'PROCUREMENT_ANALYSIS_REPORT',
+      text: 'รายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
+    },
+    { value: 'O5', text: 'O5: การบริหารและพัฒนาทรัพยากรบุคคล' },
+    { value: 'PLAN', text: 'แผนงาน (ทั่วไป)' },
+    { value: 'ORDER', text: 'คำสั่ง (ทั่วไป)' },
+    { value: 'OTHER_MOIT3', text: 'อื่นๆ (สำหรับ MOIT 3)' },
+  ],
+  'MOIT 4': [
+    {
+      value: 'PROCUREMENT_PLAN_ANNOUNCE',
+      text: 'ประกาศเผยแพร่แผนการจัดซื้อจัดจ้างและการจัดหาพัสดุ ประจำปีของหน่วยงาน',
+    },
+    { value: 'INVESTMENT_REPORT_QUARTERLY', text: 'รายงานผลแผนจัดซื้อจัดจ้าง งบลงทุน ทุกไตรมาส' },
+    {
+      value: 'OPERATION_REPORT_QUARTERLY',
+      text: 'รายงานผลแผนจัดซื้อจัดจ้าง งบดำเนินงาน ทุกไตรมาส',
+    },
+    {
+      value: 'PREVENT_CONFLICT_OF_INTEREST',
+      text: 'การป้องกันผู้มีส่วนได้ส่วนเสียกับการจัดซื้อจัดจ้าง',
+    },
+    { value: 'OTHER_MOIT4', text: 'อื่นๆ (สำหรับ MOIT 4)' },
+  ],
+  'MOIT 5': [
+    { value: 'O7', text: 'O7: การส่งเสริมความโปร่งใสในการจัดซื้อจัดจ้าง' },
+    { value: 'ANNOUNCEMENT', text: 'ประกาศ (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 6': [
+    { value: 'O8', text: 'O8: การป้องกันผลประโยชน์ทับซ้อน' },
+    { value: 'REPORT', text: 'รายงานผล (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 7': [
+    { value: 'O9', text: 'O9: การส่งเสริมคุณธรรมและจริยธรรม' },
+    { value: 'PLAN', text: 'แผนงาน (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 8': [
+    { value: 'O10', text: 'O10: การบริหารความเสี่ยงการทุจริต' },
+    { value: 'REPORT', text: 'รายงานผล (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 9': [
+    { value: 'O11', text: 'O11: การสร้างวัฒนธรรมองค์กร' },
+    { value: 'PLAN', text: 'แผนงาน (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 10': [
+    { value: 'REPORT', text: 'รายงานผล (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 11': [
+    { value: 'SURVEY', text: 'แบบสำรวจ (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 12': [
+    { value: 'POLICY', text: 'นโยบาย (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 13': [
+    { value: 'REPORT', text: 'รายงานผล (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 14': [
+    { value: 'PLAN', text: 'แผนงาน (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 15': [
+    { value: 'MANUAL', text: 'คู่มือ (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 16': [
+    { value: 'REPORT', text: 'รายงานผล (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 17': [
+    { value: 'PLAN', text: 'แผนงาน (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระระบุประเภท)' },
+  ],
+  'MOIT 18': [
+    { value: 'ANNOUNCEMENT', text: 'ประกาศ (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 19': [
+    { value: 'SURVEY', text: 'แบบสำรวจ (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 20': [
+    { value: 'POLICY', text: 'นโยบาย (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 21': [
+    { value: 'PLAN', text: 'แผนงาน (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+  'MOIT 22': [
+    { value: 'REPORT', text: 'รายงานผล (ทั่วไป)' },
+    { value: 'OTHER', text: 'อื่นๆ (ไม่ระบุประเภท)' },
+  ],
+}
+
+// ข้อมูลจำลองสำหรับแสดงผล
 const itaDocuments = ref<ITADocument[]>([
   {
     id: 1,
-    title: 'เอกสารโครงสร้างองค์กร 2567',
-    year: 2567,
-    quarter: '1',
-    topic:
-      'MOIT 1 หน่วยงานมีการวางระบบโดยการกำหนดมาตรการการเผยแพร่ข้อมูลต่อสาธารณะ ผ่านเว็บไซต์ของหน่วยงาน',
-    subTopic: 'คำสั่ง',
-    description: 'เอกสารโครงสร้างองค์กรล่าสุด',
+    name: 'รายงานผลการประเมิน ITA ประจำปี 2566',
+    year: 2566,
+    quarter: 'Q4',
+    moitTopic: 'MOIT 1',
+    subTopic: 'PUB_INFO_TRACKING_REPORT',
+    description: 'สรุปผลการประประเมิน ITA ของหน่วยงานในปีงบประมาณ 2566',
     url: 'https://www.africau.edu/images/default/sample.pdf',
   },
   {
     id: 2,
-    title: 'แผนการจัดซื้อจัดจ้าง 2567',
+    name: 'แผนปฏิบัติการป้องกันการทุจริต 2567',
     year: 2567,
-    quarter: '1',
-    topic: 'MOIT 3 หน่วยงานมีรายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
-    subTopic: 'แผนปฏิบัติการ',
-    description: 'แผนการจัดซื้อจัดจ้างประจำปี',
+    quarter: 'Q1',
+    moitTopic: 'MOIT 2',
+    subTopic: 'MOPH_ANTI_CORRUPTION_PLAN',
+    description: 'แผนงานและมาตรการป้องกันการทุจริตของกระทรวงสาธารณสุข',
     url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
   },
   {
     id: 3,
-    title: 'รายงานผลการดำเนินงาน Q2 2567',
-    year: 2567,
-    quarter: '2',
-    topic: 'MOIT 5 หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
-    subTopic: 'รายงานผล',
-    description: 'รายงานผลการดำเนินงานไตรมาส 2',
+    name: 'รายงานวิเคราะห์จัดซื้อจัดจ้าง 2566',
+    year: 2566,
+    quarter: 'Q2',
+    moitTopic: 'MOIT 3',
+    subTopic: 'PROCUREMENT_ANALYSIS_REPORT',
+    description: 'รายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ 2566',
     url: 'https://www.africau.edu/images/default/sample.pdf',
   },
   {
     id: 4,
-    title: 'นโยบาย No Gift Policy 2566',
-    year: 2566,
-    quarter: '1',
-    topic: 'MOIT 12 หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ',
-    subTopic: 'ประกาศ',
-    description: 'นโยบายไม่รับของขวัญปี 2566',
+    name: 'ประกาศแผนจัดซื้อจัดจ้าง 2567',
+    year: 2567,
+    quarter: 'Q1',
+    moitTopic: 'MOIT 4',
+    subTopic: 'PROCUREMENT_PLAN_ANNOUNCE',
+    description: 'ประกาศเผยแพร่แผนการจัดซื้อจัดจ้างและการจัดหาพัสดุ ประจำปี 2567',
     url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
   },
-  {
-    id: 5,
-    title: 'งบประมาณรายรับ-รายจ่าย 2565',
-    year: 2565,
-    quarter: '3',
-    topic: 'MOIT 2 หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
-    subTopic: 'รายงานผล',
-    description: 'สรุปงบประมาณปี 2565',
-    url: 'https://www.africau.edu/images/default/sample.pdf',
-  },
-  {
-    id: 6,
-    title: 'นโยบายป้องกันการรับสินบน 2567',
-    year: 2567,
-    quarter: '1',
-    topic: 'MOIT 13 หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณ',
-    subTopic: 'นโยบาย',
-    description: 'นโยบายป้องกันการรับสินบนล่าสุดสำหรับปี 2567',
-    url: 'https://www.africau.edu/images/default/sample.pdf',
-  },
 ])
 
-// รายการหัวข้อ ITA (MOIT)
-const itaTopics = ref([
-  'MOIT 1 หน่วยงานมีการวางระบบโดยการกำหนดมาตรการการเผยแพร่ข้อมูลต่อสาธารณะ ผ่านเว็บไซต์ของหน่วยงาน',
-  'MOIT 2 หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
-  'MOIT 3 หน่วยงานมีรายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
-  'MOIT 4 หน่วยงานมีการวางระบบการจัดซื้อจัดจ้างและการจัดหาพัสดุ ประจำปีงบประมาณ',
-  'MOIT 5 หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
-  'MOIT 6 ผู้บริหารแสดงนโยบายการบริหารและพัฒนาทรัพยากรบุคคล',
-  'MOIT 7 หน่วยงานมีการรายงานการประเมินและเกี่ยวกับการประเมินผลการปฏิบัติราชการของบุคลากรในหน่วยงาน และเปิดเผยผลการปฏิบัติราชการ ระดับดีเด่น และระดับดีมาก ในที่เปิดเผยให้ทราบ รอบปีงบประมาณ พ.ศ. 2566 และรอบปีงบประมาณ',
-  'MOIT 8 หน่วยงานมีการอบรมให้ความรู้แก่เจ้าหน้าที่ภายในหน่วยงานเกี่ยวกับการเสริมสร้างและพัฒนาทางด้านจริยธรรม และการรักษาวินัยรวมทั้งการป้องกันมิให้กระทำผิดวินัย',
-  'MOIT 9 หน่วยงานมีแนวปฏิบัติการจัดการเรื่องร้องเรียน และช่องทางการร้องเรียน',
-  'MOIT 10 หน่วยงานมีสรุปผลการดำเนินงานเรื่องรัองเรียนการปฏิบัติงานหรือการให้บริการของเจ้าหน้าที่ภายในหน่วยงาน และเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ',
-  'MOIT 11 หน่วยงานของท่านเปิดโอกาสให้ผู้มีส่วนได้ส่วนเสียมีโอกาสเข้ามามีส่วนร่วมในการดำเนินงานตามภารกิจของหน่วยงาน',
-  'MOIT 12 หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ',
-  'MOIT 13 หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณ',
-  'MOIT 14 หน่วยงานมีแนวทางปฏิบัติเกี่ยวกับการใช้ทรัพย์สินของราชการ และมีขั้นตอนการขออนุญาตเพื่อยืมทรัพย์สินของราชการไปใช้ปฏิบัติในหน่วยงานที่ถูกต้อง',
-  'MOIT 15 หน่วยงานมีแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ และแผนปฏิบัติการส่งเสริมคุณธรรมของชมรมจริยธรรม ประจำปีงบประมาณ',
-  'MOIT 16 หน่วยงานมีรายงานการกำกับติดตามการดำเนินงานตามแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ ประจำปีงบประมาณ 2568 และแผนปฏิบัติการส่งเสริมคุณธรรมของชมรมจริยธรรม ประจำปีงบประมาณ',
-  'MOIT 17 หน่วยงานมีการประเมินความเสี่ยงการทุจริต ประจำปีงบประมาณ',
-  'MOIT 18 หน่วยงานมีการปฏิบัติตามมาตรการป้องกันการทุจริต (การควบคุมความเสี่ยงการทุจริต)',
-  'MOIT 19 หน่วยงานมีการรายงานผลการส่งเสริมการปฏิบัติตามประมวลจริยธรรมข้าราชการพลเรือน:กรณีการเรี่ยไรและกรณีการให้หรือรับของขวัญหรือประโยชน์อื่นใด ประจำปีงบประมาณ',
-  'MOIT 20 หน่วยงานมีการอบรมให้ความรู้ภายในหน่วยงาน เรื่อง ผลประโยชน์ทับซ้อนในหลักสูตร ต้านทุจริตศึกษา(Anti-Corruption Education)กระทรวงสาธารณสุข (ฉบับปรับปรุง) พ.ศ.2565',
-  'MOIT 21 หน่วยงานมีการเผยแพร่เจตจำนงสุจริตของการปฏิบัติหน้าที่ราชการ และนโยบายที่เคารพ สิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงานและของผู้บริหาร ต่อสาธารณชน',
-  'MOIT 22 หน่วยงานมีแนวปฏิบัติที่เคารพสิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงาน และรายงานการป้องกันและแก้ไขปัญหาการล่วงละเมิดหรือคุกคามทางเพศในการทำงาน ประจำปีงบประมาณ',
-])
-
-// สถานะของเอกสารปัจจุบันที่กำลังเพิ่มหรือแก้ไข
+// สถานะ Reactive สำหรับเอกสารที่กำลังแก้ไข/เพิ่ม
 const currentDocument = ref<ITADocument>({
   id: 0,
-  title: '',
-  year: new Date().getFullYear() + 543, // กำหนดปีเริ่มต้นเป็นปีปัจจุบันในพุทธศักราช
-  quarter: '1',
-  topic: '',
-  subTopic: '',
+  name: '',
+  year: getYearsList()[0], // กำหนดปีเริ่มต้นเป็นปีปัจจุบัน
+  quarter: 'Q1',
+  moitTopic: itaTopics[0].value, // กำหนดหัวข้อ MOIT เริ่มต้นเป็น MOIT 1
+  subTopic: '', // กำหนดหัวข้อย่อยเริ่มต้นเป็นค่าว่าง
   description: '',
   url: '',
 })
 
-// สถานะการแก้ไขเอกสาร (true ถ้ากำลังแก้ไข, false ถ้ากำลังเพิ่มใหม่)
+// สถานะสำหรับการอัปโหลดไฟล์
+const selectedFile = ref<File | null>(null)
+const selectedFileName = ref<string | null>(null)
+
+// แฟล็กเพื่อระบุว่ากำลังแก้ไขเอกสารที่มีอยู่หรือไม่
 const editingDocument = ref(false)
-// ID ของเอกสารที่ต้องการลบ
+
+// สถานะสำหรับ Modal ยืนยันการลบ
 const documentToDeleteId = ref<number | null>(null)
-// สถานะการแสดง Modal ยืนยันการลบ
 const showConfirmModal = ref(false)
 
-/**
- * @function getYearsList
- * @description สร้างรายการปีงบประมาณสำหรับ Dropdown โดยเริ่มจาก 2 ปีข้างหน้าถึง 5 ปีที่ผ่านมา (พุทธศักราช)
- * @returns {number[]} อาร์เรย์ของปีงบประมาณ
- */
-const getYearsList = () => {
-  const currentYear = new Date().getFullYear() + 543 // แปลงเป็นพุทธศักราช
+// ฟังก์ชันสร้างรายการปี (พ.ศ.)
+function getYearsList(): number[] {
+  const currentBuddhistYear = new Date().getFullYear() + 543
   const years = []
-  for (let i = currentYear + 2; i >= currentYear - 5; i--) {
-    years.push(i)
+  // รวมปีปัจจุบัน + 2 ปีข้างหน้า
+  for (let i = 0; i <= 2; i++) {
+    years.push(currentBuddhistYear + i)
   }
-  return years
+  // รวม 5 ปีย้อนหลัง
+  for (let i = 1; i <= 5; i++) {
+    years.unshift(currentBuddhistYear - i)
+  }
+  return years.sort((a, b) => b - a) // เรียงลำดับจากมากไปน้อย
 }
 
-/**
- * @computed sortedITADocuments
- * @description Computed property สำหรับเรียงลำดับเอกสาร ITA ตามปี (จากมากไปน้อย) และไตรมาส (จากน้อยไปมาก)
- * @returns {ITADocument[]} อาร์เรย์ของเอกสาร ITA ที่เรียงลำดับแล้ว
- */
+// Computed property สำหรับกรองหัวข้อย่อยตามหัวข้อ MOIT ที่เลือก
+const availableSubTopics = computed(() => {
+  const selectedMoitTopic = currentDocument.value.moitTopic
+  return moitSubTopicMapping[selectedMoitTopic] || []
+})
+
+// รีเซ็ตหัวข้อย่อยเมื่อหัวข้อ MOIT เปลี่ยน
+const resetSubTopic = () => {
+  currentDocument.value.subTopic = ''
+}
+
+// Computed property สำหรับเรียงลำดับเอกสารตามปี (มากไปน้อย) และไตรมาส (น้อยไปมาก)
 const sortedITADocuments = computed(() => {
-  const quarterOrder: { [key: string]: number } = { '1': 1, '2': 2, '3': 3, '4': 4 }
   return [...itaDocuments.value].sort((a, b) => {
-    // เรียงตามปีจากมากไปน้อย
-    if (b.year !== a.year) {
+    if (a.year !== b.year) {
       return b.year - a.year
     }
-    // ถ้าปีเท่ากัน ให้เรียงตามไตรมาสจากน้อยไปมาก
-    const aQuarterValue = quarterOrder[a.quarter] || 0
-    const bQuarterValue = quarterOrder[b.quarter] || 0
-    return aQuarterValue - bQuarterValue
+    const quarterOrder = { Q1: 1, Q2: 2, Q3: 3, Q4: 4 }
+    return (
+      quarterOrder[a.quarter as keyof typeof quarterOrder] -
+      quarterOrder[b.quarter as keyof typeof quarterOrder]
+    )
   })
 })
 
-/**
- * @function saveITADocument
- * @description บันทึกหรือแก้ไขเอกสาร ITA ลงในรายการ
- * - หากอยู่ในโหมดแก้ไข จะอัปเดตเอกสารที่มีอยู่
- * - หากอยู่ในโหมดเพิ่มใหม่ จะเพิ่มเอกสารใหม่และกำหนด ID
- * - แสดง Toast Notification เพื่อยืนยันการดำเนินการ
- */
+// ฟังก์ชันช่วยดึงข้อความเต็มของหัวข้อ MOIT สำหรับแสดงในตาราง
+const getMoitTopicText = (moitValue: string) => {
+  const topic = itaTopics.find((t) => t.value === moitValue)
+  return topic ? topic.text : moitValue
+}
+
+// ฟังก์ชันช่วยดึงข้อความเต็มของหัวข้อย่อยสำหรับแสดงในตาราง
+const getSubTopicText = (moitValue: string, subValue: string) => {
+  const subTopicsForMoit = moitSubTopicMapping[moitValue] || []
+  const sub = subTopicsForMoit.find((s) => s.value === subValue)
+  return sub ? sub.text : subValue
+}
+
+// จัดการการเปลี่ยนแปลงไฟล์ที่เลือก
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    selectedFile.value = target.files[0]
+    selectedFileName.value = target.files[0].name
+  } else {
+    selectedFile.value = null
+    selectedFileName.value = null
+  }
+}
+
+// บันทึกหรืออัปเดตเอกสาร ITA
 const saveITADocument = () => {
-  if (authStore.isUser) {
-    toast.error('คุณไม่มีสิทธิ์ในการบันทึกข้อมูล')
+  // ตรวจสอบความถูกต้องเบื้องต้น
+  if (
+    !currentDocument.value.name ||
+    !currentDocument.value.year ||
+    !currentDocument.value.quarter ||
+    !currentDocument.value.moitTopic ||
+    !currentDocument.value.subTopic
+  ) {
+    toast.error('กรุณากรอกข้อมูลให้ครบถ้วน')
+    return
+  }
+
+  // การจำลองการอัปโหลดไฟล์
+  if (selectedFile.value) {
+    currentDocument.value.url = `uploads/${selectedFile.value.name}` // URL จำลอง
+    toast.info(`จำลองการอัปโหลดไฟล์: ${selectedFile.value.name}`)
+  } else if (!currentDocument.value.url && !editingDocument.value) {
+    toast.error('กรุณาเลือกไฟล์ PDF สำหรับเอกสารใหม่')
     return
   }
 
   if (editingDocument.value) {
-    // โหมดแก้ไข: ค้นหาเอกสารและอัปเดตข้อมูล
+    // อัปเดตเอกสารที่มีอยู่
     const index = itaDocuments.value.findIndex((doc) => doc.id === currentDocument.value.id)
     if (index !== -1) {
       itaDocuments.value[index] = { ...currentDocument.value }
+      toast.success('บันทึกการแก้ไขเอกสาร ITA สำเร็จ!')
     }
-    toast.success('แก้ไขเอกสาร ITA สำเร็จ!')
   } else {
-    // โหมดเพิ่มใหม่: กำหนด ID และเพิ่มเอกสารเข้าในอาร์เรย์
-    currentDocument.value.id =
+    // เพิ่มเอกสารใหม่
+    const newId =
       itaDocuments.value.length > 0 ? Math.max(...itaDocuments.value.map((doc) => doc.id)) + 1 : 1
+    currentDocument.value.id = newId
     itaDocuments.value.push({ ...currentDocument.value })
-    toast.success('เพิ่มเอกสาร ITA ใหม่สำเร็จ!')
+    toast.success('เพิ่มเอกสาร ITA สำเร็จ!')
   }
-  resetForm() // รีเซ็ตฟอร์มหลังจากบันทึก
+  resetForm() // ล้างฟอร์มหลังจากบันทึก
 }
 
-/**
- * @function editITADocument
- * @description ตั้งค่าฟอร์มเพื่อแก้ไขเอกสาร ITA ที่เลือก
- * @param {ITADocument} doc - เอกสาร ITA ที่ต้องการแก้ไข
- */
+// ใส่ข้อมูลในฟอร์มเพื่อแก้ไข
 const editITADocument = (doc: ITADocument) => {
-  if (authStore.isUser) {
-    toast.error('คุณไม่มีสิทธิ์ในการแก้ไขข้อมูล')
-    return
+  currentDocument.value = { ...doc } // สร้างสำเนาเพื่อหลีกเลี่ยงการเปลี่ยนแปลงโดยตรง
+  editingDocument.value = true
+  selectedFile.value = null // ล้างไฟล์ที่เลือกไว้ก่อนหน้า
+  selectedFileName.value = null // ล้างชื่อไฟล์ที่เลือก
+
+  // หากเอกสารที่กำลังแก้ไขมี URL ให้แสดงชื่อไฟล์ปัจจุบัน
+  if (doc.url) {
+    selectedFileName.value = doc.url.split('/').pop() || null
   }
-  currentDocument.value = { ...doc } // คัดลอกข้อมูลเอกสารมายัง currentDocument
-  editingDocument.value = true // ตั้งค่าสถานะเป็นโหมดแก้ไข
 }
 
-/**
- * @function cancelEdit
- * @description ยกเลิกการแก้ไขและรีเซ็ตฟอร์ม
- */
+// ยกเลิกการแก้ไขและรีเซ็ตฟอร์ม
 const cancelEdit = () => {
   resetForm()
 }
 
-/**
- * @function confirmDeleteITADocument
- * @description เปิด Modal ยืนยันการลบและเก็บ ID ของเอกสารที่ต้องการลบ
- * @param {number} id - ID ของเอกสาร ITA ที่ต้องการลบ
- */
+// แสดง Modal ยืนยันการลบ
 const confirmDeleteITADocument = (id: number) => {
-  if (!authStore.isSuperAdmin) {
-    toast.error('คุณไม่มีสิทธิ์ในการลบข้อมูล')
-    return
-  }
   documentToDeleteId.value = id
   showConfirmModal.value = true
 }
 
-/**
- * @function deleteITADocument
- * @description ลบเอกสาร ITA ออกจากรายการหลังจากยืนยัน
- * - แสดง Toast Notification เพื่อยืนยันการดำเนินการ
- */
+// ลบเอกสารหลังจากยืนยัน
 const deleteITADocument = () => {
-  if (!authStore.isSuperAdmin) {
-    toast.error('คุณไม่มีสิทธิ์ในการลบข้อมูล')
-    resetDeleteConfirm() // ปิด modal แม้ไม่มีสิทธิ์
-    return
-  }
-
   if (documentToDeleteId.value !== null) {
     itaDocuments.value = itaDocuments.value.filter((doc) => doc.id !== documentToDeleteId.value)
     toast.success('ลบเอกสาร ITA สำเร็จ!')
   }
-  resetDeleteConfirm() // รีเซ็ตสถานะการลบและปิด Modal
+  resetDeleteConfirm() // ปิด Modal และรีเซ็ตสถานะ
 }
 
-/**
- * @function cancelDelete
- * @description ยกเลิกการลบและปิด Modal ยืนยัน
- */
+// ยกเลิกการลบ
 const cancelDelete = () => {
   resetDeleteConfirm()
 }
 
-/**
- * @function resetForm
- * @description รีเซ็ตค่าในฟอร์มกลับสู่สถานะเริ่มต้น
- */
+// รีเซ็ตฟอร์มเป็นสถานะเริ่มต้น
 const resetForm = () => {
   currentDocument.value = {
     id: 0,
-    title: '',
-    year: new Date().getFullYear() + 543,
-    quarter: '1',
-    topic: '',
+    name: '',
+    year: getYearsList()[0],
+    quarter: 'Q1',
+    moitTopic: itaTopics[0].value,
     subTopic: '',
     description: '',
     url: '',
   }
-  editingDocument.value = false // ตั้งค่าสถานะเป็นโหมดเพิ่มใหม่
+  editingDocument.value = false
+  selectedFile.value = null
+  selectedFileName.value = null
 }
 
-/**
- * @function resetDeleteConfirm
- * @description รีเซ็ตสถานะที่เกี่ยวข้องกับการยืนยันการลบ (ID เอกสารและสถานะ Modal)
- */
+// รีเซ็ตสถานะ Modal ยืนยันการลบ
 const resetDeleteConfirm = () => {
   documentToDeleteId.value = null
   showConfirmModal.value = false
 }
 </script>
-
-<style scoped></style>
