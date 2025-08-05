@@ -55,8 +55,8 @@ export const useAuthStore = defineStore('auth', () => {
     loginError.value = null; // เคลียร์ error เก่าก่อนเริ่ม
 
     try {
-      const response = await apiService.post('/login', { username: usernameInput, password: passwordInput });
-      const responseData = response.data.data; // สมมติว่าข้อมูลผู้ใช้อยู่ใน response.data.data
+      const response = await apiService.post('/auth/login', { username: usernameInput, password: passwordInput });
+      const responseData = response.data.data;
       const authToken = responseData?.accessToken;
       const backendUser = responseData?.user;
 
@@ -66,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
         token.value = authToken;
         isAuthenticated.value = true;
         localStorage.setItem('user', JSON.stringify(user.value));
-        if (token.value) { localStorage.setItem('token', token.value); } // ตรวจสอบ token.value ก่อนเก็บ
+        if (token.value) { localStorage.setItem('token', token.value); }
         console.log('เข้าสู่ระบบสำเร็จ:', user.value);
         return true;
       } else {
