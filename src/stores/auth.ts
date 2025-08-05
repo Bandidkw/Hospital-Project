@@ -2,7 +2,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import apiService from '@/services/apiService'; // ตรวจสอบให้แน่ใจว่า apiService ถูกตั้งค่ามาอย่างถูกต้อง
+import apiService from '@/services/apiService';
 import { isAxiosError } from 'axios';
 
 // Interface สำหรับข้อมูล User ที่เก็บใน Store
@@ -10,7 +10,7 @@ interface User {
   id: string;
   username: string;
   fullName: string;
-  email?: string; // เพิ่ม email เข้ามาใน User interface หากต้องการใช้ในอนาคต
+  email?: string;
   roleId: number;
   role: string;
 }
@@ -24,18 +24,17 @@ const ROLE_MAPPING: { [key: number]: string } = {
 
 // กำหนด Pinia Store สำหรับจัดการสถานะการยืนยันตัวตน (Authentication)
 export const useAuthStore = defineStore('auth', () => {
-  const router = useRouter(); // สำหรับจัดการการเปลี่ยนเส้นทาง (routing)
+  const router = useRouter();
 
-  // --- State Variables (สถานะของ Store) ---
-  const user = ref<User | null>(null); // ข้อมูลผู้ใช้ที่เข้าสู่ระบบ
-  const token = ref<string | null>(null); // Access Token สำหรับการเรียก API
-  const isAuthenticated = ref(false); // สถานะการเข้าสู่ระบบ (true หากเข้าสู่ระบบแล้ว)
-  const isAuthenticating = ref(false); // สถานะกำลังดำเนินการ Login หรือ Password Reset
-  const loginError = ref<string | null>(null); // ข้อความ Error จากการ Login หรือ Password Reset
-  const profileError = ref<string | null>(null); // ข้อความ Error จากการดึงข้อมูล Profile
+  // --- State Variables ---
+  const user = ref<User | null>(null);
+  const token = ref<string | null>(null);
+  const isAuthenticated = ref(false);
+  const isAuthenticating = ref(false);
+  const loginError = ref<string | null>(null);
+  const profileError = ref<string | null>(null);
 
-  // --- Computed Properties (ค่าที่คำนวณจาก State) ---
-  // การใช้ computed property เพื่อเข้าถึง state โดยตรงเป็นแนวทางที่ดี
+  // --- Computed Properties ---
   const getIsAuthenticated = computed(() => isAuthenticated.value);
   const getUser = computed(() => user.value);
   const getToken = computed(() => token.value);
@@ -47,43 +46,50 @@ export const useAuthStore = defineStore('auth', () => {
    * @Action: login
    * ใช้สำหรับเข้าสู่ระบบผู้ใช้โดยเรียก API
    * - อัปเดตสถานะ isAuthenticating, loginError
-   * - เก็บข้อมูล user และ token ใน State และ localStorage หากสำเร็จ
+   * - เก็บ Token ใน State และ localStorage หากสำเร็จ
+   * - เรียก fetchUserProfile เพื่อดึงข้อมูลผู้ใช้
    * - จัดการข้อผิดพลาดจาก API และ Network
    */
   const login = async (usernameInput: string, passwordInput: string): Promise<boolean> => {
     isAuthenticating.value = true;
-    loginError.value = null; // เคลียร์ error เก่าก่อนเริ่ม
+    loginError.value = null;
 
     try {
       const response = await apiService.post('/auth/login', { username: usernameInput, password: passwordInput });
-      const responseData = response.data.data;
-      const authToken = responseData?.accessToken;
-      const backendUser = responseData?.user;
+      const responseData = response.data.data; // ตอนนี้ response.data.data คือ JWT Token String โดยตรง
 
-      if (backendUser && authToken) {
-        const userRole = ROLE_MAPPING[backendUser.roleId] || 'user';
-        user.value = { ...backendUser, role: userRole };
-        token.value = authToken;
-        isAuthenticated.value = true;
-        localStorage.setItem('user', JSON.stringify(user.value));
-        if (token.value) { localStorage.setItem('token', token.value); }
-        console.log('เข้าสู่ระบบสำเร็จ:', user.value);
-        return true;
+      // ตรวจสอบว่า responseData เป็น String และมีค่า
+      if (typeof responseData === 'string' && responseData) {
+        token.value = responseData; // เก็บ Token ที่เป็น String โดยตรง
+        localStorage.setItem('token', token.value); // เก็บ Token ใน localStorage
+
+        // ตั้งค่า Authorization Header สำหรับ API Service
+        apiService.defaults.headers.common['Authorization'] = `Bearer ${token.value}`;
+
+        // เรียก fetchUserProfile ทันทีเพื่อดึงข้อมูลผู้ใช้
+        const profileFetched = await fetchUserProfile();
+        if (profileFetched) {
+          isAuthenticated.value = true;
+          console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value);
+          return true;
+        } else {
+          // หากดึงโปรไฟล์ไม่สำเร็จ ให้ถือว่าล็อกอินไม่สมบูรณ์
+          loginError.value = 'เข้าสู่ระบบสำเร็จแต่ไม่สามารถดึงข้อมูลโปรไฟล์ได้';
+          logout(); // ทำการ logout เพื่อล้างสถานะ
+          return false;
+        }
       } else {
-        loginError.value = 'ข้อมูลการเข้าสู่ระบบไม่สมบูรณ์จากเซิร์ฟเวอร์';
+        loginError.value = 'ข้อมูลการเข้าสู่ระบบไม่สมบูรณ์จากเซิร์ฟเวอร์ (Token ไม่ถูกต้อง)';
         return false;
       }
     } catch (error: any) {
       if (isAxiosError(error) && error.response) {
-        // ข้อผิดพลาดจาก API (เช่น 400, 401)
         loginError.value = error.response.data.description || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง';
         console.error('ข้อผิดพลาด API การเข้าสู่ระบบ:', error.response.data);
       } else {
-        // ข้อผิดพลาดเครือข่ายหรืออื่นๆ
         loginError.value = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: โปรดลองอีกครั้ง';
         console.error('ข้อผิดพลาดเครือข่ายการเข้าสู่ระบบ:', error);
       }
-      // รีเซ็ตสถานะการยืนยันตัวตนเมื่อเกิดข้อผิดพลาด
       isAuthenticated.value = false;
       user.value = null;
       token.value = null;
@@ -103,29 +109,24 @@ export const useAuthStore = defineStore('auth', () => {
    */
   const requestPasswordReset = async (email: string): Promise<boolean> => {
     isAuthenticating.value = true;
-    loginError.value = null; // เคลียร์ error เก่าก่อนเริ่ม
+    loginError.value = null;
 
     try {
-      // ใช้ apiService.post เพื่อความสอดคล้อง
-      // ตรวจสอบให้แน่ใจว่า Backend ของคุณมี Endpoint นี้
-      const response = await apiService.post('/forgot-password', { email }); // สมมติ Endpoint คือ /forgot-password
+      const response = await apiService.post('/forgot-password', { email });
 
-      if (response.status === 200 || response.status === 204) { // 200 OK หรือ 204 No Content
+      if (response.status === 200 || response.status === 204) {
         console.log('ส่งคำขอรีเซ็ตรหัสผ่านสำเร็จสำหรับอีเมล:', email);
         return true;
       } else {
-        // กรณี Backend ส่งสถานะอื่นที่ไม่ใช่ 2xx แต่ไม่ใช่ error ที่ Axios จับได้
         const errorData = response.data;
         loginError.value = errorData.message || 'ไม่สามารถส่งคำขอรีเซ็ตรหัสผ่านได้';
         return false;
       }
     } catch (error: any) {
       if (isAxiosError(error) && error.response) {
-        // ข้อผิดพลาดจาก API (เช่น 404, 400 ถ้าอีเมลไม่ถูกต้อง)
         loginError.value = error.response.data.description || 'ไม่สามารถส่งคำขอรีเซ็ตรหัสผ่านได้: กรุณาตรวจสอบอีเมล';
         console.error('ข้อผิดพลาด API การรีเซ็ตรหัสผ่าน:', error.response.data);
       } else {
-        // ข้อผิดพลาดเครือข่ายหรืออื่นๆ
         loginError.value = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: โปรดลองอีกครั้ง';
         console.error('ข้อผิดพลาดเครือข่ายการรีเซ็ตรหัสผ่าน:', error);
       }
@@ -142,15 +143,16 @@ export const useAuthStore = defineStore('auth', () => {
    * - จัดการข้อผิดพลาด เช่น Token หมดอายุ (401) และทำการ logout อัตโนมัติ
    */
   const fetchUserProfile = async (): Promise<boolean> => {
+    profileError.value = null; // เคลียร์ error เก่าก่อนเริ่ม
     if (!token.value) {
       profileError.value = 'Token ไม่พร้อมใช้งาน กรุณาเข้าสู่ระบบ';
       return false;
     }
-    profileError.value = null; // เคลียร์ error เก่าก่อนเริ่ม
 
     try {
+      // ตรวจสอบให้แน่ใจว่า apiService ถูกตั้งค่าให้ส่ง Authorization header ด้วย token
       const response = await apiService.get('/auth/profile'); // เปลี่ยน Endpoint ตาม Backend ของคุณ
-      const backendUser = response.data.data; // สมมติว่าข้อมูลผู้ใช้อยู่ใน response.data.data
+      const backendUser = response.data.data;
 
       if (backendUser) {
         const userRole = ROLE_MAPPING[backendUser.roleId] || 'user';
@@ -167,7 +169,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('การดึงข้อมูลโปรไฟล์ผู้ใช้ล้มเหลว:', error);
       profileError.value = 'ไม่สามารถดึงข้อมูลโปรไฟล์ได้: เกิดข้อผิดพลาด';
       if (isAxiosError(error) && error.response && error.response.status === 401) {
-        logout(); // Logout อัตโนมัติเมื่อ Token หมดอายุ
+        logout();
         profileError.value = 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง';
       }
       return false;
@@ -188,6 +190,8 @@ export const useAuthStore = defineStore('auth', () => {
     profileError.value = null;
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    // ล้าง Authorization Header เมื่อออกจากระบบ
+    delete apiService.defaults.headers.common['Authorization'];
     console.log('ออกจากระบบแล้ว - ล้าง localStorage.');
     router.push('/');
   };
@@ -220,6 +224,8 @@ export const useAuthStore = defineStore('auth', () => {
           isAuthenticated.value = true;
           if (user.value) { localStorage.setItem('user', JSON.stringify(user.value)); }
           if (token.value) { localStorage.setItem('token', token.value); }
+          // ตั้งค่า Authorization Header สำหรับ Dev Login
+          apiService.defaults.headers.common['Authorization'] = `Bearer ${token.value}`;
           resolve(true);
         } else {
           loginError.value = 'บทบาท Dev ไม่ถูกต้อง';
@@ -230,7 +236,7 @@ export const useAuthStore = defineStore('auth', () => {
           localStorage.removeItem('token');
           resolve(false);
         }
-      }, 300); // จำลองการหน่วงเวลา
+      }, 300);
     });
   };
 
@@ -242,39 +248,47 @@ export const useAuthStore = defineStore('auth', () => {
   const fetchUser = () => {
     const storedUser = localStorage.getItem('user');
     const storedToken = localStorage.getItem('token');
-    if (storedUser && storedToken) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        // ตรวจสอบความถูกต้องของข้อมูลที่ดึงมาจาก localStorage อย่างละเอียด
-        if (
-          parsedUser &&
-          typeof parsedUser.id === 'string' &&
-          typeof parsedUser.username === 'string' &&
-          typeof parsedUser.fullName === 'string' && // เพิ่มการตรวจสอบ fullName
-          typeof parsedUser.roleId === 'number'
-        ) {
-          const userRole = ROLE_MAPPING[parsedUser.roleId] || 'user';
-          user.value = { ...parsedUser, role: userRole };
-          token.value = storedToken;
-          isAuthenticated.value = true;
-          console.log('ดึงข้อมูลผู้ใช้จาก localStorage สำเร็จ:', user.value);
-        } else {
-          console.warn('ข้อมูลผู้ใช้ใน localStorage ไม่ถูกต้อง ล้างข้อมูล...');
-          logout();
+    if (storedToken) { // ตรวจสอบแค่ token ก่อน
+      token.value = storedToken;
+      // ตั้งค่า Authorization Header ทันทีที่พบ Token
+      apiService.defaults.headers.common['Authorization'] = `Bearer ${token.value}`;
+
+      // ถ้ามี user ใน localStorage ด้วย ก็ดึงมาใช้
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (
+            parsedUser &&
+            typeof parsedUser.id === 'string' &&
+            typeof parsedUser.username === 'string' &&
+            typeof parsedUser.fullName === 'string' &&
+            typeof parsedUser.roleId === 'number'
+          ) {
+            const userRole = ROLE_MAPPING[parsedUser.roleId] || 'user';
+            user.value = { ...parsedUser, role: userRole };
+            isAuthenticated.value = true;
+            console.log('ดึงข้อมูลผู้ใช้จาก localStorage สำเร็จ:', user.value);
+          } else {
+            console.warn('ข้อมูลผู้ใช้ใน localStorage ไม่ถูกต้อง ล้างข้อมูล...');
+            logout(); // ล้างข้อมูลหากไม่ถูกต้อง
+          }
+        } catch (e) {
+          console.error('ไม่สามารถแยกวิเคราะห์ข้อมูลผู้ใช้จาก localStorage:', e);
+          logout(); // ล้างข้อมูลหากเกิดข้อผิดพลาดในการแยกวิเคราะห์
         }
-      } catch (e) {
-        console.error('ไม่สามารถแยกวิเคราะห์ข้อมูลผู้ใช้หรือ token จาก localStorage:', e);
-        logout();
+      } else {
+        // ถ้ามี Token แต่ไม่มี User ใน localStorage ให้เรียก fetchUserProfile เพื่อดึงข้อมูล
+        console.log('พบ Token แต่ไม่มีข้อมูล User ใน localStorage, กำลังดึงข้อมูลโปรไฟล์...');
+        fetchUserProfile(); // ไม่ต้อง await เพราะไม่ต้องการบล็อกการทำงาน
       }
     } else {
-      // หากไม่มีข้อมูลใน localStorage ให้ตั้งค่าสถานะเริ่มต้น
       isAuthenticated.value = false;
       user.value = null;
       token.value = null;
     }
   };
 
-  // คืนค่า State, Computed Properties และ Actions ที่จะถูกเรียกใช้จาก Component อื่นๆ
+  // คืนค่า State, Computed Properties และ Actions
   return {
     user,
     token,
