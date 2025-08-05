@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import type { AxiosInstance } from 'axios';
 
 // กำหนด Base URL ของ Backend API
-const API_BASE_URL = 'https://test-hospital-project-backend.wnimqo.easypanel.host';
+const API_BASE_URL = 'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1';
 
 const apiService: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
