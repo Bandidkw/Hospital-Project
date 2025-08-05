@@ -56,8 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await apiService.post('/auth/login', { username: usernameInput, password: passwordInput });
-      // จาก Response ล่าสุดของ /auth/login, response.data.data คือ JWT Token String โดยตรง
-      const authToken = response.data.data;
+      const authToken = response.data.data.token;
 
       // ตรวจสอบว่า authToken เป็น String และมีค่า
       if (typeof authToken === 'string' && authToken) {
