@@ -56,30 +56,30 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await apiService.post('/auth/login', { username: usernameInput, password: passwordInput });
-      const responseData = response.data.data.token; // ตอนนี้ response.data.data คือ JWT Token String โดยตรง
+      // จาก Response ล่าสุดของ /auth/login, response.data.data คือ JWT Token String โดยตรง
+      const authToken = response.data.data;
 
-      // ตรวจสอบว่า responseData เป็น String และมีค่า
-      if (typeof responseData === 'string' && responseData) {
-        token.value = responseData; // เก็บ Token ที่เป็น String โดยตรง
+      // ตรวจสอบว่า authToken เป็น String และมีค่า
+      if (typeof authToken === 'string' && authToken) {
+        token.value = authToken; // เก็บ Token ที่เป็น String โดยตรง
         localStorage.setItem('token', token.value); // เก็บ Token ใน localStorage
 
-        // ตั้งค่า Authorization Header สำหรับ API Service
+        // ตั้งค่า Authorization Header สำหรับ API Service เพื่อใช้ในการเรียก API ถัดไป
         apiService.defaults.headers.common['Authorization'] = `Bearer ${token.value}`;
 
-        // เรียก fetchUserProfile ทันทีเพื่อดึงข้อมูลผู้ใช้
+        // เรียก fetchUserProfile ทันทีเพื่อดึงข้อมูลผู้ใช้ (ซึ่งจะตั้งค่า user.value และ isAuthenticated.value)
         const profileFetched = await fetchUserProfile();
         if (profileFetched) {
-          isAuthenticated.value = true;
-          // console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value);
+          console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value);
           return true;
         } else {
           // หากดึงโปรไฟล์ไม่สำเร็จ ให้ถือว่าล็อกอินไม่สมบูรณ์
-          loginError.value = 'เข้าสู่ระบบสำเร็จแต่ไม่สามารถดึงข้อมูลโปรไฟล์ได้';
+          loginError.value = profileError.value || 'เข้าสู่ระบบสำเร็จแต่ไม่สามารถดึงข้อมูลโปรไฟล์ได้';
           logout(); // ทำการ logout เพื่อล้างสถานะ
           return false;
         }
       } else {
-        loginError.value = 'ข้อมูลการเข้าสู่ระบบไม่สมบูรณ์จากเซิร์ฟเวอร์ (Token ไม่ถูกต้อง)';
+        loginError.value = 'ข้อมูลการเข้าสู่ระบบไม่สมบูรณ์จากเซิร์ฟเวอร์ (ไม่ได้รับ Token ที่ถูกต้อง)';
         return false;
       }
     } catch (error: any) {
@@ -152,13 +152,24 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       // ตรวจสอบให้แน่ใจว่า apiService ถูกตั้งค่าให้ส่ง Authorization header ด้วย token
       const response = await apiService.get('/auth/profile');
-      const backendUser = response.data.data;
+      const backendUser = response.data.data; // จาก Response ล่าสุดของ /auth/profile, response.data.data คือ Object ผู้ใช้
 
       if (backendUser) {
-        const userRole = ROLE_MAPPING[backendUser.roleId] || 'user';
-        user.value = { ...backendUser, role: userRole };
-        isAuthenticated.value = true;
-        localStorage.setItem('user', JSON.stringify(user.value));
+        // แปลง 'role' จาก String เป็น Number ก่อนนำไปใช้กับ ROLE_MAPPING
+        const roleIdFromBackend = parseInt(backendUser.role, 10);
+        const userRole = ROLE_MAPPING[roleIdFromBackend] || 'user'; // Map บทบาท
+
+        // กำหนดค่า user object ใน Store
+        user.value = {
+          id: backendUser.id,
+          username: backendUser.username,
+          fullName: backendUser.name || backendUser.fullName, // ใช้ 'name' ถ้า 'fullName' ไม่มี
+          email: backendUser.email,
+          roleId: roleIdFromBackend, // เก็บ roleId เป็น Number
+          role: userRole // เก็บ role ที่ Map แล้ว (เช่น 'admin')
+        };
+        isAuthenticated.value = true; // ตั้งค่าสถานะว่าเข้าสู่ระบบแล้ว
+        localStorage.setItem('user', JSON.stringify(user.value)); // เก็บข้อมูลผู้ใช้ใน localStorage
         console.log('ดึงข้อมูลโปรไฟล์ผู้ใช้สำเร็จ:', user.value);
         return true;
       } else {
@@ -169,7 +180,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('การดึงข้อมูลโปรไฟล์ผู้ใช้ล้มเหลว:', error);
       profileError.value = 'ไม่สามารถดึงข้อมูลโปรไฟล์ได้: เกิดข้อผิดพลาด';
       if (isAxiosError(error) && error.response && error.response.status === 401) {
-        logout();
+        logout(); // Logout อัตโนมัติเมื่อ Token หมดอายุ
         profileError.value = 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง';
       }
       return false;
@@ -262,7 +273,7 @@ export const useAuthStore = defineStore('auth', () => {
             typeof parsedUser.id === 'string' &&
             typeof parsedUser.username === 'string' &&
             typeof parsedUser.fullName === 'string' &&
-            typeof parsedUser.roleId === 'number'
+            typeof parsedUser.roleId === 'number' // ตรวจสอบว่า roleId เป็น number
           ) {
             const userRole = ROLE_MAPPING[parsedUser.roleId] || 'user';
             user.value = { ...parsedUser, role: userRole };
