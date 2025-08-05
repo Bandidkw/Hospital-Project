@@ -56,7 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const response = await apiService.post('/auth/login', { username: usernameInput, password: passwordInput });
-      const responseData = response.data.data; // ตอนนี้ response.data.data คือ JWT Token String โดยตรง
+      const responseData = response.data.data.token; // ตอนนี้ response.data.data คือ JWT Token String โดยตรง
 
       // ตรวจสอบว่า responseData เป็น String และมีค่า
       if (typeof responseData === 'string' && responseData) {
@@ -70,7 +70,7 @@ export const useAuthStore = defineStore('auth', () => {
         const profileFetched = await fetchUserProfile();
         if (profileFetched) {
           isAuthenticated.value = true;
-          console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value);
+          // console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value);
           return true;
         } else {
           // หากดึงโปรไฟล์ไม่สำเร็จ ให้ถือว่าล็อกอินไม่สมบูรณ์
@@ -151,7 +151,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       // ตรวจสอบให้แน่ใจว่า apiService ถูกตั้งค่าให้ส่ง Authorization header ด้วย token
-      const response = await apiService.get('/auth/profile'); // เปลี่ยน Endpoint ตาม Backend ของคุณ
+      const response = await apiService.get('/auth/profile');
       const backendUser = response.data.data;
 
       if (backendUser) {
