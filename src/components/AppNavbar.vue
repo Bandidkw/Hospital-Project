@@ -133,16 +133,14 @@
           <i class="fas fa-id-card"></i>
           <span>ติดต่อเรา</span>
         </RouterLink>
-
         <!-- ***** เมนู 'บริการอื่นๆ' พร้อม Dropdown (สำหรับ Desktop) - ย้ายมาที่นี่แล้ว ***** -->
-        <div class="relative h-full flex items-center">
+        <!-- <div class="relative h-full flex items-center">
           <button
             @click="toggleDropdown('otherServices')"
             class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300 cursor-pointer focus:outline-none"
             :aria-expanded="isDropdownOpen.otherServices"
           >
             <i class="fas fa-ellipsis-h"></i>
-            <!-- ไอคอนสำหรับ 'บริการอื่นๆ' -->
             <span>บริการอื่นๆ</span>
             <i
               :class="{
@@ -157,7 +155,6 @@
             class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
             @click.stop
           >
-            <!-- ลิงก์สำหรับ 'บริการอื่นๆ' -->
             <RouterLink
               to="/some-internal-page"
               class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
@@ -190,10 +187,8 @@
             >
               <i class="fas fa-link"></i><span>บริการเสริม 3</span>
             </a>
-
-            <!-- เพิ่มลิงก์อื่นๆ ของคุณที่นี่ -->
           </div>
-        </div>
+        </div> -->
         <!-- ***** สิ้นสุดเมนู 'บริการอื่นๆ' ***** -->
 
         <div class="relative h-full flex items-center">
@@ -385,7 +380,7 @@
       </RouterLink>
 
       <!-- ***** เมนู 'บริการอื่นๆ' พร้อม Dropdown (สำหรับ Mobile) - ย้ายมาที่นี่แล้ว ***** -->
-      <div
+      <!-- <div
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
         @click="toggleDropdown('otherServices')"
       >
@@ -397,9 +392,8 @@
           }"
           class="text-xs ml-auto transition-transform duration-300"
         ></i>
-      </div>
-      <div v-if="isDropdownOpen.otherServices" class="bg-gray-100 pl-6">
-        <!-- ลิงก์สำหรับ 'บริการอื่นๆ' -->
+      </div> -->
+      <!-- <div v-if="isDropdownOpen.otherServices" class="bg-gray-100 pl-6">
         <a
           href="https://example.com/other-service-1"
           target="_blank"
@@ -423,8 +417,7 @@
         >
           <i class="fas fa-info-circle"></i><span>หน้าข้อมูลภายใน (Mobile)</span>
         </RouterLink>
-        <!-- เพิ่มลิงก์อื่นๆ ของคุณที่นี่ -->
-      </div>
+      </div> -->
       <!-- ***** สิ้นสุดเมนู 'บริการอื่นๆ' (Mobile) ***** -->
 
       <div
@@ -497,7 +490,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import LoginModal from './LoginModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
@@ -512,7 +505,7 @@ const isDropdownOpen = ref({
 const isLoginModalOpen = ref(false)
 
 const route = useRoute()
-const router = useRouter()
+// const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToast()
 

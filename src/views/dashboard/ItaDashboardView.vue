@@ -131,9 +131,13 @@ const fetchYears = async () => {
   error.value = null
   try {
     availableYears.value = await itaService.getYears()
-  } catch (err: any) {
-    error.value = err.message || 'ไม่สามารถดึงข้อมูลปีได้'
-    toast.error(error.value)
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+    }
+    toast.error(error.value || 'ไม่สามารถดึงข้อมูลปีได้')
   } finally {
     loading.value = false
   }
@@ -161,8 +165,13 @@ const handleCreateYearSubmit = async () => {
     isCreateYearModalOpen.value = false // ปิด Modal
     toast.success(`สร้างปี ${newYearNumber} สำเร็จ!`)
     fetchYears() // ดึงข้อมูลปีมาใหม่เพื่ออัปเดตตาราง
-  } catch (err: any) {
-    toast.error(err.message || 'ไม่สามารถสร้างปีใหม่ได้')
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+    }
+    toast.error(error.value || 'ไม่สามารถดึงข้อมูลปีได้')
   }
 }
 

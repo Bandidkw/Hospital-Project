@@ -21,10 +21,12 @@
       <i class="fas fa-spinner fa-spin text-5xl text-blue-500"></i>
       <p class="mt-6 text-xl text-gray-600">กำลังโหลดข้อมูล ITA...</p>
     </div>
+
     <div v-else-if="error" class="text-center py-20 text-red-600">
       <i class="fas fa-exclamation-triangle text-5xl mb-6"></i>
       <p class="text-xl">เกิดข้อผิดพลาดในการดึงข้อมูล: {{ error }}</p>
     </div>
+
     <div v-else-if="!selectedYearData" class="text-center py-20 text-gray-500 text-2xl">
       <i class="fas fa-folder-open text-5xl mb-6"></i>
       <p>ไม่พบข้อมูล ITA สำหรับปีงบประมาณที่เลือก</p>
@@ -32,56 +34,58 @@
 
     <div v-else class="space-y-10">
       <div
-        v-for="moitGroup in groupedMoitsByCategory"
-        :key="moitGroup.id"
-        class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
+        v-for="moit in groupedMoitsByCategory"
+        :key="moit.id"
+        class="bg-white rounded-xl shadow-lg p-8"
       >
-        <h2 class="text-2xl font-bold text-my-custom-gray mb-4 flex items-center">
-          <i class="fas fa-folder mr-3 text-emerald-600"></i> {{ moitGroup.title }}
+        <h2 class="text-2xl font-bold text-my-custom-gray mb-4">
+          <i class="fas fa-folder mr-3 text-emerald-600"></i> {{ moit.title }}
         </h2>
-        <p
-          v-if="moitGroup.description"
-          class="text-gray-600 mb-6 border-l-4 border-emerald-400 pl-3 italic"
-        >
-          {{ moitGroup.description }}
-        </p>
+        <p v-if="moit.description" class="text-gray-600 mb-6 italic">{{ moit.description }}</p>
 
-        <div v-if="Object.keys(moitGroup.groupedDocuments).length > 0" class="space-y-6 ml-4">
-          <div
-            v-for="(docs, categoryName) in moitGroup.groupedDocuments"
-            :key="categoryName"
-            class="bg-gray-50 p-4 rounded-md shadow-sm"
-          >
-            <h3 class="text-xl font-bold text-gray-700 mb-3 pb-2 border-b flex items-center">
-              <i class="fas fa-tags mr-2 text-orange-500"></i> {{ categoryName }}
+        <div class="space-y-6">
+          <div v-for="quarter in [1, 2, 3, 4]" :key="quarter">
+            <h3
+              @click="toggleQuarter(moit.id, quarter)"
+              class="text-xl font-semibold text-gray-700 mb-3 border-b pb-2 flex justify-between items-center cursor-pointer"
+            >
+              <span>
+                <i class="fas fa-calendar-alt mr-2 text-orange-500"></i>
+                ไตรมาสที่ {{ quarter }}
+              </span>
+              <i
+                class="fas fa-chevron-down transition-transform duration-300"
+                :class="{ 'rotate-180': expandedQuarters[`${moit.id}-${quarter}`] }"
+              ></i>
             </h3>
 
-            <ul class="list-none p-0 ml-4">
-              <li
-                v-for="doc in docs"
-                :key="doc.id"
-                class="flex items-start mb-3 bg-white p-3 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
+            <div v-if="expandedQuarters[`${moit.id}-${quarter}`]" class="space-y-4 ml-4">
+              <div
+                v-for="(docs, subTopic) in groupedDocumentsBySubTopic(moit.documents, quarter)"
+                :key="subTopic"
               >
-                <i class="fas fa-file-pdf text-red-500 text-xl mr-3 mt-1"></i>
-                <div>
-                  <a
-                    :href="doc.fileUrl"
-                    target="_blank"
-                    class="text-blue-600 hover:underline text-lg font-medium"
-                  >
-                    {{ doc.title }}
-                  </a>
-                  <p v-if="doc.description" class="text-sm text-gray-600 mt-1 italic">
-                    {{ doc.description }}
-                  </p>
-                </div>
-              </li>
-            </ul>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">
+                  <i class="fas fa-tags mr-2"></i> {{ subTopic || 'เอกสารทั่วไป' }}
+                </h4>
+                <ul class="list-disc pl-6">
+                  <li v-for="doc in docs" :key="doc.id" class="mb-2">
+                    <a :href="doc.fileUrl" target="_blank" class="text-blue-600 hover:underline">
+                      {{ doc.title }}
+                    </a>
+                    <p v-if="doc.description" class="text-sm text-gray-500 italic">
+                      {{ doc.description }}
+                    </p>
+                  </li>
+                </ul>
+              </div>
+              <div
+                v-if="!hasDocumentsForQuarter(moit.documents, quarter)"
+                class="text-gray-500 italic"
+              >
+                ยังไม่มีเอกสารสำหรับไตรมาสนี้
+              </div>
+            </div>
           </div>
-        </div>
-
-        <div v-else class="text-gray-500 text-center py-4 border-t mt-6">
-          ยังไม่มีเอกสารสำหรับหัวข้อนี้
         </div>
       </div>
     </div>
@@ -90,39 +94,115 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-// 1. แก้ไข Import ให้ถูกต้องตาม Interface ใหม่
+// 1. Import Type ที่ถูกต้องจากไฟล์กลาง
 import type { YearIta, Moit, ItaDocument } from '@/types/ita'
-import { itaService } from '@/services/itaService'
+// import { itaService } from '@/services/itaService'; // เปิดใช้งานเมื่อเชื่อม API จริง
 
-// 2. State หลักจะเก็บข้อมูลแบบ 3 ชั้น (YearIta[])
-const itaData = ref<YearIta[]>([])
-const loading = ref(true)
+// 2. Mock Data ที่สมบูรณ์ตาม Interface ล่าสุด
+const mockITAData: YearIta[] = [
+  {
+    id: 'year-2567',
+    year: '2567',
+    title: 'ปีงบประมาณ 2567',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    moits: [
+      {
+        id: 'moit1-2567',
+        ita_topic_id: 'year-2567',
+        moit_name: 'MOIT 1',
+        title: 'MOIT 1: หน่วยงานมีการกำหนดมาตรการ...',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        documents: [
+          {
+            id: 'doc-1',
+            topic_id: 'moit1-2567',
+            title: 'ประกาศ MOIT 1 Q1',
+            sub_topic: 'ประกาศ',
+            quarter: 1,
+            fileUrl: '#',
+            fileName: 'doc1.pdf',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          {
+            id: 'doc-2',
+            topic_id: 'moit1-2567',
+            title: 'รายงาน MOIT 1 Q1',
+            sub_topic: 'รายงานผล',
+            quarter: 1,
+            fileUrl: '#',
+            fileName: 'doc2.pdf',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+          {
+            id: 'doc-3',
+            topic_id: 'moit1-2567',
+            title: 'ประกาศ MOIT 1 Q2',
+            sub_topic: 'ประกาศ',
+            quarter: 2,
+            fileUrl: '#',
+            fileName: 'doc3.pdf',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+      },
+      {
+        id: 'moit2-2567',
+        ita_topic_id: 'year-2567',
+        moit_name: 'MOIT 2',
+        title: 'MOIT 2: หน่วยงานมีการเปิดเผยข้อมูล...',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        documents: [
+          {
+            id: 'doc-4',
+            topic_id: 'moit2-2567',
+            title: 'รายงาน MOIT 2 Q4',
+            sub_topic: 'รายงานผล',
+            quarter: 4,
+            fileUrl: '#',
+            fileName: 'doc4.pdf',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          },
+        ],
+      },
+    ],
+  },
+]
+
+// 3. State ทั้งหมดที่ต้องใช้
+const itaData = ref<YearIta[]>(mockITAData)
+const loading = ref(false)
 const error = ref<string | null>(null)
-const selectedYear = ref<string | null>(null)
+const selectedYear = ref<string | null>('2567')
+const expandedQuarters = ref<{ [key: string]: boolean }>({})
 
-// 3. Computed สำหรับดึง "ปี" ที่มีข้อมูลทั้งหมดออกมาสร้าง Dropdown
+// 4. Computed Properties ชุดใหม่ที่ทำงานกับโครงสร้าง 3 ชั้น
 const availableYears = computed(() => {
   if (!itaData.value) return []
   const years = new Set(itaData.value.map((data) => data.year))
   return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a))
 })
 
-// 4. Computed สำหรับหา "ข้อมูลของปีที่ถูกเลือก" แค่ปีเดียว
 const selectedYearData = computed(() => {
   if (!selectedYear.value || !itaData.value) return null
   return itaData.value.find((data) => data.year === selectedYear.value) || null
 })
 
-// 5. Computed สำหรับจัดกลุ่ม "เอกสาร" ที่อยู่ใน "MOIT" ของปีที่เลือก
+// ===== นี่คือฟังก์ชันใหม่ที่คุณต้องเพิ่มเข้ามา =====
 const groupedMoitsByCategory = computed(() => {
   if (!selectedYearData.value) return []
 
-  // เพิ่ม (moit: Moit) เข้าไปเพื่อบอก Type ให้ชัดเจน
   return selectedYearData.value.moits.map((moit: Moit) => {
     const grouped: { [category: string]: ItaDocument[] } = {}
 
     moit.documents.forEach((doc) => {
-      const category = doc.category || 'เอกสารทั่วไป'
+      const category = doc.sub_topic || 'เอกสารทั่วไป'
       if (!grouped[category]) {
         grouped[category] = []
       }
@@ -133,31 +213,47 @@ const groupedMoitsByCategory = computed(() => {
   })
 })
 
-// 6. ฟังก์ชัน fetch ข้อมูลจะเรียกใช้ Service เดิม แต่ State ที่รับข้อมูลจะเปลี่ยนไป
-const fetchAllITAData = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    // itaService.getAllTopics() จะคืนค่าเป็น YearIta[]
-    const dataFromApi = await itaService.getAllTopics()
-    itaData.value = dataFromApi
+// 5. Helper Functions สำหรับจัดกลุ่มและตรวจสอบข้อมูล
+const groupedDocumentsBySubTopic = (documents: ItaDocument[], quarter: number) => {
+  const filteredDocs = documents.filter((doc) => doc.quarter === quarter)
+  const grouped: { [subTopic: string]: ItaDocument[] } = {}
+  filteredDocs.forEach((doc) => {
+    const sub = doc.sub_topic || 'เอกสารทั่วไป'
+    if (!grouped[sub]) {
+      grouped[sub] = []
+    }
+    grouped[sub].push(doc)
+  })
+  return grouped
+}
 
-    // ตั้งค่าปีเริ่มต้นเป็นปีล่าสุด
-    if (availableYears.value.length > 0) {
-      selectedYear.value = availableYears.value[0]
+const hasDocumentsForQuarter = (documents: ItaDocument[], quarter: number) => {
+  return documents.some((doc) => doc.quarter === quarter)
+}
+
+// 6. ฟังก์ชันสำหรับ Accordion
+const toggleQuarter = (moitId: string, quarter: number) => {
+  const keyToToggle = `${moitId}-${quarter}`
+  const wasOpen = !!expandedQuarters.value[keyToToggle]
+
+  const newExpandedState: { [key: string]: boolean } = {}
+
+  for (const key in expandedQuarters.value) {
+    if (!key.startsWith(`${moitId}-`)) {
+      newExpandedState[key] = expandedQuarters.value[key]
     }
-  } catch (err: unknown) {
-    console.error('Error fetching public ITA data:', err)
-    if (err instanceof Error) {
-      // ถ้า err เป็น Error object จริงๆ เราถึงจะใช้ .message ได้
-      error.value = err.message
-    } else {
-      // ถ้าเป็น Error รูปแบบอื่นที่เราไม่รู้จัก
-      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
-    }
-  } finally {
-    loading.value = false
   }
+
+  if (!wasOpen) {
+    newExpandedState[keyToToggle] = true
+  }
+
+  expandedQuarters.value = newExpandedState
+}
+
+// 7. ฟังก์ชันสำหรับดึงข้อมูลจริง (ตอนนี้ปิดไว้ก่อน)
+const fetchAllITAData = async () => {
+  // ...
 }
 
 onMounted(() => {

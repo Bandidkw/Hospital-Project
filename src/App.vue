@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { RouterView, useRouter, useRoute } from 'vue-router'
-import Navbar from './components/Navbar.vue'
+import Navbar from './components/AppNavbar.vue'
 import Footer from './components/Footer.vue'
 import LoadingSpinner from './components/LoadingSpinner.vue'
 import HeaderContact from './components/HeaderContact.vue'

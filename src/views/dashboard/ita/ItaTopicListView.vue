@@ -190,9 +190,12 @@ const fetchTopicsForYear = async () => {
         updatedAt: '',
       },
     ]
-  } catch (err: any) {
-    error.value = err.message || 'ไม่สามารถดึงข้อมูลหัวข้อได้'
-    toast.error(error.value)
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+    }
   } finally {
     loading.value = false
   }
@@ -223,8 +226,13 @@ const handleCreateTopicSubmit = async () => {
       fetchTopicsForYear()
       router.push(`/dashboard/ita/topic/${newTopic.id}/edit`)
     }
-  } catch (err: any) {
-    toast.error(err.message || 'เกิดข้อผิดพลาดในการสร้างหัวข้อใหม่')
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message
+    } else {
+      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+    }
+    toast.error(error.value || 'ไม่สามารถดึงข้อมูลปีได้')
   }
 }
 

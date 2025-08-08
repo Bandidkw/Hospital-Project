@@ -4,8 +4,8 @@ export interface ItaDocument {
   topic_id: string;
   title: string;
   description?: string;
-  category: string;
-  quarter?: 1 | 2 | 3 | 4;
+  quarter: 1 | 2 | 3 | 4;
+  sub_topic: string;
   fileName: string;
   fileUrl: string;
   createdAt: string;
