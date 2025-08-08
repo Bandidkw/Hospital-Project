@@ -27,6 +27,8 @@ const router = createRouter({
     { path: '/news', name: 'news', component: () => import('@/views/NewsView.vue') },
     { path: '/contact', name: 'contact', component: () => import('@/views/ContactView.vue') },
     { path: '/ita-documents-public', name: 'ita-documents-public', component: () => import('@/views/ita/ItaPublicView.vue') },
+    // ใน router/index.ts
+    { path: '/dashboard/ita/topic/:id/edit', name: 'ItaTopicEdit', component: () => import('@/views/dashboard/ItaTopicEditView.vue'),meta: {requiresAuth:true}},
 
     // **Dashboard และ Nested Routes**
     {
@@ -57,7 +59,7 @@ const router = createRouter({
         {
           path: 'ita', // /dashboard/ita
           name: 'dashboard-ita',
-          component: () => import('../views/dashboard/DashboardItaView.vue'),
+          component: () => import('../views/dashboard/ItaDashboardView.vue'),
           meta: { requiresAuth: true, roles: ['user', 'admin', 'superadmin'] } // user, admin, superadmin
         },
         {

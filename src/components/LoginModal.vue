@@ -1,3 +1,4 @@
+<!-- LoginModal.vue -->
 <template>
   <div
     v-if="isOpen"
@@ -205,6 +206,8 @@ const closeModal = () => {
   resetError.value = null // Clear reset error
 }
 
+// LoginModal.vue
+
 const submitLogin = async () => {
   isLoading.value = true
   const success = await authStore.login(username.value, password.value)
@@ -213,29 +216,24 @@ const submitLogin = async () => {
   if (success) {
     emit('loginSuccess')
     toast.success('เข้าสู่ระบบสำเร็จ!')
-    closeModal()
 
-    console.log('Login Success! Checking roles...')
-    console.log('User Role:', authStore.user?.role)
-    console.log('Is User:', authStore.isUser)
-    console.log('Is Admin:', authStore.isAdmin)
-    console.log('Is SuperAdmin:', authStore.isSuperAdmin)
-
-    try {
+    // --- นี่คือ Logic การนำทางที่อัปเกรดแล้ว ---
+    if (authStore.user?.vitrify) {
+      // 1. ถ้าถูกบังคับให้เปลี่ยนรหัส -> ส่งไปหน้าเปลี่ยนรหัสทันที
+      console.log('User must change password. Redirecting to /force-change-password')
+      toast.info('กรุณาตั้งรหัสผ่านใหม่เพื่อความปลอดภัย')
+      router.push('/force-change-password')
+    } else {
+      // 2. ถ้าไม่ต้องเปลี่ยนรหัส -> ค่อยเช็ค role เพื่อไปหน้าแดชบอร์ด
+      console.log('Password is fine. Redirecting based on role.')
       if (authStore.isAdmin || authStore.isSuperAdmin) {
-        console.log('เงื่อนไขบทบาทเป็นจริง: กำลังนำทางไปที่ /dashboard')
-        router.push('/dashboard').catch((err) => {
-          console.error('เกิดข้อผิดพลาดในการนำทางไป Dashboard:', err)
-        })
+        router.push('/dashboard')
       } else {
-        console.log('บทบาทผู้ใช้ทั่วไป: กำลังนำทางไปที่ /')
-        router.push('/').catch((err) => {
-          console.error('เกิดข้อผิดพลาดในการนำทางไป Home:', err)
-        })
+        router.push('/')
       }
-    } catch (e) {
-      console.error('ข้อผิดพลาดที่ไม่คาดคิดใน Logic การนำทาง:', e)
     }
+
+    closeModal() // ปิด Modal
   } else {
     emit('loginFailed', authStore.loginError || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ')
     toast.error(authStore.loginError || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง')

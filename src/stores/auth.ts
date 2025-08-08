@@ -13,6 +13,7 @@ interface User {
   email?: string;
   roleId: number;
   role: string;
+  vitrify:boolean;
 }
 
 // Map สำหรับแปลง roleId เป็นชื่อ Role ที่อ่านง่าย
@@ -29,10 +30,12 @@ export const useAuthStore = defineStore('auth', () => {
   // --- State Variables ---
   const user = ref<User | null>(null);
   const token = ref<string | null>(null);
-  const isAuthenticated = ref(false);
+  // const isAuthenticated = ref(false);
   const isAuthenticating = ref(false);
   const loginError = ref<string | null>(null);
   const profileError = ref<string | null>(null);
+
+  const isAuthenticated = computed(() => !!user.value && !!token.value);
 
   // --- Computed Properties ---
   const getIsAuthenticated = computed(() => isAuthenticated.value);
@@ -89,7 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
         loginError.value = 'เกิดข้อผิดพลาดในการเชื่อมต่อ: โปรดลองอีกครั้ง';
         console.error('ข้อผิดพลาดเครือข่ายการเข้าสู่ระบบ:', error);
       }
-      isAuthenticated.value = false;
+      // isAuthenticated.value = false;
       user.value = null;
       token.value = null;
       localStorage.removeItem('user');
@@ -165,9 +168,10 @@ export const useAuthStore = defineStore('auth', () => {
           fullName: backendUser.name || backendUser.fullName, // ใช้ 'name' ถ้า 'fullName' ไม่มี
           email: backendUser.email,
           roleId: roleIdFromBackend, // เก็บ roleId เป็น Number
-          role: userRole // เก็บ role ที่ Map แล้ว (เช่น 'admin')
+          role: userRole,
+          vitrify: backendUser.vitrify || false
         };
-        isAuthenticated.value = true; // ตั้งค่าสถานะว่าเข้าสู่ระบบแล้ว
+        // isAuthenticated.value = true;
         localStorage.setItem('user', JSON.stringify(user.value)); // เก็บข้อมูลผู้ใช้ใน localStorage
         console.log('ดึงข้อมูลโปรไฟล์ผู้ใช้สำเร็จ:', user.value);
         return true;
@@ -195,7 +199,7 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = () => {
     user.value = null;
     token.value = null;
-    isAuthenticated.value = false;
+    // isAuthenticated.value = false;
     loginError.value = null;
     profileError.value = null;
     localStorage.removeItem('user');
@@ -218,20 +222,41 @@ export const useAuthStore = defineStore('auth', () => {
         let devToken: string | null = null;
 
         if (role === 'user') {
-          devUser = { id: 'dev-user-1', username: 'dev_user', fullName: 'Dev User', roleId: 10, role: 'user' };
+          devUser = {
+            id: 'dev-user-1',
+            username: 'dev_user',
+            fullName: 'Dev User',
+            roleId: 10,
+            role: 'user',
+            vitrify: false,
+          };
           devToken = 'dev-user-token';
         } else if (role === 'admin') {
-          devUser = { id: 'dev-admin-1', username: 'dev_admin', fullName: 'Dev Admin', roleId: 50, role: 'admin' };
+          devUser = {
+            id: 'dev-admin-1',
+            username: 'dev_admin',
+            fullName: 'Dev Admin',
+            roleId: 50,
+            role: 'admin',
+            vitrify: false,
+          };
           devToken = 'dev-admin-token';
         } else if (role === 'superadmin') {
-          devUser = { id: 'dev-superadmin-1', username: 'dev_superadmin', fullName: 'Dev Super Admin', roleId: 90, role: 'superadmin' };
+          devUser = {
+            id: 'dev-superadmin-1',
+            username: 'dev_superadmin',
+            fullName: 'Dev Super Admin',
+            roleId: 90,
+            role: 'superadmin',
+            vitrify: false,
+          };
           devToken = 'dev-superadmin-token';
         }
 
         if (devUser && devToken) {
           user.value = devUser;
           token.value = devToken;
-          isAuthenticated.value = true;
+          // isAuthenticated.value = true;
           if (user.value) { localStorage.setItem('user', JSON.stringify(user.value)); }
           if (token.value) { localStorage.setItem('token', token.value); }
           // ตั้งค่า Authorization Header สำหรับ Dev Login
@@ -239,7 +264,7 @@ export const useAuthStore = defineStore('auth', () => {
           resolve(true);
         } else {
           loginError.value = 'บทบาท Dev ไม่ถูกต้อง';
-          isAuthenticated.value = false;
+          // isAuthenticated.value = false;
           user.value = null;
           token.value = null;
           localStorage.removeItem('user');
@@ -276,7 +301,7 @@ export const useAuthStore = defineStore('auth', () => {
           ) {
             const userRole = ROLE_MAPPING[parsedUser.roleId] || 'user';
             user.value = { ...parsedUser, role: userRole };
-            isAuthenticated.value = true;
+            // isAuthenticated.value = true;
             console.log('ดึงข้อมูลผู้ใช้จาก localStorage สำเร็จ:', user.value);
           } else {
             console.warn('ข้อมูลผู้ใช้ใน localStorage ไม่ถูกต้อง ล้างข้อมูล...');
@@ -292,31 +317,49 @@ export const useAuthStore = defineStore('auth', () => {
         fetchUserProfile(); // ไม่ต้อง await เพราะไม่ต้องการบล็อกการทำงาน
       }
     } else {
-      isAuthenticated.value = false;
+      // isAuthenticated.value = false;
       user.value = null;
       token.value = null;
     }
   };
+  // เพิ่ม Action นี้เข้าไปใน store
+const changePassword = async (passwords: { currentPassword?: string; newPassword: string }): Promise<boolean> => {
+  try {
+    // Endpoint นี้คุณต้องสร้างที่ฝั่ง Backend
+    await apiService.post('/auth/change-password', passwords);
+    // หลังจากเปลี่ยนรหัสผ่านสำเร็จ ควรจะอัปเดตสถานะใน State ด้วย
+    if (user.value) {
+      user.value.vitrify = false;
+    }
+    console.log('เปลี่ยนรหัสผ่านสำเร็จ');
+    return true;
+  } catch (error) {
+    console.error('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน:', error);
+    // คุณอาจจะดึงข้อความ error จากหลังบ้านมาแสดงผล
+    return false;
+  }
+};
 
-  // คืนค่า State, Computed Properties และ Actions
-  return {
-    user,
-    token,
-    isAuthenticated,
-    isAuthenticating,
-    loginError,
-    profileError,
-    getIsAuthenticated,
-    getUser,
-    getToken,
-    isUser,
-    isAdmin,
-    isSuperAdmin,
-    login,
-    logout,
-    fetchUserProfile,
-    devLogin,
-    fetchUser,
-    requestPasswordReset,
-  };
+// คืนค่า State, Computed Properties และ Actions
+return {
+  user,
+  token,
+  isAuthenticated,
+  isAuthenticating,
+  loginError,
+  profileError,
+  getIsAuthenticated,
+  getUser,
+  getToken,
+  isUser,
+  isAdmin,
+  isSuperAdmin,
+  login,
+  logout,
+  fetchUserProfile,
+  devLogin,
+  fetchUser,
+  requestPasswordReset,
+  changePassword,
+};
 });

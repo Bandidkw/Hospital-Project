@@ -1,10 +1,18 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click.self="closeModal">
+  <div
+    v-if="isOpen"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    @click.self="closeModal"
+  >
     <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800">{{ documentToEdit ? 'แก้ไขเอกสาร ITA' : 'เพิ่มเอกสาร ITA ใหม่' }}</h2>
+      <h2 class="text-2xl font-bold mb-4 text-gray-800">
+        {{ documentToEdit ? 'แก้ไขเอกสาร ITA' : 'เพิ่มเอกสาร ITA ใหม่' }}
+      </h2>
       <form @submit.prevent="saveDocument">
         <div class="mb-4">
-          <label for="title" class="block text-sm font-medium text-gray-700 mb-2">ชื่อเอกสาร:</label>
+          <label for="title" class="block text-sm font-medium text-gray-700 mb-2"
+            >ชื่อเอกสาร:</label
+          >
           <input
             type="text"
             id="title"
@@ -34,7 +42,9 @@
           />
         </div>
         <div class="mb-4">
-          <label for="fileName" class="block text-sm font-medium text-gray-700 mb-2">ชื่อไฟล์:</label>
+          <label for="fileName" class="block text-sm font-medium text-gray-700 mb-2"
+            >ชื่อไฟล์:</label
+          >
           <input
             type="text"
             id="fileName"
@@ -44,7 +54,9 @@
           />
         </div>
         <div class="mb-6">
-          <label for="fileUrl" class="block text-sm font-medium text-gray-700 mb-2">URL ไฟล์:</label>
+          <label for="fileUrl" class="block text-sm font-medium text-gray-700 mb-2"
+            >URL ไฟล์:</label
+          >
           <input
             type="url"
             id="fileUrl"
@@ -75,15 +87,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import type { ItaDocument } from '@/types/ItaDocument'; // Import the type
+import { ref, watch } from 'vue'
+import type { ItaDocument } from '@/types/ita' // Import the type
 
 const props = defineProps<{
-  isOpen: boolean;
-  documentToEdit: ItaDocument | null;
-}>();
+  isOpen: boolean
+  documentToEdit: ItaDocument | null
+}>()
 
-const emit = defineEmits(['close', 'save']);
+const emit = defineEmits(['close', 'save'])
 
 const defaultDocument: ItaDocument = {
   id: 0, // Will be assigned by backend/mock API for new documents
@@ -92,26 +104,30 @@ const defaultDocument: ItaDocument = {
   year: new Date().getFullYear(), // Default to current year
   fileName: '',
   fileUrl: '',
-};
+}
 
-const currentDocument = ref<ItaDocument>({ ...defaultDocument });
+const currentDocument = ref<ItaDocument>({ ...defaultDocument })
 
 // Watch for changes in documentToEdit prop to populate the form
-watch(() => props.documentToEdit, (newDoc) => {
-  if (newDoc) {
-    currentDocument.value = { ...newDoc }; // Copy existing document for editing
-  } else {
-    currentDocument.value = { ...defaultDocument }; // Reset for new document
-  }
-}, { immediate: true }); // Run immediately on component mount
+watch(
+  () => props.documentToEdit,
+  (newDoc) => {
+    if (newDoc) {
+      currentDocument.value = { ...newDoc } // Copy existing document for editing
+    } else {
+      currentDocument.value = { ...defaultDocument } // Reset for new document
+    }
+  },
+  { immediate: true },
+) // Run immediately on component mount
 
 const closeModal = () => {
-  emit('close');
-};
+  emit('close')
+}
 
 const saveDocument = () => {
-  emit('save', currentDocument.value);
-};
+  emit('save', currentDocument.value)
+}
 </script>
 
 <style scoped>

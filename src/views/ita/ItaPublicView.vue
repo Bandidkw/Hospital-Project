@@ -4,7 +4,7 @@
       การประเมินคุณธรรมและความโปร่งใส <br />(MOPH ITA)
     </h1>
 
-    <div class="mb-8 flex justify-center items-center space-x-4">
+    <div v-if="availableYears.length > 0" class="mb-8 flex justify-center items-center space-x-4">
       <label for="yearFilter" class="text-lg font-semibold text-gray-700">เลือกปีงบประมาณ:</label>
       <select
         id="yearFilter"
@@ -21,107 +21,67 @@
       <i class="fas fa-spinner fa-spin text-5xl text-blue-500"></i>
       <p class="mt-6 text-xl text-gray-600">กำลังโหลดข้อมูล ITA...</p>
     </div>
-
     <div v-else-if="error" class="text-center py-20 text-red-600">
       <i class="fas fa-exclamation-triangle text-5xl mb-6"></i>
       <p class="text-xl">เกิดข้อผิดพลาดในการดึงข้อมูล: {{ error }}</p>
-      <button
-        @click="fetchITATopics"
-        class="mt-8 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-lg shadow-md"
-      >
-        ลองใหม่
-      </button>
     </div>
-
-    <div v-else-if="filteredTopics.length === 0" class="text-center py-20 text-gray-500 text-2xl">
+    <div v-else-if="!selectedYearData" class="text-center py-20 text-gray-500 text-2xl">
       <i class="fas fa-folder-open text-5xl mb-6"></i>
-      <p>ไม่พบข้อมูล ITA สำหรับปีงบประมาณที่เลือก หรือยังไม่มีการเพิ่มข้อมูล.</p>
+      <p>ไม่พบข้อมูล ITA สำหรับปีงบประมาณที่เลือก</p>
     </div>
 
     <div v-else class="space-y-10">
       <div
-        v-for="topicGroup in groupedTopicsByQuarterThenSubTopic"
-        :key="topicGroup.id"
+        v-for="moitGroup in groupedMoitsByCategory"
+        :key="moitGroup.id"
         class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300"
       >
         <h2 class="text-2xl font-bold text-my-custom-gray mb-4 flex items-center">
-          <i class="fas fa-folder mr-3 text-emerald-600"></i> {{ topicGroup.title }}
+          <i class="fas fa-folder mr-3 text-emerald-600"></i> {{ moitGroup.title }}
         </h2>
         <p
-          v-if="topicGroup.description"
+          v-if="moitGroup.description"
           class="text-gray-600 mb-6 border-l-4 border-emerald-400 pl-3 italic"
         >
-          {{ topicGroup.description }} {{ topicGroup.year }}
+          {{ moitGroup.description }}
         </p>
 
-        <!-- Outer loop for Quarters -->
-        <div v-if="Object.keys(topicGroup.groupedByQuarter).length > 0" class="space-y-6">
+        <div v-if="Object.keys(moitGroup.groupedDocuments).length > 0" class="space-y-6 ml-4">
           <div
-            v-for="(subTopicsData, quarterName) in sortQuarters(topicGroup.groupedByQuarter)"
-            :key="quarterName"
-            class="ml-4 bg-gray-100 p-4 rounded-md shadow-sm"
+            v-for="(docs, categoryName) in moitGroup.groupedDocuments"
+            :key="categoryName"
+            class="bg-gray-50 p-4 rounded-md shadow-sm"
           >
-            <!-- Quarter Heading - Clickable to toggle content -->
-            <h3
-              class="text-xl font-bold text-gray-700 mb-3 pb-2 flex items-center justify-between cursor-pointer"
-              @click="toggleQuarter(topicGroup.id, quarterName)"
-            >
-              <div>
-                <i class="fas fa-calendar-alt mr-2 text-orange-500"></i> ไตรมาส {{ quarterName }}
-              </div>
-              <i
-                class="fas fa-chevron-down transition-transform duration-300"
-                :class="{ 'rotate-180': expandedQuarters[`${topicGroup.id}-${quarterName}`] }"
-              ></i>
+            <h3 class="text-xl font-bold text-gray-700 mb-3 pb-2 border-b flex items-center">
+              <i class="fas fa-tags mr-2 text-orange-500"></i> {{ categoryName }}
             </h3>
 
-            <!-- Content to be collapsed/expanded -->
-            <div v-if="expandedQuarters[`${topicGroup.id}-${quarterName}`]" class="mt-4">
-              <!-- Inner loop for Sub-Topics within each Quarter -->
-              <div v-if="Object.keys(subTopicsData).length > 0" class="ml-4 space-y-4">
-                <div
-                  v-for="(docs, subTopicName) in subTopicsData"
-                  :key="subTopicName"
-                  class="bg-white p-4 rounded-md shadow-md"
-                >
-                  <h4
-                    class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4 flex items-center"
+            <ul class="list-none p-0 ml-4">
+              <li
+                v-for="doc in docs"
+                :key="doc.id"
+                class="flex items-start mb-3 bg-white p-3 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
+              >
+                <i class="fas fa-file-pdf text-red-500 text-xl mr-3 mt-1"></i>
+                <div>
+                  <a
+                    :href="doc.fileUrl"
+                    target="_blank"
+                    class="text-blue-600 hover:underline text-lg font-medium"
                   >
-                    <i class="fas fa-file-alt mr-2 text-blue-500"></i>
-                    {{ subTopicName || 'เอกสารทั่วไป' }}
-                  </h4>
-
-                  <ul class="list-none p-0">
-                    <li
-                      v-for="doc in sortedDocuments(docs)"
-                      :key="doc.id"
-                      class="flex items-start mb-3 bg-gray-50 p-3 rounded-md border border-gray-200 hover:bg-gray-100 transition-colors duration-200"
-                    >
-                      <i class="fas fa-file-pdf text-red-500 text-xl mr-3 mt-1"></i>
-                      <div>
-                        <a
-                          :href="doc.path"
-                          target="_blank"
-                          class="text-blue-600 hover:underline text-lg font-medium"
-                        >
-                          {{ doc.name }}
-                        </a>
-                        <p class="text-sm text-gray-600 mt-1">
-                          <span v-if="doc.description" class="italic">{{ doc.description }}</span>
-                        </p>
-                      </div>
-                    </li>
-                  </ul>
+                    {{ doc.title }}
+                  </a>
+                  <p v-if="doc.description" class="text-sm text-gray-600 mt-1 italic">
+                    {{ doc.description }}
+                  </p>
                 </div>
-              </div>
-              <div v-else class="text-gray-500 text-center py-2">
-                ไม่พบเอกสารสำหรับไตรมาสนี้ในปัจจุบัน
-              </div>
-            </div>
+              </li>
+            </ul>
           </div>
         </div>
+
         <div v-else class="text-gray-500 text-center py-4 border-t mt-6">
-          ยังไม่มีเอกสารสำหรับหัวข้อนี้ในปัจจุบัน
+          ยังไม่มีเอกสารสำหรับหัวข้อนี้
         </div>
       </div>
     </div>
@@ -129,309 +89,78 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+// 1. แก้ไข Import ให้ถูกต้องตาม Interface ใหม่
+import type { YearIta, Moit, ItaDocument } from '@/types/ita'
+import { itaService } from '@/services/itaService'
 
-// Interfaces (must match your backend or mock data structure)
-interface ITADocument {
-  id: number
-  name: string // Document title
-  path: string // URL to the document file
-  quarter: string // Changed to string for flexibility
-  topicId: number // Links to the ITATopic
-  year: number // Year of the document
-  description?: string // Optional description for the document
-  subTopic?: string // New: Sub-category/type of document
-}
+// 2. State หลักจะเก็บข้อมูลแบบ 3 ชั้น (YearIta[])
+const itaData = ref<YearIta[]>([])
+const loading = ref(true)
+const error = ref<string | null>(null)
+const selectedYear = ref<string | null>(null)
 
-interface ITATopic {
-  id: number
-  year: number
-  title: string // MOIT main topic title, e.g., 'MOIT 1: ...'
-  description: string // Description of the MOIT topic
-  documents: ITADocument[] // Array of documents under this MOIT topic
-}
-
-// Reactive States
-const itaTopics = ref<ITATopic[]>([]) // This will hold our fetched/mocked ITA data
-const loading = ref(true) // Initial loading state
-const error = ref<string | null>(null) // Error message
-const selectedYear = ref<number | null>(null) // Year selected by the user
-// State to manage which quarters are expanded. Key is 'topicId-quarterName'
-const expandedQuarters = ref<{ [key: string]: boolean }>({})
-
-// Mock Data (simulating data that would come from an API)
-const mockITATopics: ITATopic[] = [
-  // --- MOIT Topics for Year 2567 ---
-  {
-    id: 1,
-    year: 2567,
-    title:
-      'MOIT 1: หน่วยงานมีการกำหนดมาตรการ และวางระบบการเผยแพร่ข้อมูลต่อสาธารณะผ่านเว็บไซต์ของหน่วยงาน',
-    description: 'เอกสารที่เกี่ยวข้องกับการกำหนดมาตรการและระบบการเผยแพร่ข้อมูล.',
-    documents: [
-      {
-        id: 101,
-        name: 'คำสั่งแต่งตั้งคณะทำงาน ITA 2567',
-        path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: '1',
-        topicId: 1,
-        year: 2567,
-        subTopic: 'คำสั่ง',
-      },
-      {
-        id: 102,
-        name: 'ประกาศช่องทางการเผยแพร่ข้อมูล 2567',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '1',
-        topicId: 1,
-        year: 2567,
-        subTopic: 'ประกาศ',
-      },
-      {
-        id: 103,
-        name: 'รายงานสรุปการเผยแพร่ข้อมูล Q2/2567',
-        path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: '2',
-        topicId: 1,
-        year: 2567,
-        subTopic: 'รายงานผล',
-      },
-      {
-        id: 104,
-        name: 'มาตรการเสริมสร้างความโปร่งใส',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '2',
-        topicId: 1,
-        year: 2567,
-        subTopic: 'มาตรการ',
-      },
-      {
-        id: 105,
-        name: 'เอกสารอื่นๆ Q4/2567',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '4',
-        topicId: 1,
-        year: 2567,
-        subTopic: 'ประกาศ',
-      },
-    ],
-  },
-  {
-    id: 2,
-    year: 2567,
-    title: 'MOIT 2: หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน',
-    description: 'เอกสารที่เกี่ยวข้องกับการเปิดเผยข้อมูลข่าวสารที่อัปเดต.',
-    documents: [
-      {
-        id: 201,
-        name: 'รายงานสรุปข้อมูลข่าวสาร Q1-2567',
-        path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: '1',
-        topicId: 2,
-        year: 2567,
-        subTopic: 'รายงานผล',
-      },
-      {
-        id: 202,
-        name: 'แผนการปรับปรุงเว็บไซต์ 2567',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '2',
-        topicId: 2,
-        year: 2567,
-        subTopic: 'แผนปฏิบัติการ',
-      },
-    ],
-  },
-  {
-    id: 3,
-    year: 2567,
-    title: 'MOIT 3: หน่วยงานมีรายงานการวิเคราะห์ผลการจัดซื้อจัดจ้างและการจัดหาพัสดุประจำปีงบประมาณ',
-    description: 'รายงานและข้อมูลการจัดซื้อจัดจ้างและจัดหาพัสดุ.',
-    documents: [
-      {
-        id: 301,
-        name: 'รายงานผลการจัดซื้อจัดจ้าง 2567 (รอบ 6 เดือน)',
-        path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: '2',
-        topicId: 3,
-        year: 2567,
-        subTopic: 'รายงานผล',
-      },
-      {
-        id: 302,
-        name: 'ประกาศแผนจัดซื้อจัดจ้างประจำปี 2567',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '1',
-        topicId: 3,
-        year: 2567,
-        subTopic: 'ประกาศ',
-      },
-    ],
-  },
-  {
-    id: 12,
-    year: 2567,
-    title: 'MOIT 13: หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณ',
-    description: 'เอกสารเกี่ยวกับการประเมินแนวทางปฏิบัติของหน่วยงาน.',
-    documents: [
-      {
-        id: 1301,
-        name: 'รายงานผลการประเมินภายใน Q2 2567',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '2',
-        topicId: 12,
-        year: 2567,
-        subTopic: 'รายงานผล',
-      },
-      {
-        id: 1302,
-        name: 'คู่มือการประเมินตนเอง ITA 2567',
-        path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: '1',
-        topicId: 12,
-        year: 2567,
-        subTopic: 'คู่มือ',
-      },
-      {
-        id: 1303,
-        name: 'สรุปการประชุมคณะกรรมการ ITA',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '1',
-        topicId: 12,
-        year: 2567,
-        subTopic: 'อื่นๆ',
-      },
-    ],
-  },
-  // --- MOIT Topics for Year 2566 ---
-  {
-    id: 14,
-    year: 2566,
-    title:
-      'MOIT 1: หน่วยงานมีการกำหนดมาตรการ และวางระบบการเผยแพร่ข้อมูลต่อสาธารณะผ่านเว็บไซต์ ของหน่วยงาน (ปี 2566)',
-    description: 'เอกสารที่เกี่ยวข้องกับการกำหนดมาตรการและระบบการเผยแพร่ข้อมูล',
-    documents: [
-      {
-        id: 1401,
-        name: 'ประกาศช่องทางข้อมูล 2566',
-        path: 'https://www.africau.edu/images/default/sample.pdf',
-        quarter: '1',
-        topicId: 14,
-        year: 2566,
-        subTopic: 'ประกาศ',
-      },
-    ],
-  },
-  {
-    id: 15,
-    year: 2566,
-    title: 'MOIT 2: หน่วยงานมีการเปิดเผยข้อมูลข่าวสารที่เป็นปัจจุบัน (ปี 2566)',
-    description: 'เอกสารที่เกี่ยวข้องกับการเปิดเผยข้อมูลข่าวสารที่อัปเดต',
-    documents: [
-      {
-        id: 1501,
-        name: 'รายงานข้อมูลข่าวสาร Q4-2566',
-        path: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        quarter: '4',
-        topicId: 15,
-        year: 2566,
-        subTopic: 'รายงานผล',
-      },
-    ],
-  },
-]
-
+// 3. Computed สำหรับดึง "ปี" ที่มีข้อมูลทั้งหมดออกมาสร้าง Dropdown
 const availableYears = computed(() => {
-  const years = new Set(mockITATopics.map((topic) => topic.year))
-  return Array.from(years).sort((a, b) => b - a)
+  if (!itaData.value) return []
+  const years = new Set(itaData.value.map((data) => data.year))
+  return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a))
 })
 
-const filteredTopics = computed(() => {
-  if (!selectedYear.value) {
-    return []
-  }
-  return itaTopics.value.filter((topic) => topic.year === selectedYear.value)
+// 4. Computed สำหรับหา "ข้อมูลของปีที่ถูกเลือก" แค่ปีเดียว
+const selectedYearData = computed(() => {
+  if (!selectedYear.value || !itaData.value) return null
+  return itaData.value.find((data) => data.year === selectedYear.value) || null
 })
 
-const groupedTopicsByQuarterThenSubTopic = computed(() => {
-  return filteredTopics.value.map((topic) => {
-    const groupedByQuarter: { [quarter: string]: { [subTopicName: string]: ITADocument[] } } = {}
+// 5. Computed สำหรับจัดกลุ่ม "เอกสาร" ที่อยู่ใน "MOIT" ของปีที่เลือก
+const groupedMoitsByCategory = computed(() => {
+  if (!selectedYearData.value) return []
 
-    topic.documents.forEach((doc) => {
-      const quarter = doc.quarter || 'ไม่ระบุไตรมาส'
-      const sTopic = doc.subTopic || 'เอกสารทั่วไป'
+  // เพิ่ม (moit: Moit) เข้าไปเพื่อบอก Type ให้ชัดเจน
+  return selectedYearData.value.moits.map((moit: Moit) => {
+    const grouped: { [category: string]: ItaDocument[] } = {}
 
-      if (!groupedByQuarter[quarter]) {
-        groupedByQuarter[quarter] = {}
+    moit.documents.forEach((doc) => {
+      const category = doc.category || 'เอกสารทั่วไป'
+      if (!grouped[category]) {
+        grouped[category] = []
       }
-      if (!groupedByQuarter[quarter][sTopic]) {
-        groupedByQuarter[quarter][sTopic] = []
-      }
-      groupedByQuarter[quarter][sTopic].push(doc)
+      grouped[category].push(doc)
     })
 
-    return {
-      ...topic,
-      groupedByQuarter: groupedByQuarter,
-    }
+    return { ...moit, groupedDocuments: grouped }
   })
 })
 
-const sortedDocuments = (documents: ITADocument[]) => {
-  return [...documents].sort((a, b) => a.id - b.id)
-}
-
-const sortQuarters = (quarters: { [quarter: string]: any }) => {
-  const quarterOrder: { [key: string]: number } = {
-    '1': 1,
-    '2': 2,
-    '3': 3,
-    '4': 4,
-    ไม่ระบุไตรมาส: 99,
-  }
-  return Object.keys(quarters)
-    .sort((a, b) => {
-      const aValue = quarterOrder[a] || 99
-      const bValue = quarterOrder[b] || 99
-      return aValue - bValue
-    })
-    .reduce((obj: { [key: string]: any }, key) => {
-      obj[key] = quarters[key]
-      return obj
-    }, {})
-}
-const toggleQuarter = (topicId: number, quarterName: string | number) => {
-  const key = `${topicId}-${String(quarterName)}`
-  expandedQuarters.value = {
-    ...expandedQuarters.value,
-    [key]: !expandedQuarters.value[key],
-  }
-}
-
-const fetchITATopics = async () => {
+// 6. ฟังก์ชัน fetch ข้อมูลจะเรียกใช้ Service เดิม แต่ State ที่รับข้อมูลจะเปลี่ยนไป
+const fetchAllITAData = async () => {
   loading.value = true
   error.value = null
   try {
-    await new Promise((resolve) => setTimeout(resolve, 700))
-    itaTopics.value = mockITATopics
-    if (!selectedYear.value && availableYears.value.length > 0) {
+    // itaService.getAllTopics() จะคืนค่าเป็น YearIta[]
+    const dataFromApi = await itaService.getAllTopics()
+    itaData.value = dataFromApi
+
+    // ตั้งค่าปีเริ่มต้นเป็นปีล่าสุด
+    if (availableYears.value.length > 0) {
       selectedYear.value = availableYears.value[0]
     }
-  } catch (err: any) {
-    console.error('Error fetching public ITA topics:', err)
-    error.value = err.message || 'ไม่สามารถดึงข้อมูล ITA ได้'
+  } catch (err: unknown) {
+    console.error('Error fetching public ITA data:', err)
+    if (err instanceof Error) {
+      // ถ้า err เป็น Error object จริงๆ เราถึงจะใช้ .message ได้
+      error.value = err.message
+    } else {
+      // ถ้าเป็น Error รูปแบบอื่นที่เราไม่รู้จัก
+      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+    }
   } finally {
     loading.value = false
   }
 }
 
-watch(selectedYear, () => {
-  expandedQuarters.value = {}
-})
-
 onMounted(() => {
-  fetchITATopics()
+  fetchAllITAData()
 })
 </script>
-
-<style scoped></style>
