@@ -70,9 +70,10 @@
               >
                 จัดการเอกสาร
               </button>
-              <button @click="deleteTopic(topic.id)" class="text-red-600 hover:text-red-900">
-                ลบ
-              </button>
+              <!-- <button
+              @click="deleteTopic(topic.id)"
+              class="text-red-600 hover:text-red-900">
+              </button> -->
             </td>
           </tr>
         </tbody>
@@ -240,9 +241,7 @@ const editTopic = (topicId: string | number) => {
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
 }
 
-const deleteTopic = async (topicId: string | number) => {
-  // Logic การลบหัวข้อ
-}
+// const deleteTopic = async (topicId: string | number) => {}
 
 onMounted(() => {
   fetchTopicsForYear()
