@@ -137,20 +137,20 @@ const fetchYears = async () => {
     } else {
       error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     }
-    toast.error(error.value || 'ไม่สามารถดึงข้อมูลปีได้')
+    toast.error(error.value || 'ไม่สามารถดึงข้อมูลหัวข้อได้')
   } finally {
     loading.value = false
   }
 }
 
-// --- ฟังก์ชัน `createNewYear` เดิมจะเปลี่ยนเป็นแค่ "เปิด Modal" ---
+// --- ฟังก์ชันสำหรับ "เปิด Modal" ---
 const openCreateYearModal = () => {
   // รีเซ็ตค่าในฟอร์มทุกครั้งที่เปิด
   newYearData.value.year = new Date().getFullYear() + 543
   isCreateYearModalOpen.value = true
 }
 
-// --- ฟังก์ชันใหม่สำหรับจัดการการ Submit ของ Modal ---
+// --- ฟังก์ชันสำหรับจัดการการ Submit ของ Modal ---
 const handleCreateYearSubmit = async () => {
   if (!newYearData.value.year) {
     toast.error('กรุณาระบุปีงบประมาณ')
@@ -171,15 +171,16 @@ const handleCreateYearSubmit = async () => {
     } else {
       error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     }
-    toast.error(error.value || 'ไม่สามารถดึงข้อมูลปีได้')
+    toast.error(error.value || 'ไม่สามารถสร้างปีงบประมาณได้')
   }
 }
 
-// --- ไปยังหน้าจัดการหัวข้อของปีนั้นๆ ---
+// --- ฟังก์ชันสำหรับไปยังหน้าจัดการหัวข้อของปีนั้นๆ ---
 const manageTopicsForYear = (yearId: string | number) => {
   router.push(`/dashboard/ita/year/${yearId}/topics`)
 }
 
+// สั่งให้ดึงข้อมูลทันทีที่เปิดหน้า
 onMounted(() => {
   fetchYears()
 })
