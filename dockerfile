@@ -1,3 +1,4 @@
+
 FROM node:20-slim AS build-stage
 
 WORKDIR /app
@@ -11,10 +12,9 @@ RUN npm run build
 
 FROM nginx:stable-alpine AS production-stage
 
+
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
-# คัดลอก nginx.conf ไปแทน default.conf ใน conf.d
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 3001
 
