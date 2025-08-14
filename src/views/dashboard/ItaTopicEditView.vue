@@ -240,14 +240,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-// import { itaService } from '@/services/itaService'
-import type { MoitWithYear } from '@/services/itaService'
+import { useRoute, useRouter } from 'vue-router'
+import { itaService, type MoitWithYear } from '@/services/itaService'
 import type { ItaDocument } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 
 const route = useRoute()
-// const router = useRouter()
+const router = useRouter()
 const toast = useToast()
 
 const moitId = route.params.id as string
@@ -261,6 +260,7 @@ const currentDocument = ref<Partial<ItaDocument>>({
   title: '',
   sub_topic: '',
   quarter: 1,
+  description: '',
 })
 const selectedFile = ref<File | null>(null)
 
@@ -284,13 +284,14 @@ const fetchTopicDetails = async () => {
     // *** TODO: เมื่อ API พร้อม ให้เปิดใช้งานบรรทัดนี้ ***
     // moit.value = await itaService.getTopicById(moitId);
 
-    // ข้อมูลจำลองที่สมบูรณ์
+    // 2. ข้อมูลจำลองที่สมบูรณ์และถูกต้อง 100%
     toast.info(`(จำลอง) กำลังโหลดข้อมูลสำหรับ Topic ID: ${moitId}`)
     moit.value = {
       id: moitId,
       ita_topic_id: 'year-123',
       moit_name: 'MOIT 1',
       title: `MOIT 1: หน่วยงานมีการวางระบบโดยการกำหนดมาตรการ...`,
+      description: 'คำอธิบายเพิ่มเติมของหัวข้อ MOIT (ถ้ามี)',
       documents: [
         {
           id: '101',
@@ -301,6 +302,17 @@ const fetchTopicDetails = async () => {
           fileUrl: '#',
           fileName: 'cmd-ita-2567.pdf',
           description: 'คำสั่งแต่งตั้งคณะทำงานอย่างเป็นทางการ',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: '102',
+          topic_id: moitId,
+          title: 'ประกาศช่องทางการเผยแพร่ข้อมูล',
+          sub_topic: 'ประกาศ',
+          quarter: 1,
+          fileUrl: '#',
+          fileName: 'announce-channel.pdf',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -399,6 +411,7 @@ const resetForm = () => {
     title: '',
     sub_topic: '',
     quarter: 1,
+    description: '',
   }
   selectedFile.value = null
   const fileInput = document.getElementById('docFile') as HTMLInputElement
