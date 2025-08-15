@@ -19,7 +19,7 @@ export const itaService = {
     }
   },
   createYear: async (yearData: {
-    year: number
+    year: string
     title: string
     description: string
   }): Promise<YearIta> => {
