@@ -18,7 +18,11 @@ export const itaService = {
       throw new Error('ไม่สามารถดึงข้อมูลปีงบประมาณได้')
     }
   },
-  createYear: async (yearData: { year: number }): Promise<YearIta> => {
+  createYear: async (yearData: {
+    year: number
+    title: string
+    description: string
+  }): Promise<YearIta> => {
     try {
       const response = await apiService.post('/ita/year-moit', yearData)
       return response.data.data

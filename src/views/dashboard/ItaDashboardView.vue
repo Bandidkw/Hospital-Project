@@ -70,10 +70,10 @@
     >
       <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">สร้างปีงบประมาณใหม่</h2>
-        <form @submit.prevent="handleCreateYearSubmit">
+        <form @submit.prevent="handleCreateYearSubmit" class="space-y-4">
           <div>
             <label for="new-year" class="block text-gray-700 font-bold mb-2"
-              >ปีงบประมาณ (พ.ศ.):</label
+              >ปีงบประมาณ (พ.ศ.):*</label
             >
             <input
               id="new-year"
@@ -84,6 +84,34 @@
               required
             />
           </div>
+
+          <div>
+            <label for="new-year-title" class="block text-gray-700 font-bold mb-2"
+              >ชื่อเรื่อง (Title):*</label
+            >
+            <input
+              id="new-year-title"
+              type="text"
+              v-model="newYearData.title"
+              placeholder="เช่น ปีงบประมาณ 2568"
+              class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="new-year-desc" class="block text-gray-700 font-bold mb-2"
+              >คำอธิบาย (Description):</label
+            >
+            <textarea
+              id="new-year-desc"
+              v-model="newYearData.description"
+              rows="3"
+              placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+              class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+          </div>
+
           <div class="flex justify-end space-x-4 pt-6 mt-4 border-t">
             <button
               type="button"
@@ -119,13 +147,13 @@ const availableYears = ref<YearIta[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-// --- State ใหม่สำหรับ Modal ---
 const isCreateYearModalOpen = ref(false)
 const newYearData = ref({
-  year: new Date().getFullYear() + 543, // ค่าเริ่มต้นเป็นปี พ.ศ. ปัจจุบัน
+  year: new Date().getFullYear() + 543,
+  title: '',
+  description: '',
 })
 
-// --- ดึงข้อมูลปีทั้งหมด ---
 const fetchYears = async () => {
   loading.value = true
   error.value = null
@@ -137,50 +165,55 @@ const fetchYears = async () => {
     } else {
       error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     }
-    toast.error(error.value || 'ไม่สามารถดึงข้อมูลหัวข้อได้')
+    toast.error(error.value || 'ไม่สามารถดึงข้อมูลปีได้')
   } finally {
     loading.value = false
   }
 }
 
-// --- ฟังก์ชันสำหรับ "เปิด Modal" ---
 const openCreateYearModal = () => {
-  // รีเซ็ตค่าในฟอร์มทุกครั้งที่เปิด
-  newYearData.value.year = new Date().getFullYear() + 543
+  const currentYear = new Date().getFullYear() + 543
+  newYearData.value = {
+    year: currentYear,
+    title: `ปีงบประมาณ ${currentYear}`,
+    description: `รายละเอียดข้อมูล ITA ประจำปีงบประมาณ ${currentYear}`,
+  }
   isCreateYearModalOpen.value = true
 }
 
-// --- ฟังก์ชันสำหรับจัดการการ Submit ของ Modal ---
 const handleCreateYearSubmit = async () => {
-  if (!newYearData.value.year) {
-    toast.error('กรุณาระบุปีงบประมาณ')
+  if (!newYearData.value.year || !newYearData.value.title) {
+    toast.error('กรุณากรอกปีและชื่อเรื่องให้ครบถ้วน')
     return
   }
 
   try {
-    const newYearNumber = newYearData.value.year
-    toast.info(`กำลังสร้างปีงบประมาณ ${newYearNumber}...`)
-    await itaService.createYear({ year: newYearNumber })
+    const payload = {
+      year: newYearData.value.year,
+      title: newYearData.value.title,
+      description: newYearData.value.description || '',
+    }
 
-    isCreateYearModalOpen.value = false // ปิด Modal
-    toast.success(`สร้างปี ${newYearNumber} สำเร็จ!`)
+    toast.info(`กำลังสร้างปีงบประมาณ ${payload.year}...`)
+    // สมมติว่า itaService.createYear ถูกปรับให้รับ object ที่มี title และ description แล้ว
+    await itaService.createYear(payload)
+
+    isCreateYearModalOpen.value = false
+    toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
     fetchYears() // ดึงข้อมูลปีมาใหม่เพื่ออัปเดตตาราง
   } catch (err: unknown) {
     if (err instanceof Error) {
-      error.value = err.message
+      toast.error(err.message)
     } else {
-      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+      toast.error('ไม่สามารถสร้างปีใหม่ได้: เกิดข้อผิดพลาดที่ไม่คาดคิด')
     }
-    toast.error(error.value || 'ไม่สามารถสร้างปีงบประมาณได้')
   }
 }
 
-// --- ฟังก์ชันสำหรับไปยังหน้าจัดการหัวข้อของปีนั้นๆ ---
 const manageTopicsForYear = (yearId: string | number) => {
   router.push(`/dashboard/ita/year/${yearId}/topics`)
 }
 
-// สั่งให้ดึงข้อมูลทันทีที่เปิดหน้า
 onMounted(() => {
   fetchYears()
 })
