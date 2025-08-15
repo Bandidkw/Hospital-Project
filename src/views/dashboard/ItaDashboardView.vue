@@ -140,6 +140,12 @@ import { itaService } from '@/services/itaService'
 import type { YearIta } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 
+interface NewYearFormData {
+  year: number
+  title: string
+  description: string
+}
+
 const router = useRouter()
 const toast = useToast()
 
@@ -148,7 +154,7 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 
 const isCreateYearModalOpen = ref(false)
-const newYearData = ref({
+const newYearData = ref<NewYearFormData>({
   year: new Date().getFullYear() + 543,
   title: '',
   description: '',
@@ -189,18 +195,15 @@ const handleCreateYearSubmit = async () => {
 
   try {
     const payload = {
-      year: newYearData.value.year,
+      year: String(newYearData.value.year),
       title: newYearData.value.title,
       description: newYearData.value.description || '',
     }
-
     toast.info(`กำลังสร้างปีงบประมาณ ${payload.year}...`)
-    // สมมติว่า itaService.createYear ถูกปรับให้รับ object ที่มี title และ description แล้ว
     await itaService.createYear(payload)
-
     isCreateYearModalOpen.value = false
     toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
-    fetchYears() // ดึงข้อมูลปีมาใหม่เพื่ออัปเดตตาราง
+    fetchYears()
   } catch (err: unknown) {
     if (err instanceof Error) {
       toast.error(err.message)
