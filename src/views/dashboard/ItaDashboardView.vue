@@ -28,12 +28,17 @@
             <th
               class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
             >
-              ID
+              ปี
             </th>
             <th
               class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
             >
               ปีงบประมาณ (พ.ศ.)
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+            >
+              รายละเอียดปี
             </th>
             <th
               class="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider"
@@ -49,8 +54,13 @@
             </td>
           </tr>
           <tr v-for="year in availableYears" :key="year.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ year.id }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">{{ year.year }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ year.year }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">
+              {{ year.title }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">
+              {{ year.description }}
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
               <button
                 @click="manageTopicsForYear(year.id)"
