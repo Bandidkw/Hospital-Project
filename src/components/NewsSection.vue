@@ -50,7 +50,7 @@
       </div>
       <div class="mt-12">
         <button
-          class="text-blue-600 hover:text-blue-800 font-bold py-2 px-6 rounded-full border-2 border-blue-500"
+          class="text-blue-600 hover:text-white hover:bg-blue-700 font-bold py-2 px-6 rounded-full border-2 border-blue-500"
         >
           ดูข่าวสารทั้งหมด
         </button>

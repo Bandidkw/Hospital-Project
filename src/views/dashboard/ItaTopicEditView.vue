@@ -240,13 +240,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+// import { useRoute, useRouter } from 'vue-router'
 import { itaService, type MoitWithYear } from '@/services/itaService'
 import type { ItaDocument } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 
 const route = useRoute()
-const router = useRouter()
+// const router = useRouter()
 const toast = useToast()
 
 const moitId = route.params.id as string
