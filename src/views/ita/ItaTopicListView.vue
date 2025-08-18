@@ -239,49 +239,16 @@ const fetchTopicsForYear = async () => {
   loading.value = true
   error.value = null
   try {
-    // *** TODO: เมื่อ API พร้อม ให้เปิดใช้งานบรรทัดนี้ ***
-    // const result = await itaService.getTopicsByYearId(yearId);
-    // yearData.value = result;
-    // topics.value = result.moits;
-
-    // --- ใช้ข้อมูลจำลองไปก่อน ---
-    toast.info(`(จำลอง) กำลังโหลดข้อมูลสำหรับ Year ID: ${yearId}`)
-    const mockYearData: YearIta = {
-      id: yearId,
-      year: '2568',
-      moits: [
-        {
-          id: 'moit-001',
-          ita_topic_id: yearId,
-          moit_name: 'MOIT 1',
-          title: 'MOIT 1: การวางระบบเผยแพร่ข้อมูล',
-          documents: [],
-          createdAt: '',
-          updatedAt: '',
-        },
-        {
-          id: 'moit-002',
-          ita_topic_id: yearId,
-          moit_name: 'MOIT 2',
-          title: 'MOIT 2: การเปิดเผยข้อมูลข่าวสาร',
-          documents: [],
-          createdAt: '',
-          updatedAt: '',
-        },
-      ],
-      createdAt: '',
-      updatedAt: '',
-    }
-    yearData.value = mockYearData
-    topics.value = mockYearData.moits
-    // -------------------------
+    const result = await itaService.getTopicsByYearId(yearId)
+    yearData.value = result
+    topics.value = result.moits
   } catch (err: unknown) {
     if (err instanceof Error) {
       error.value = err.message
     } else {
       error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     }
-    toast.error(error.value)
+    toast.error(error.value || 'ไม่สามารถดึงข้อมูลหัวข้อได้')
   } finally {
     loading.value = false
   }
@@ -324,17 +291,19 @@ const editTopic = (topicId: string | number) => {
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
 }
 
+// --- 2. ฟังก์ชันลบหัวข้อ (ฉบับสมบูรณ์) ---
 const deleteTopic = async (topicId: string | number) => {
-  // ใช้ confirm() เพื่อยืนยันการลบ
+  // ยืนยันการลบก่อนดำเนินการ
   if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ ID: ${topicId}?`)) {
     try {
       toast.info(`กำลังลบหัวข้อ ID: ${topicId}...`)
 
-      // *** TODO: เมื่อ API พร้อม ให้เปิดใช้งานบรรทัดนี้ ***
-      // await itaService.deleteTopic(topicId);
+      // เรียกใช้ service เพื่อส่งคำขอลบไปยัง Backend
+      await itaService.deleteTopic(topicId)
 
-      toast.success(`(จำลอง) ลบหัวข้อ ID: ${topicId} สำเร็จ!`)
-      // ดึงข้อมูลใหม่เพื่ออัปเดตตาราง
+      toast.success(`ลบหัวข้อ ID: ${topicId} สำเร็จ!`)
+
+      // ดึงข้อมูลใหม่เพื่ออัปเดตตารางให้แสดงผลล่าสุด
       fetchTopicsForYear()
     } catch (err: unknown) {
       if (err instanceof Error) {

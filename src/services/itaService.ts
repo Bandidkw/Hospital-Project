@@ -2,13 +2,14 @@
 import apiService from './apiService'
 import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 
-// Type พิเศษสำหรับหน้า Edit
+// Type พิเศษสำหรับหน้า Edit ที่ต้องการข้อมูลปีมาด้วย
 export interface MoitWithYear extends Moit {
   yearData: YearIta
 }
 
 export const itaService = {
-  // --- Functions for Year ---
+  // --- 1. ฟังก์ชันสำหรับจัดการ "ปี" (YearIta) ---
+
   getYears: async (): Promise<YearIta[]> => {
     try {
       const response = await apiService.get('/ita/year-moit')
@@ -31,8 +32,18 @@ export const itaService = {
       throw new Error('ไม่สามารถสร้างปีงบประมาณใหม่ได้')
     }
   },
+  getTopicsByYearId: async (yearId: string | number): Promise<YearIta> => {
+    try {
+      const response = await apiService.get(`/ita/year-moit/${yearId}`)
+      return response.data.data
+    } catch (error) {
+      console.error(`Error fetching topics for year ID ${yearId}:`, error)
+      throw new Error('ไม่สามารถดึงข้อมูลหัวข้อสำหรับปีที่เลือกได้')
+    }
+  },
 
-  // --- Functions for Topic (MOIT) ---
+  // --- 2. ฟังก์ชันสำหรับจัดการ "หัวข้อ" (Moit) ---
+
   getAllTopics: async (): Promise<YearIta[]> => {
     try {
       const response = await apiService.get('/ita-topics')
@@ -60,8 +71,17 @@ export const itaService = {
       throw new Error('ไม่สามารถสร้างหัวข้อใหม่ได้')
     }
   },
+  deleteTopic: async (topicId: string | number): Promise<void> => {
+    try {
+      await apiService.delete(`/ita-topics/${topicId}`)
+    } catch (error) {
+      console.error(`Error deleting ITA topic with ID ${topicId}:`, error)
+      throw new Error('ไม่สามารถลบหัวข้อได้')
+    }
+  },
 
-  // --- Functions for Document ---
+  // --- 3. ฟังก์ชันสำหรับจัดการ "เอกสาร" (ItaDocument) ---
+
   createDocument: async (topicId: string | number, formData: FormData): Promise<ItaDocument> => {
     try {
       const response = await apiService.post(`/ita-topics/${topicId}/documents`, formData, {
@@ -86,6 +106,7 @@ export const itaService = {
   },
   deleteDocument: async (docId: string | number): Promise<void> => {
     try {
+      // Endpoint นี้ควรจะเป็น /ita-documents/ ไม่ใช่ /ita/year-moit/
       await apiService.delete(`/ita-documents/${docId}`)
     } catch (error) {
       console.error(`Error deleting document with ID ${docId}:`, error)
