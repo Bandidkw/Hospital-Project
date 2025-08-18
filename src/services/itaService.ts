@@ -41,6 +41,25 @@ export const itaService = {
       throw new Error('ไม่สามารถดึงข้อมูลหัวข้อสำหรับปีที่เลือกได้')
     }
   },
+  // --- เพิ่มฟังก์ชันนี้เข้าไปครับ ---
+  /**
+   * อัปเดตข้อมูลปีงบประมาณ
+   * @param yearId ID ของปีที่ต้องการแก้ไข
+   * @param yearData ข้อมูลที่ต้องการอัปเดต
+   * @returns ข้อมูลปีที่อัปเดตแล้ว
+   */
+  updateYear: async (
+    yearId: string | number,
+    yearData: { title: string; description: string },
+  ): Promise<YearIta> => {
+    try {
+      const response = await apiService.put(`/ita/year-moit/${yearId}`, yearData)
+      return response.data.data
+    } catch (error) {
+      console.error(`Error updating ITA year with ID ${yearId}:`, error)
+      throw new Error('ไม่สามารถอัปเดตข้อมูลปีงบประมาณได้')
+    }
+  },
 
   // --- 2. ฟังก์ชันสำหรับจัดการ "หัวข้อ" (Moit) ---
 

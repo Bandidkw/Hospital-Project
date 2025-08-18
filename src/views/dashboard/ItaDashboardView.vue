@@ -1,3 +1,4 @@
+<!-- ItaDashboardView.vue -->
 <template>
   <div class="container mx-auto p-8 bg-white rounded-lg shadow-xl">
     <div class="flex justify-between items-center mb-8 border-b-4 border-blue-500 pb-4">
@@ -21,24 +22,24 @@
     <div v-else-if="error" class="text-center py-16 bg-red-50 p-8 rounded-lg">
       <p class="text-xl text-red-600">เกิดข้อผิดพลาด: {{ error }}</p>
     </div>
-    <div v-else class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+    <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-blue-100">
           <tr>
             <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
-            >
-              ปี
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-1/6"
             >
               ปีงบประมาณ (พ.ศ.)
             </th>
             <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-2/5"
             >
-              รายละเอียดปี
+              ชื่อเรื่อง (Title)
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-2/5"
+            >
+              คำอธิบาย (Description)
             </th>
             <th
               class="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider"
@@ -49,18 +50,14 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-if="availableYears.length === 0">
-            <td colspan="3" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
               ยังไม่มีปีงบประมาณในระบบ
             </td>
           </tr>
           <tr v-for="year in availableYears" :key="year.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ year.year }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">
-              {{ year.title }}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">
-              {{ year.description }}
-            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">{{ year.year }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ year.title }}</td>
+            <td class="px-6 py-4 text-gray-500 italic">{{ year.description || '-' }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
               <button
                 @click="manageTopicsForYear(year.id)"
