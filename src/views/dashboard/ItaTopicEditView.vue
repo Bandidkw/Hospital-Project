@@ -280,53 +280,10 @@ const fetchTopicDetails = async () => {
   loading.value = true
   error.value = null
   try {
-    // *** TODO: เมื่อ API พร้อม ให้เปิดใช้งานบรรทัดนี้ ***
-    // moit.value = await itaService.getTopicById(moitId);
+    // --- เปลี่ยนมาเรียก API จริง ---
+    moit.value = await itaService.getTopicById(moitId)
 
-    // 2. ข้อมูลจำลองที่สมบูรณ์และถูกต้อง 100%
-    toast.info(`(จำลอง) กำลังโหลดข้อมูลสำหรับ Topic ID: ${moitId}`)
-    moit.value = {
-      id: moitId,
-      ita_topic_id: 'year-123',
-      moit_name: 'MOIT 1',
-      title: `MOIT 1: หน่วยงานมีการวางระบบโดยการกำหนดมาตรการ...`,
-      description: 'คำอธิบายเพิ่มเติมของหัวข้อ MOIT (ถ้ามี)',
-      documents: [
-        {
-          id: '101',
-          topic_id: moitId,
-          title: 'คำสั่งแต่งตั้งคณะทำงาน ITA 2567',
-          sub_topic: 'คำสั่ง',
-          quarter: 1,
-          fileUrl: '#',
-          fileName: 'cmd-ita-2567.pdf',
-          description: 'คำสั่งแต่งตั้งคณะทำงานอย่างเป็นทางการ',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          id: '102',
-          topic_id: moitId,
-          title: 'ประกาศช่องทางการเผยแพร่ข้อมูล',
-          sub_topic: 'ประกาศ',
-          quarter: 1,
-          fileUrl: '#',
-          fileName: 'announce-channel.pdf',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      yearData: {
-        id: 'year-123',
-        year: '2567',
-        moits: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    }
-    resetForm()
+    resetForm() // เคลียร์ฟอร์มเมื่อโหลดข้อมูลสำเร็จ
   } catch (err: unknown) {
     if (err instanceof Error) {
       error.value = err.message
@@ -358,18 +315,36 @@ const saveDocument = async () => {
     return
   }
 
-  toast.info(`(จำลอง) กำลังบันทึกข้อมูลเอกสาร...`)
   // *** TODO: สร้าง FormData object และเรียกใช้ itaService ***
-
-  if (editingDocument.value) {
-    // await itaService.updateDocument(currentDocument.value.id, formData);
-    toast.success('แก้ไขเอกสารสำเร็จ!')
-  } else {
-    // await itaService.createDocument(moitId, formData);
-    toast.success('เพิ่มเอกสารใหม่สำเร็จ!')
+  const formData = new FormData()
+  formData.append('title', currentDocument.value.title || '')
+  formData.append('sub_topic', currentDocument.value.sub_topic || '')
+  // ... append fields อื่นๆ ...
+  if (selectedFile.value) {
+    formData.append('file', selectedFile.value)
   }
-  fetchTopicDetails()
-  resetForm()
+
+  try {
+    toast.info('กำลังบันทึกข้อมูล...')
+    if (editingDocument.value) {
+      // await itaService.updateDocument(currentDocument.value.id, formData);
+      toast.success('แก้ไขเอกสารสำเร็จ!')
+    } else {
+      // await itaService.createDocument(moitId, formData);
+      toast.success('เพิ่มเอกสารใหม่สำเร็จ!')
+    }
+    fetchTopicDetails() // Refresh ข้อมูล
+    resetForm()
+  } catch (err: unknown) {
+    // ตรวจสอบก่อนว่า err เป็น instance ของ Error object หรือไม่
+    if (err instanceof Error) {
+      // ถ้าใช่ ก็สามารถใช้ err.message ได้อย่างปลอดภัย
+      toast.error(err.message)
+    } else {
+      // ถ้าไม่ใช่ Error object หรือเป็นค่าอื่น ให้ใช้ข้อความสำรอง
+      toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิดในการบันทึกเอกสาร')
+    }
+  }
 }
 
 const editDocument = (doc: ItaDocument) => {

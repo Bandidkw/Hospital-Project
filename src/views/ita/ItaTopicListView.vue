@@ -303,7 +303,6 @@ const deleteTopic = async (topicId: string | number) => {
 
       toast.success(`ลบหัวข้อ ID: ${topicId} สำเร็จ!`)
 
-      // ดึงข้อมูลใหม่เพื่ออัปเดตตารางให้แสดงผลล่าสุด
       fetchTopicsForYear()
     } catch (err: unknown) {
       if (err instanceof Error) {
