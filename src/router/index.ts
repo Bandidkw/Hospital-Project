@@ -158,6 +158,12 @@ const router = createRouter({
           component: () => import('../views/dashboard/DashboardUsersView.vue'),
           meta: { requiresAuth: true, roles: ['superadmin'] }, // เฉพาะ SuperAdmin
         },
+        {
+          path: '/dashboard/ita/year/:yearId/topics', // :yearId คือ parameter
+          name: 'ItaTopicList',
+          component: () => import('@/views/dashboard/ita/ItaTopicListView.vue'),
+          meta: { requiresAuth: true },
+        },
       ],
     },
     {
