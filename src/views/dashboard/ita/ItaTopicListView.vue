@@ -69,14 +69,19 @@
             <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ topic.moit_name }}</td>
             <td class="px-6 py-4 text-gray-700">{{ topic.title }}</td>
             <td class="px-6 py-4 text-gray-700">{{ topic.description }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"></td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="editTopic(topic.id)"
-                class="text-indigo-600 hover:text-indigo-900 mr-4"
+                class="inline-flex items-center px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
               >
                 จัดการเอกสาร
               </button>
-              <button class="text-red-600 hover:text-red-900">ลบ</button>
+              <button
+                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+              >
+                ลบ
+              </button>
             </td>
           </tr>
         </tbody>
