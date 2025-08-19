@@ -38,14 +38,19 @@
         <thead class="bg-blue-100">
           <tr>
             <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
-            >
-              หัวข้อ
-            </th>
-            <th
-              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-1/6"
             >
               MOIT
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-2/5"
+            >
+              ชื่อหัวข้อ
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider w-2/5"
+            >
+              คำอธิบาย
             </th>
             <th
               class="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider"
@@ -63,6 +68,7 @@
           <tr v-for="topic in topics" :key="topic.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ topic.moit_name }}</td>
             <td class="px-6 py-4 text-gray-700">{{ topic.title }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ topic.description }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
               <button
                 @click="editTopic(topic.id)"
@@ -70,7 +76,7 @@
               >
                 จัดการเอกสาร
               </button>
-              <button class="text-red-600 hover:text-red-900"></button>
+              <button class="text-red-600 hover:text-red-900">ลบ</button>
             </td>
           </tr>
         </tbody>
