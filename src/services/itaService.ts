@@ -89,6 +89,7 @@ export const itaService = {
       throw new Error('ไม่สามารถดึงข้อมูลหัวข้อได้')
     }
   },
+
   createTopic: async (topicData: {
     year_ita_id: string | number
     moit_name: string
@@ -103,6 +104,7 @@ export const itaService = {
       throw new Error('ไม่สามารถสร้างหัวข้อใหม่ได้')
     }
   },
+
   deleteTopic: async (topicId: string | number): Promise<void> => {
     try {
       await apiService.delete(`/ita-topics/${topicId}`)

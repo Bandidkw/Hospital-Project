@@ -267,16 +267,27 @@ const handleCreateTopicSubmit = async () => {
   const selectedTemplate = moitTemplates.find((t) => t.value === newTopicData.value.templateValue)
   if (!selectedTemplate) return
 
-  const newTitle = selectedTemplate.text
-
   try {
+    // --- สร้าง "แบบฟอร์ม" (payload) ที่ถูกต้อง ---
+    const payload = {
+      year_ita_id: yearId, // <-- เปลี่ยนจาก yearId เป็น year_ita_id
+      moit_name: selectedTemplate.value,
+      title: selectedTemplate.text,
+      description: `รายละเอียดของ ${selectedTemplate.value}`,
+    }
+    // ---------------------------------------------
+
     toast.info(`กำลังสร้างหัวข้อ: "${selectedTemplate.value}"...`)
-    const newTopic = await itaService.createTopic({ yearId: yearId, title: newTitle })
+
+    const newTopic = await itaService.createTopic(payload)
+
     if (newTopic && newTopic.id) {
       isCreateModalOpen.value = false
       toast.success(`สร้างหัวข้อสำเร็จ!`)
       fetchTopicsForYear()
       router.push(`/dashboard/ita/topic/${newTopic.id}/edit`)
+    } else {
+      throw new Error('ไม่ได้รับ ID ของหัวข้อใหม่จากเซิร์ฟเวอร์')
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
