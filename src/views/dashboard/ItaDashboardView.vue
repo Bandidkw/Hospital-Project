@@ -61,7 +61,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="manageTopicsForYear(year.id)"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
               >
                 <i class="fas fa-folder-open mr-2"></i>
                 จัดการหัวข้อ
@@ -69,7 +69,7 @@
 
               <button
                 @click="openEditYearModal(year)"
-                class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-yellow-400 text-gray-700 text-sm font-medium rounded-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors duration-200"
               >
                 <i class="fas fa-pencil-alt mr-2"></i>
                 แก้ไข
@@ -77,7 +77,7 @@
 
               <button
                 @click="deleteYear(year.id)"
-                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
               >
                 <i class="fas fa-trash-alt mr-2"></i>
                 ลบ
