@@ -61,26 +61,26 @@
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="manageTopicsForYear(year.id)"
-                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
               >
-                <i class="fas fa-folder-open -ml-1 mr-2 h-5 w-5"></i>
-                <span>จัดการหัวข้อ</span>
+                <i class="fas fa-folder-open mr-2"></i>
+                จัดการหัวข้อ
               </button>
 
               <button
                 @click="openEditYearModal(year)"
-                class="inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors duration-200"
               >
-                <i class="fas fa-pencil-alt -ml-1 mr-2 h-5 w-5 text-gray-500"></i>
-                <span>แก้ไข</span>
+                <i class="fas fa-pencil-alt mr-2"></i>
+                แก้ไข
               </button>
 
               <button
                 @click="deleteYear(year.id)"
-                class="inline-flex items-center px-4 py-2 bg-white text-danger-700 text-sm font-medium rounded-md border border-gray-300 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
               >
-                <i class="fas fa-trash-alt -ml-1 mr-2 h-5 w-5 text-danger-500"></i>
-                <span>ลบ</span>
+                <i class="fas fa-trash-alt mr-2"></i>
+                ลบ
               </button>
             </td>
           </tr>
