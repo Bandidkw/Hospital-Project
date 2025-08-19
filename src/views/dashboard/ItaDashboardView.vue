@@ -58,21 +58,29 @@
             <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">{{ year.year }}</td>
             <td class="px-6 py-4 text-gray-700">{{ year.title }}</td>
             <td class="px-6 py-4 text-gray-500 italic">{{ year.description || '-' }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="manageTopicsForYear(year.id)"
-                class="text-indigo-600 hover:text-indigo-900 mr-4"
+                class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
               >
-                จัดการหัวข้อ
+                <i class="fas fa-folder-open -ml-1 mr-2 h-5 w-5"></i>
+                <span>จัดการหัวข้อ</span>
               </button>
+
               <button
                 @click="openEditYearModal(year)"
-                class="text-green-600 hover:text-green-900 mr-4"
+                class="inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
-                แก้ไข
+                <i class="fas fa-pencil-alt -ml-1 mr-2 h-5 w-5 text-gray-500"></i>
+                <span>แก้ไข</span>
               </button>
-              <button @click="deleteYear(year.id)" class="text-red-600 hover:text-red-900">
-                ลบ
+
+              <button
+                @click="deleteYear(year.id)"
+                class="inline-flex items-center px-4 py-2 bg-white text-danger-700 text-sm font-medium rounded-md border border-gray-300 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                <i class="fas fa-trash-alt -ml-1 mr-2 h-5 w-5 text-danger-500"></i>
+                <span>ลบ</span>
               </button>
             </td>
           </tr>
