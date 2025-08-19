@@ -40,12 +40,12 @@
             <th
               class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
             >
-              ID
+              หัวข้อ
             </th>
             <th
               class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
             >
-              ชื่อหัวข้อ (MOIT)
+              MOIT
             </th>
             <th
               class="px-6 py-3 text-center text-xs font-medium text-gray-600 uppercase tracking-wider"
@@ -61,7 +61,7 @@
             </td>
           </tr>
           <tr v-for="topic in topics" :key="topic.id" class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ topic.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ topic.moit_name }}</td>
             <td class="px-6 py-4 text-gray-700">{{ topic.title }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
               <button
@@ -70,10 +70,7 @@
               >
                 จัดการเอกสาร
               </button>
-              <!-- <button
-              @click="deleteTopic(topic.id)"
-              class="text-red-600 hover:text-red-900">
-              </button> -->
+              <button class="text-red-600 hover:text-red-900"></button>
             </td>
           </tr>
         </tbody>
