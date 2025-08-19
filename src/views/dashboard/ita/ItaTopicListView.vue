@@ -276,24 +276,33 @@ const handleCreateTopicSubmit = async () => {
   const selectedTemplate = moitTemplates.find((t) => t.value === newTopicData.value.templateValue)
   if (!selectedTemplate) return
 
-  const newTitle = selectedTemplate.text
-
   try {
+    // --- 1. สร้าง "แบบฟอร์ม" ที่ถูกต้องสำหรับส่งไปหลังบ้าน ---
+    const payload = {
+      year_ita_id: yearId, // ID ของปีที่เราอยู่
+      moit_name: selectedTemplate.value, // เช่น "MOIT 1"
+      title: selectedTemplate.text, // ชื่อเต็มของ MOIT
+      description: `รายละเอียดของ ${selectedTemplate.value}`, // คำอธิบายเบื้องต้น
+    }
+    // ----------------------------------------------------
+
     toast.info(`กำลังสร้างหัวข้อ: "${selectedTemplate.value}"...`)
-    const newTopic = await itaService.createTopic({ yearId: yearId, title: newTitle })
+
+    // 2. เรียกใช้ service ด้วย payload ใหม่
+    const newTopic = await itaService.createTopic(payload)
+
     if (newTopic && newTopic.id) {
       isCreateModalOpen.value = false
       toast.success(`สร้างหัวข้อสำเร็จ!`)
-      fetchTopicsForYear() // ดึงข้อมูลใหม่เพื่ออัปเดตตาราง
+      fetchTopicsForYear()
       router.push(`/dashboard/ita/topic/${newTopic.id}/edit`)
     }
   } catch (err: unknown) {
     if (err instanceof Error) {
-      error.value = err.message
+      toast.error(err.message)
     } else {
-      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+      toast.error('เกิดข้อผิดพลาดในการสร้างหัวข้อใหม่')
     }
-    toast.error(error.value || 'ไม่สามารถดึงข้อมูลปีได้')
   }
 }
 

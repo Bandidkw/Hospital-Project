@@ -89,9 +89,14 @@ export const itaService = {
       throw new Error('ไม่สามารถดึงข้อมูลหัวข้อได้')
     }
   },
-  createTopic: async (topicData: { yearId: string | number; title: string }): Promise<Moit> => {
+  createTopic: async (topicData: {
+    year_ita_id: string | number
+    moit_name: string
+    title: string
+    description: string
+  }): Promise<Moit> => {
     try {
-      const response = await apiService.post('/ita-topics', topicData)
+      const response = await apiService.post('/moit', topicData)
       return response.data.data
     } catch (error) {
       console.error('Error creating ITA topic:', error)
