@@ -61,15 +61,14 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-if="!topics || topics.length === 0">
-            <td colspan="3" class="px-6 py-4 text-center text-gray-500">
+            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
               ยังไม่มีหัวข้อสำหรับปีงบประมาณนี้
             </td>
           </tr>
           <tr v-for="topic in topics" :key="topic.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ topic.moit_name }}</td>
             <td class="px-6 py-4 text-gray-700">{{ topic.title }}</td>
-            <td class="px-6 py-4 text-gray-700">{{ topic.description }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium"></td>
+            <td class="px-6 py-4 text-gray-700">{{ topic.description || '-' }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="editTopic(topic.id)"
