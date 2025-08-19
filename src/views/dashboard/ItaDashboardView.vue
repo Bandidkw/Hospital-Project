@@ -1,4 +1,3 @@
-<!-- ItaDashboardView.vue -->
 <template>
   <div class="container mx-auto p-8 bg-white rounded-lg shadow-xl">
     <div class="flex justify-between items-center mb-8 border-b-4 border-blue-500 pb-4">
@@ -22,7 +21,8 @@
     <div v-else-if="error" class="text-center py-16 bg-red-50 p-8 rounded-lg">
       <p class="text-xl text-red-600">เกิดข้อผิดพลาด: {{ error }}</p>
     </div>
-    <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+
+    <div v-else class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-blue-100">
           <tr>
@@ -65,6 +65,15 @@
               >
                 จัดการหัวข้อ
               </button>
+              <button
+                @click="openEditYearModal(year)"
+                class="text-green-600 hover:text-green-900 mr-4"
+              >
+                แก้ไข
+              </button>
+              <button @click="deleteYear(year.id)" class="text-red-600 hover:text-red-900">
+                ลบ
+              </button>
             </td>
           </tr>
         </tbody>
@@ -72,57 +81,55 @@
     </div>
 
     <div
-      v-if="isCreateYearModalOpen"
+      v-if="isModalOpen"
       class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
     >
       <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">สร้างปีงบประมาณใหม่</h2>
-        <form @submit.prevent="handleCreateYearSubmit" class="space-y-4">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+          {{ isEditing ? 'แก้ไขปีงบประมาณ' : 'สร้างปีงบประมาณใหม่' }}
+        </h2>
+        <form @submit.prevent="handleFormSubmit" class="space-y-4">
           <div>
-            <label for="new-year" class="block text-gray-700 font-bold mb-2"
+            <label for="year-input" class="block text-gray-700 font-bold mb-2"
               >ปีงบประมาณ (พ.ศ.):*</label
             >
             <input
-              id="new-year"
+              id="year-input"
               type="number"
-              v-model="newYearData.year"
+              v-model="formData.year"
               placeholder="เช่น 2568"
-              class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700"
+              :disabled="isEditing"
               required
             />
           </div>
-
           <div>
-            <label for="new-year-title" class="block text-gray-700 font-bold mb-2"
+            <label for="year-title" class="block text-gray-700 font-bold mb-2"
               >ชื่อเรื่อง (Title):*</label
             >
             <input
-              id="new-year-title"
+              id="year-title"
               type="text"
-              v-model="newYearData.title"
-              placeholder="เช่น ปีงบประมาณ 2568"
-              class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              v-model="formData.title"
+              class="shadow rounded-lg w-full py-3 px-4"
               required
             />
           </div>
-
           <div>
-            <label for="new-year-desc" class="block text-gray-700 font-bold mb-2"
+            <label for="year-desc" class="block text-gray-700 font-bold mb-2"
               >คำอธิบาย (Description):</label
             >
             <textarea
-              id="new-year-desc"
-              v-model="newYearData.description"
+              id="year-desc"
+              v-model="formData.description"
               rows="3"
-              placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
-              class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="shadow rounded-lg w-full py-3 px-4"
             ></textarea>
           </div>
-
           <div class="flex justify-end space-x-4 pt-6 mt-4 border-t">
             <button
               type="button"
-              @click="isCreateYearModalOpen = false"
+              @click="closeModal"
               class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full"
             >
               ยกเลิก
@@ -147,12 +154,6 @@ import { itaService } from '@/services/itaService'
 import type { YearIta } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 
-interface NewYearFormData {
-  year: number
-  title: string
-  description: string
-}
-
 const router = useRouter()
 const toast = useToast()
 
@@ -160,8 +161,11 @@ const availableYears = ref<YearIta[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-const isCreateYearModalOpen = ref(false)
-const newYearData = ref<NewYearFormData>({
+// --- รวม State ของ Modal ไว้ที่เดียว ---
+const isModalOpen = ref(false)
+const isEditing = ref(false)
+const editingYearId = ref<string | number | null>(null)
+const formData = ref({
   year: new Date().getFullYear() + 543,
   title: '',
   description: '',
@@ -184,38 +188,91 @@ const fetchYears = async () => {
   }
 }
 
+// --- ฟังก์ชันสำหรับเปิด Modal (ใช้ได้ทั้งสร้างและแก้ไข) ---
 const openCreateYearModal = () => {
+  isEditing.value = false
   const currentYear = new Date().getFullYear() + 543
-  newYearData.value = {
+  formData.value = {
     year: currentYear,
     title: `ปีงบประมาณ ${currentYear}`,
     description: `รายละเอียดข้อมูล ITA ประจำปีงบประมาณ ${currentYear}`,
   }
-  isCreateYearModalOpen.value = true
+  isModalOpen.value = true
 }
 
-const handleCreateYearSubmit = async () => {
-  if (!newYearData.value.year || !newYearData.value.title) {
+const openEditYearModal = (yearToEdit: YearIta) => {
+  isEditing.value = true
+  editingYearId.value = yearToEdit.id
+  formData.value = {
+    year: parseInt(yearToEdit.year),
+    title: yearToEdit.title || '',
+    description: yearToEdit.description || '',
+  }
+  isModalOpen.value = true
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+}
+
+// --- ฟังก์ชัน Submit ที่จัดการได้ทั้งสร้างและแก้ไข ---
+const handleFormSubmit = async () => {
+  if (!formData.value.year || !formData.value.title) {
     toast.error('กรุณากรอกปีและชื่อเรื่องให้ครบถ้วน')
     return
   }
 
   try {
-    const payload = {
-      year: String(newYearData.value.year),
-      title: newYearData.value.title,
-      description: newYearData.value.description || '',
+    if (isEditing.value && editingYearId.value) {
+      // --- โหมดแก้ไข ---
+      const payload = {
+        title: formData.value.title,
+        description: formData.value.description || '',
+      }
+      toast.info(`กำลังอัปเดตข้อมูลปี ${formData.value.year}...`)
+      await itaService.updateYear(editingYearId.value, payload)
+      toast.success(`อัปเดตข้อมูลปี ${formData.value.year} สำเร็จ!`)
+    } else {
+      // --- โหมดสร้างใหม่ ---
+      const payload = {
+        year: String(formData.value.year),
+        title: formData.value.title,
+        description: formData.value.description || '',
+      }
+      toast.info(`กำลังสร้างปีงบประมาณ ${payload.year}...`)
+      await itaService.createYear(payload)
+      toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
     }
-    toast.info(`กำลังสร้างปีงบประมาณ ${payload.year}...`)
-    await itaService.createYear(payload)
-    isCreateYearModalOpen.value = false
-    toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
-    fetchYears()
+
+    closeModal()
+    fetchYears() // ดึงข้อมูลใหม่
   } catch (err: unknown) {
     if (err instanceof Error) {
       toast.error(err.message)
     } else {
-      toast.error('ไม่สามารถสร้างปีใหม่ได้: เกิดข้อผิดพลาดที่ไม่คาดคิด')
+      toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิด')
+    }
+  }
+}
+
+// --- เพิ่มฟังก์ชัน deleteYear เข้ามา ---
+const deleteYear = async (yearId: string | number) => {
+  if (
+    confirm(
+      `คุณแน่ใจหรือไม่ว่าต้องการลบปีงบประมาณ ID: ${yearId}? การกระทำนี้จะลบหัวข้อและเอกสารทั้งหมดที่อยู่ภายในปีนี้ด้วย และไม่สามารถกู้คืนได้!`,
+    )
+  ) {
+    try {
+      toast.info(`กำลังลบปี ID: ${yearId}...`)
+      await itaService.deleteYear(yearId)
+      toast.success(`ลบปี ID: ${yearId} สำเร็จ!`)
+      fetchYears()
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message)
+      } else {
+        toast.error('เกิดข้อผิดพลาดในการลบปีงบประมาณ')
+      }
     }
   }
 }

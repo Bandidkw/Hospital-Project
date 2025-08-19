@@ -60,6 +60,15 @@ export const itaService = {
     }
   },
 
+  deleteYear: async (yearId: string | number): Promise<void> => {
+    try {
+      await apiService.delete(`/ita/year-moit/${yearId}`)
+    } catch (error) {
+      console.error(`Error deleting ITA year with ID ${yearId}:`, error)
+      throw new Error('ไม่สามารถลบปีงบประมาณได้')
+    }
+  },
+
   // --- 2. ฟังก์ชันสำหรับจัดการ "หัวข้อ" (Moit) ---
 
   getAllTopics: async (): Promise<YearIta[]> => {
