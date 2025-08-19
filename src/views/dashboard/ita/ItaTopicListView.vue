@@ -267,7 +267,6 @@ const openCreateTopicModal = () => {
   newTopicData.value.templateValue = ''
   isCreateModalOpen.value = true
 }
-
 const handleCreateTopicSubmit = async () => {
   if (!newTopicData.value.templateValue) {
     toast.error('กรุณาเลือกหัวข้อ')
@@ -275,21 +274,15 @@ const handleCreateTopicSubmit = async () => {
   }
   const selectedTemplate = moitTemplates.find((t) => t.value === newTopicData.value.templateValue)
   if (!selectedTemplate) return
-
   try {
-    // --- สร้าง "แบบฟอร์ม" (payload) ที่ถูกต้อง ---
     const payload = {
       year_ita_id: yearId,
       moit_name: selectedTemplate.value,
       title: selectedTemplate.text,
       description: `รายละเอียดของ ${selectedTemplate.value}`,
     }
-    // ---------------------------------------------
-
     toast.info(`กำลังสร้างหัวข้อ: "${selectedTemplate.value}"...`)
-
     const newTopic = await itaService.createTopic(payload)
-
     if (newTopic && newTopic.id) {
       isCreateModalOpen.value = false
       toast.success(`สร้างหัวข้อสำเร็จ!`)
