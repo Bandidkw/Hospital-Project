@@ -61,7 +61,7 @@
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="manageTopicsForYear(year.id)"
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
               >
                 <i class="fas fa-folder-open mr-2"></i>
                 จัดการหัวข้อ
@@ -69,14 +69,14 @@
 
               <button
                 @click="openEditYearModal(year)"
-                class="inline-flex items-center px-4 py-2 bg-yellow-400 text-gray-700 text-sm font-medium rounded-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-yellow-400 text-gray-700 text-sm font-medium rounded-md hover:bg-yellow-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400 transition-colors duration-200"
               >
                 <i class="fas fa-pencil-alt mr-2"></i>
                 แก้ไข
               </button>
 
               <button
-                @click="deleteYear(year.id)"
+                @click="deleteYear(year.id, year.year)"
                 class="inline-flex items-center px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
               >
                 <i class="fas fa-trash-alt mr-2"></i>
@@ -263,17 +263,17 @@ const handleFormSubmit = async () => {
   }
 }
 
-// --- เพิ่มฟังก์ชัน deleteYear เข้ามา ---
-const deleteYear = async (yearId: string | number) => {
+// --- เพิ่มฟังก์ชัน deleteYear ---
+const deleteYear = async (yearId: string | number, yearString: string) => {
   if (
     confirm(
-      `คุณแน่ใจหรือไม่ว่าต้องการลบปีงบประมาณ ID: ${yearId}? การกระทำนี้จะลบหัวข้อและเอกสารทั้งหมดที่อยู่ภายในปีนี้ด้วย และไม่สามารถกู้คืนได้!`,
+      `คุณแน่ใจหรือไม่ว่าต้องการลบ "ปีงบประมาณ ${yearString}"? การกระทำนี้จะลบหัวข้อและเอกสารทั้งหมดที่อยู่ภายในปีนี้ด้วย และไม่สามารถกู้คืนได้!`,
     )
   ) {
     try {
-      toast.info(`กำลังลบปี ID: ${yearId}...`)
+      toast.info(`กำลังลบปีงบประมาณ ${yearString}...`)
       await itaService.deleteYear(yearId)
-      toast.success(`ลบปี ID: ${yearId} สำเร็จ!`)
+      toast.success(`ลบ "ปีงบประมาณ ${yearString}" สำเร็จ!`)
       fetchYears()
     } catch (err: unknown) {
       if (err instanceof Error) {

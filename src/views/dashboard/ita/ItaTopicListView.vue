@@ -158,7 +158,7 @@ const error = ref<string | null>(null)
 // State สำหรับ Modal
 const isCreateModalOpen = ref(false)
 const newTopicData = ref({
-  templateValue: '', // จะเก็บค่า value ของ MOIT ที่เลือก เช่น 'MOIT 1'
+  templateValue: '',
 })
 
 // "แม่แบบ" ของหัวข้อ MOIT ทั้งหมดสำหรับให้ User เลือก
@@ -277,19 +277,18 @@ const handleCreateTopicSubmit = async () => {
   if (!selectedTemplate) return
 
   try {
-    // --- 1. สร้าง "แบบฟอร์ม" ที่ถูกต้องสำหรับส่งไปหลังบ้าน ---
+    // --- สร้าง "แบบฟอร์ม" (payload) ---
     const payload = {
-      year_ita_id: yearId, // ID ของปีที่เราอยู่
-      moit_name: selectedTemplate.value, // เช่น "MOIT 1"
-      title: selectedTemplate.text, // ชื่อเต็มของ MOIT
-      description: `รายละเอียดของ ${selectedTemplate.value}`, // คำอธิบายเบื้องต้น
+      year_ita_id: yearId, // <-- เปลี่ยนจาก yearId เป็น year_ita_id
+      moit_name: selectedTemplate.value,
+      title: selectedTemplate.text,
+      description: `รายละเอียดของ ${selectedTemplate.value}`,
     }
-    // ----------------------------------------------------
+    // ---------------------------------------------
 
     toast.info(`กำลังสร้างหัวข้อ: "${selectedTemplate.value}"...`)
 
-    // 2. เรียกใช้ service ด้วย payload ใหม่
-    const newTopic = await itaService.createTopic(payload)
+    const newTopic = await itaService.createTopic(payload) // <-- ส่ง payload
 
     if (newTopic && newTopic.id) {
       isCreateModalOpen.value = false

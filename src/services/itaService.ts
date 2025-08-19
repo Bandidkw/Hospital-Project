@@ -138,7 +138,7 @@ export const itaService = {
   },
   deleteDocument: async (docId: string | number): Promise<void> => {
     try {
-      // Endpoint นี้ควรจะเป็น /ita-documents/ ไม่ใช่ /ita/year-moit/
+      // Endpoint
       await apiService.delete(`/ita-documents/${docId}`)
     } catch (error) {
       console.error(`Error deleting document with ID ${docId}:`, error)
