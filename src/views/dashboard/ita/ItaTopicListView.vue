@@ -277,9 +277,9 @@ const handleCreateTopicSubmit = async () => {
   if (!selectedTemplate) return
 
   try {
-    // --- สร้าง "แบบฟอร์ม" (payload) ---
+    // --- สร้าง "แบบฟอร์ม" (payload) ที่ถูกต้อง ---
     const payload = {
-      year_ita_id: yearId, // <-- เปลี่ยนจาก yearId เป็น year_ita_id
+      year_ita_id: yearId,
       moit_name: selectedTemplate.value,
       title: selectedTemplate.text,
       description: `รายละเอียดของ ${selectedTemplate.value}`,
@@ -288,7 +288,7 @@ const handleCreateTopicSubmit = async () => {
 
     toast.info(`กำลังสร้างหัวข้อ: "${selectedTemplate.value}"...`)
 
-    const newTopic = await itaService.createTopic(payload) // <-- ส่ง payload
+    const newTopic = await itaService.createTopic(payload)
 
     if (newTopic && newTopic.id) {
       isCreateModalOpen.value = false
