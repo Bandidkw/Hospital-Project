@@ -30,8 +30,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 // ข้อมูลจำลองสำหรับบริการต่างๆ
 const services = ref([
@@ -56,13 +56,13 @@ const services = ref([
     description: 'พร้อมให้บริการตลอด 24 ชั่วโมง สำหรับผู้ป่วยฉุกเฉินและอุบัติเหตุ',
     link: '/emergency',
   },
-  {
-    id: 4,
-    icon: 'fas fa-flask', // ไอคอนสำหรับ Lab
-    title: 'ห้องปฏิบัติการ',
-    description: 'บริการตรวจวินิจฉัยทางห้องปฏิบัติการที่ทันสมัยและแม่นยำ',
-    link: '/laboratory', // สมมติว่ามีหน้าสำหรับห้องปฏิบัติการ
-  },
+  // {
+  //   id: 4,
+  //   icon: 'fas fa-flask', // ไอคอนสำหรับ Lab
+  //   title: 'ห้องปฏิบัติการ',
+  //   description: 'บริการตรวจวินิจฉัยทางห้องปฏิบัติการที่ทันสมัยและแม่นยำ',
+  //   link: '/laboratory', // สมมติว่ามีหน้าสำหรับห้องปฏิบัติการ
+  // },
   // สามารถเพิ่มบริการอื่นๆ ได้ที่นี่
   // {
   //   id: 5,
@@ -71,7 +71,7 @@ const services = ref([
   //   description: 'บริการตรวจวินิจฉัยด้วยภาพ เช่น X-ray, Ultrasound',
   //   link: '/radiology',
   // },
-]);
+])
 </script>
 
 <style scoped>
