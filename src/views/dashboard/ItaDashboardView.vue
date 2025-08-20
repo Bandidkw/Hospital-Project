@@ -79,6 +79,7 @@
                 @click="openDeleteConfirmModal(year)"
                 class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition-colors duration-200"
               >
+                <i class="far fa-trash-alt mr-2"></i>
                 ลบ
               </button>
             </td>
@@ -257,24 +258,30 @@ const closeModal = () => {
 }
 
 // --- ฟังก์ชัน Submit ที่จัดการได้ทั้งสร้างและแก้ไข ---
+// --- แทนที่ handleFormSubmit เดิมด้วยฟังก์ชันนี้ ---
 const handleFormSubmit = async () => {
+  // 1. ตรวจสอบข้อมูลเบื้องต้น (เหมือนเดิม)
   if (!formData.value.year || !formData.value.title) {
     toast.error('กรุณากรอกปีและชื่อเรื่องให้ครบถ้วน')
     return
   }
 
   try {
+    // 2. ใช้ "ป้ายไฟนีออน" (isEditing) ในการตัดสินใจ!
     if (isEditing.value && editingYearId.value) {
-      // --- โหมดแก้ไข ---
+      // --- โหมดแก้ไข (ส่วนที่อัปเกรด) ---
       const payload = {
         title: formData.value.title,
         description: formData.value.description || '',
       }
       toast.info(`กำลังอัปเดตข้อมูลปี ${formData.value.year}...`)
+
+      // เรียกใช้ service สำหรับ "อัปเดต"
       await itaService.updateYear(editingYearId.value, payload)
+
       toast.success(`อัปเดตข้อมูลปี ${formData.value.year} สำเร็จ!`)
     } else {
-      // --- โหมดสร้างใหม่ ---
+      // --- โหมดสร้างใหม่ (ส่วนนี้ทำงานดีอยู่แล้ว) ---
       const payload = {
         year: String(formData.value.year),
         title: formData.value.title,
@@ -285,8 +292,9 @@ const handleFormSubmit = async () => {
       toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
     }
 
+    // 3. ปิด Modal และโหลดข้อมูลใหม่ (เหมือนเดิม)
     closeModal()
-    fetchYears() // ดึงข้อมูลใหม่
+    fetchYears()
   } catch (err: unknown) {
     if (err instanceof Error) {
       toast.error(err.message)
