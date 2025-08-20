@@ -196,14 +196,22 @@ import { itaService } from '@/services/itaService'
 import type { YearIta } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 
+// =================================================================
+// 1. Setup (ตั้งค่าพื้นฐาน)
+// =================================================================
 const router = useRouter()
 const toast = useToast()
 
+// =================================================================
+// 2. State Management (ตัวแปรหลักสำหรับเก็บข้อมูล)
+// =================================================================
+
+// State สำหรับข้อมูลในตาราง
 const availableYears = ref<YearIta[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-// --- รวม State ของ Modal ไว้ที่เดียว ---
+// State สำหรับ Modal สร้าง/แก้ไข
 const isModalOpen = ref(false)
 const isEditing = ref(false)
 const editingYearId = ref<string | number | null>(null)
@@ -212,6 +220,14 @@ const formData = ref({
   title: '',
   description: '',
 })
+
+// State สำหรับ Modal ยืนยันการลบ
+const isDeleteModalOpen = ref(false)
+const yearToDelete = ref<YearIta | null>(null)
+
+// =================================================================
+// 3. Core Functions (ฟังก์ชันหลักที่คุยกับ API)
+// =================================================================
 
 const fetchYears = async () => {
   loading.value = true
@@ -230,7 +246,69 @@ const fetchYears = async () => {
   }
 }
 
-// --- ฟังก์ชันสำหรับเปิด Modal (ใช้ได้ทั้งสร้างและแก้ไข) ---
+const handleFormSubmit = async () => {
+  if (!formData.value.year || !formData.value.title) {
+    toast.error('กรุณากรอกปีและชื่อเรื่องให้ครบถ้วน')
+    return
+  }
+
+  try {
+    // โหมดแก้ไข
+    if (isEditing.value && editingYearId.value) {
+      const payload = {
+        title: formData.value.title,
+        description: formData.value.description || '',
+      }
+      toast.info(`กำลังอัปเดตข้อมูลปี ${formData.value.year}...`)
+      await itaService.updateYear(editingYearId.value, payload)
+      toast.success(`อัปเดตข้อมูลปี ${formData.value.year} สำเร็จ!`)
+    }
+    // โหมดสร้างใหม่
+    else {
+      const payload = {
+        year: String(formData.value.year),
+        title: formData.value.title,
+        description: formData.value.description || '',
+      }
+      toast.info(`กำลังสร้างปีงบประมาณ ${payload.year}...`)
+      await itaService.createYear(payload)
+      toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
+    }
+
+    closeModal()
+    await fetchYears() // รอให้ข้อมูลโหลดเสร็จก่อน
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      toast.error(err.message)
+    } else {
+      toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิด')
+    }
+  }
+}
+
+const handleConfirmDelete = async () => {
+  if (!yearToDelete.value) return
+
+  try {
+    toast.info(`กำลังลบ "${yearToDelete.value.title}"...`)
+    await itaService.deleteYear(yearToDelete.value.id)
+    toast.success(`ลบ "${yearToDelete.value.title}" สำเร็จ!`)
+
+    closeDeleteConfirmModal()
+    await fetchYears() // รอให้ข้อมูลโหลดเสร็จก่อน
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      toast.error(err.message)
+    } else {
+      toast.error('เกิดข้อผิดพลาดในการลบปีงบประมาณ')
+    }
+  }
+}
+
+// =================================================================
+// 4. UI Control Functions (ฟังก์ชันควบคุมหน้าตาโปรแกรม)
+// =================================================================
+
 const openCreateYearModal = () => {
   isEditing.value = false
   const currentYear = new Date().getFullYear() + 543
@@ -257,60 +335,8 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
-// --- ฟังก์ชัน Submit ที่จัดการได้ทั้งสร้างและแก้ไข ---
-// --- แทนที่ handleFormSubmit เดิมด้วยฟังก์ชันนี้ ---
-const handleFormSubmit = async () => {
-  // 1. ตรวจสอบข้อมูลเบื้องต้น (เหมือนเดิม)
-  if (!formData.value.year || !formData.value.title) {
-    toast.error('กรุณากรอกปีและชื่อเรื่องให้ครบถ้วน')
-    return
-  }
-
-  try {
-    // 2. ใช้ "ป้ายไฟนีออน" (isEditing) ในการตัดสินใจ!
-    if (isEditing.value && editingYearId.value) {
-      // --- โหมดแก้ไข (ส่วนที่อัปเกรด) ---
-      const payload = {
-        title: formData.value.title,
-        description: formData.value.description || '',
-      }
-      toast.info(`กำลังอัปเดตข้อมูลปี ${formData.value.year}...`)
-
-      // เรียกใช้ service สำหรับ "อัปเดต"
-      await itaService.updateYear(editingYearId.value, payload)
-
-      toast.success(`อัปเดตข้อมูลปี ${formData.value.year} สำเร็จ!`)
-    } else {
-      // --- โหมดสร้างใหม่ (ส่วนนี้ทำงานดีอยู่แล้ว) ---
-      const payload = {
-        year: String(formData.value.year),
-        title: formData.value.title,
-        description: formData.value.description || '',
-      }
-      toast.info(`กำลังสร้างปีงบประมาณ ${payload.year}...`)
-      await itaService.createYear(payload)
-      toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
-    }
-
-    // 3. ปิด Modal และโหลดข้อมูลใหม่ (เหมือนเดิม)
-    closeModal()
-    fetchYears()
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message)
-    } else {
-      toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิด')
-    }
-  }
-}
-
-// --- เพิ่มฟังก์ชัน deleteYear ---
-
-const isDeleteModalOpen = ref(false)
-const yearToDelete = ref<YearIta | null>(null)
-
 const openDeleteConfirmModal = (year: YearIta) => {
-  yearToDelete.value = year // เก็บข้อมูลของปีที่จะลบไว้
+  yearToDelete.value = year
   isDeleteModalOpen.value = true
 }
 
@@ -319,48 +345,13 @@ const closeDeleteConfirmModal = () => {
   yearToDelete.value = null
 }
 
-// --- ฟังก์ชันใหม่สำหรับจัดการ "การยืนยันลบ" จริงๆ ---
-const handleConfirmDelete = async () => {
-  if (!yearToDelete.value) return
-
-  try {
-    toast.info(`กำลังลบ "${yearToDelete.value.title}"...`)
-    await itaService.deleteYear(yearToDelete.value.id)
-    toast.success(`ลบ "${yearToDelete.value.title}" สำเร็จ!`)
-
-    closeDeleteConfirmModal()
-    fetchYears() // ดึงข้อมูลใหม่
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message)
-    } else {
-      toast.error('เกิดข้อผิดพลาดในการลบปีงบประมาณ')
-    }
-  }
-}
-// const deleteYear = async (yearId: string | number, yearString: string) => {
-//   if (
-//     confirm(
-//       `คุณแน่ใจหรือไม่ว่าต้องการลบ "ปีงบประมาณ ${yearString}"? การกระทำนี้จะลบหัวข้อและเอกสารทั้งหมดที่อยู่ภายในปีนี้ด้วย และไม่สามารถกู้คืนได้!`,
-//     )
-//   ) {
-//     try {
-//       toast.info(`กำลังลบปีงบประมาณ ${yearString}...`)
-//       await itaService.deleteYear(yearId)
-//       toast.success(`ลบ "ปีงบประมาณ ${yearString}" สำเร็จ!`)
-//       fetchYears()
-//     } catch (err: unknown) {
-//       if (err instanceof Error) {
-//         toast.error(err.message)
-//       } else {
-//         toast.error('เกิดข้อผิดพลาดในการลบปีงบประมาณ')
-//       }
-//     }
-//   }
-// }
 const manageTopicsForYear = (yearId: string | number) => {
   router.push(`/dashboard/ita/year/${yearId}/topics`)
 }
+
+// =================================================================
+// 5. Lifecycle Hooks (คำสั่งที่ทำงานอัตโนมัติ)
+// =================================================================
 
 onMounted(() => {
   fetchYears()
