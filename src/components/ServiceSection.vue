@@ -6,7 +6,7 @@
         ให้บริการทางการแพทย์ด้วยหัวใจ ด้วยทีมแพทย์และพยาบาลผู้เชี่ยวชาญ
       </p>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <div
           v-for="service in services"
           :key="service.id"
