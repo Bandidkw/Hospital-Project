@@ -75,7 +75,10 @@
                 แก้ไข
               </button>
 
-              <button @click="openDeleteConfirmModal(year)" class="text-red-600 hover:text-red-900">
+              <button
+                @click="openDeleteConfirmModal(year)"
+                class="inline-flex items-center px-4 py-2 bg-red-600 text-gray-700 text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 transition-colors duration-200"
+              >
                 ลบ
               </button>
             </td>
