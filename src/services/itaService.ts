@@ -73,13 +73,14 @@ export const itaService = {
 
   getAllTopics: async (): Promise<YearIta[]> => {
     try {
-      const response = await apiService.get('/ita-topics')
+      const response = await apiService.get('/user/year-moit')
       return response.data.data
     } catch (error) {
       console.error('Error fetching all ITA data:', error)
       throw new Error('ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
     }
   },
+
   getTopicById: async (topicId: string | number): Promise<MoitWithYear> => {
     try {
       const response = await apiService.get(`/ita-topics/${topicId}`)
