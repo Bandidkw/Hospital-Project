@@ -116,100 +116,163 @@
     </div>
 
     <div class="card bg-white p-6 rounded-lg shadow-md">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">กิจกรรมล่าสุด</h3>
-      <!-- ตัวอย่างการแสดงผลแบบมีเงื่อนไขสำหรับรายการเฉพาะ -->
-      <ul class="space-y-3">
-        <li
-          v-if="authStore.isAdmin || authStore.isSuperAdmin"
-          class="flex items-center text-gray-700"
+      <h3 class="text-xl font-semibold ...">กิจกรรมล่าสุดในระบบ</h3>
+
+      <div class="relative space-y-6">
+        <div class="absolute left-4 top-4 h-full border-l-2 border-gray-200"></div>
+
+        <div
+          v-for="activity in recentActivities"
+          :key="activity.id"
+          class="relative flex items-start pl-12"
         >
-          <i class="fas fa-check-circle text-green-500 mr-3"></i>
-          <span
-            ><span class="font-semibold">Admin</span> ได้เพิ่มข่าวสารใหม่:
-            "ประกาศวันหยุดราชการ"</span
+          <div
+            class="absolute left-0 top-1.5 flex items-center justify-center w-8 h-8 rounded-full"
+            :class="getActivityIcon(activity.action_type).bgClass"
           >
-          <span class="ml-auto text-sm text-gray-500">เมื่อ 5 นาทีที่แล้ว</span>
-        </li>
-        <li class="flex items-center text-gray-700">
-          <i class="fas fa-upload text-blue-500 mr-3"></i>
-          <span
-            ><span class="font-semibold">Editor</span> ได้อัปเดตเอกสาร ITA: "รายงานผลการดำเนินงาน
-            2567"</span
-          >
-          <span class="ml-auto text-sm text-gray-500">เมื่อ 1 ชั่วโมงที่แล้ว</span>
-        </li>
-        <li class="flex items-center text-gray-700">
-          <i class="fas fa-user-plus text-purple-500 mr-3"></i>
-          <span
-            >ผู้ใช้งานใหม่
-            <span class="font-semibold">"พยาบาลวิชาชีพ"</span> ได้รับการเพิ่มในระบบ</span
-          >
-          <span class="ml-auto text-sm text-gray-500">เมื่อ 1 วันที่แล้ว</span>
-        </li>
-      </ul>
+            <i
+              class="fas"
+              :class="[
+                getActivityIcon(activity.action_type).iconClass,
+                getActivityIcon(activity.action_type).colorClass,
+              ]"
+            ></i>
+          </div>
+          <div>
+            <p class="text-gray-800" v-html="formatActivityMessage(activity)"></p>
+            <p class="text-sm text-gray-500 mt-1">{{ formatRelativeTime(activity.createdAt) }}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { ref } from 'vue'
-
-// ค่าถูกดึงมาจาก API
-const newsCount = ref(125)
-const itaDocumentCount = ref(48)
-const userCount = ref(12)
-const personnelCount = ref(230)
+import { activityService } from '@/services/activityService'
+import type { ActivityLog } from '@/types/main'
 
 const authStore = useAuthStore()
 const toast = useToast()
 const router = useRouter()
 
+// --- State ---
+const newsCount = ref(0)
+const itaDocumentCount = ref(0)
+const userCount = ref(0)
+const personnelCount = ref(0)
+
+const recentActivities = ref<ActivityLog[]>([])
+const isLoadingActivities = ref(true)
+
+// --- API Functions ---
+
+const fetchSummaryData = async () => {
+  try {
+    // *** TODO: เมื่อ API พร้อม ให้เปิดใช้งาน ***
+    // const summary = await dashboardService.getSummary();
+    // newsCount.value = summary.newsCount;
+    // ... etc ...
+
+    // (ใช้ข้อมูลจำลองไปก่อน)
+    newsCount.value = 125
+    itaDocumentCount.value = 48
+    userCount.value = 12
+    personnelCount.value = 230
+  } catch (error) {
+    console.error('Failed to fetch summary data:', error)
+    toast.error('ไม่สามารถโหลดข้อมูลสรุปได้')
+  }
+}
+
+const fetchRecentActivities = async () => {
+  isLoadingActivities.value = true
+  try {
+    recentActivities.value = await activityService.getRecentActivities()
+  } catch (error) {
+    console.error('Failed to fetch recent activities:', error)
+  } finally {
+    isLoadingActivities.value = false
+  }
+}
+
+// --- Helper Functions for UI ---
+
+/**
+ * ฟังก์ชันสำหรับกำหนด Icon และสีตามประเภทของกิจกรรม
+ */
+const getActivityIcon = (actionType: ActivityLog['action_type']) => {
+  switch (actionType) {
+    case 'CREATE':
+      return { bgClass: 'bg-green-100', iconClass: 'fa-plus', colorClass: 'text-green-500' }
+    case 'UPDATE':
+      return { bgClass: 'bg-blue-100', iconClass: 'fa-edit', colorClass: 'text-blue-500' }
+    case 'DELETE':
+      return { bgClass: 'bg-red-100', iconClass: 'fa-trash', colorClass: 'text-red-500' }
+    default:
+      return { bgClass: 'bg-gray-100', iconClass: 'fa-info-circle', colorClass: 'text-gray-500' }
+  }
+}
+
+/**
+ * ฟังก์ชันสำหรับสร้างข้อความแสดงผลในไทม์ไลน์
+ */
+const formatActivityMessage = (activity: ActivityLog) => {
+  // ฟังก์ชันนี้จะคืนค่าเป็น HTML string เราจึงต้องใช้ v-html ใน template
+  const user = `<span class="font-bold">${activity.user_name}</span>`
+  const target = `<span class="font-semibold text-gray-900">"${activity.target_name || ''}"</span>`
+
+  switch (activity.action_type) {
+    case 'CREATE':
+      return `${user} ได้สร้าง ${activity.target_type} ใหม่: ${target}`
+    case 'UPDATE':
+      return `${user} ได้แก้ไข ${activity.target_type}: ${target}`
+    case 'DELETE':
+      return `${user} ได้ลบ ${activity.target_type}: ${target}`
+    default:
+      return activity.details
+  }
+}
+
+/**
+ * ฟังก์ชันสำหรับแปลงเวลาให้เป็น "เมื่อ ... ที่แล้ว" (ฟังก์ชันอย่างง่าย)
+ */
+const formatRelativeTime = (dateString: string) => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const seconds = Math.round((now.getTime() - date.getTime()) / 1000)
+  const minutes = Math.round(seconds / 60)
+  const hours = Math.round(minutes / 60)
+  const days = Math.round(hours / 24)
+
+  if (seconds < 60) return 'เมื่อสักครู่'
+  if (minutes < 60) return `เมื่อ ${minutes} นาทีที่แล้ว`
+  if (hours < 24) return `เมื่อ ${hours} ชั่วโมงที่แล้ว`
+  return `เมื่อ ${days} วันที่แล้ว`
+}
+
+// --- Navigation ---
 const quickAction = (action: string) => {
   switch (action) {
     case 'add_news':
-      // ตรวจสอบบทบาทก่อนอนุญาตให้ดำเนินการ
       if (authStore.isSuperAdmin) {
-        toast.info('กำลังนำทางไปยังหน้าเพิ่มข่าวสาร...')
         router.push({ name: 'dashboard-news' })
       } else {
         toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
       }
       break
-    case 'upload_ita':
-      // ตรวจสอบบทบาทก่อนอนุญาตให้ดำเนินการ
-      if (authStore.isAdmin || authStore.isSuperAdmin) {
-        toast.info('กำลังนำทางไปยังหน้าจัดการเอกสาร ITA...')
-        router.push({ name: 'dashboard-ita' })
-      } else {
-        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
-      }
-      break
-    case 'view_reports':
-      // ตรวจสอบบทบาทก่อนอนุญาตให้ดำเนินการ
-      if (authStore.isSuperAdmin) {
-        toast.info('กำลังนำทางไปยังหน้าดูรายงานสถิติ...')
-        router.push({ name: 'dashboard-statistics' })
-      } else {
-        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
-      }
-      break
-    case 'view_my_docs':
-      // ตรวจสอบบทบาทสำหรับผู้ใช้ทั่วไป
-      if (authStore.isUser) {
-        toast.info('กำลังนำทางไปยังหน้าเอกสารส่วนตัว...')
-        router.push({ name: 'user-docs' }) // สมมติว่าคุณมี route ชื่อ 'user-docs'
-      } else {
-        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
-      }
-      break
-    default:
-      toast.error('การดำเนินการไม่ถูกต้อง!')
-      break
+    // ... (case อื่นๆ ของคุณ) ...
   }
 }
-</script>
 
+// --- Lifecycle Hooks ---
+onMounted(() => {
+  fetchSummaryData()
+  fetchRecentActivities()
+})
+</script>
 <style scoped></style>
