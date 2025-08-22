@@ -303,17 +303,13 @@ const editTopic = (topicId: string | number) => {
 }
 
 // --- 2. ฟังก์ชันลบหัวข้อ (ฉบับสมบูรณ์) ---
-const deleteTopic = async (topicId: string | number) => {
-  // ยืนยันการลบก่อนดำเนินการ
-  if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ ID: ${topicId}?`)) {
+const deleteTopic = async (topicId: string | number, topicName: string) => {
+  // ใช้ confirm() เพื่อยืนยันการลบ
+  if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ "${topicName}"? การกระทำนี้ไม่สามารถกู้คืนได้!`)) {
     try {
-      toast.info(`กำลังลบหัวข้อ ID: ${topicId}...`)
-
-      // เรียกใช้ service เพื่อส่งคำขอลบไปยัง Backend
+      toast.info(`กำลังลบหัวข้อ "${topicName}"...`)
       await itaService.deleteTopic(topicId)
-
-      toast.success(`ลบหัวข้อ ID: ${topicId} สำเร็จ!`)
-
+      toast.success(`ลบหัวข้อ "${topicName}" สำเร็จ!`)
       fetchTopicsForYear()
     } catch (err: unknown) {
       if (err instanceof Error) {

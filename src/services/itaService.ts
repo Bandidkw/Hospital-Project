@@ -108,7 +108,8 @@ export const itaService = {
 
   deleteTopic: async (topicId: string | number): Promise<void> => {
     try {
-      await apiService.delete(`/ita-topics/${topicId}`)
+      // 1. เปลี่ยน Endpoint เป็น /moit/:id ให้ถูกต้อง
+      await apiService.delete(`/moit/${topicId}`)
     } catch (error) {
       console.error(`Error deleting ITA topic with ID ${topicId}:`, error)
       throw new Error('ไม่สามารถลบหัวข้อได้')
