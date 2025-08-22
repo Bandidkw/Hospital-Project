@@ -30,7 +30,7 @@ const handleScroll = () => {
   if (window.scrollY > 200) {
     isVisible.value = true
   } else {
-    // ถ้าน้อยกว่า ก็ซ่อนไว้
+    // ถ้าน้อยกว่า ให้ซ่อนไว้
     isVisible.value = false
   }
 }
@@ -39,7 +39,7 @@ const handleScroll = () => {
 const scrollToTop = () => {
   window.scrollTo({
     top: 0,
-    behavior: 'smooth', // <-- คาถาทำให้ลิฟต์เลื่อนขึ้นไปนิ่มๆ
+    behavior: 'smooth',
   })
 }
 

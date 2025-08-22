@@ -1,4 +1,6 @@
-// ชื่อไฟล์: src/types/ita.ts
+/**
+ * Interface สำหรับเอกสาร (Ita_Document)
+ */
 export interface ItaDocument {
   id: string
   topic_id: string
@@ -12,6 +14,9 @@ export interface ItaDocument {
   updatedAt: string
 }
 
+/**
+ * Interface สำหรับหัวข้อ (MOIT)
+ */
 export interface Moit {
   id: string
   ita_topic_id: string
@@ -23,6 +28,9 @@ export interface Moit {
   updatedAt: string
 }
 
+/**
+ * Interface สำหรับปี (Year_ita)
+ */
 export interface YearIta {
   id: string
   year: string

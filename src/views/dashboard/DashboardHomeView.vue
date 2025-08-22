@@ -9,33 +9,66 @@
     </p>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div class="bg-blue-100 p-6 rounded-lg shadow-md flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-blue-800">ข่าวสารทั้งหมด</h3>
-          <p class="text-4xl font-bold text-blue-900">125</p>
+      <div
+        class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-blue-500 flex flex-col justify-between transform transition-transform duration-300 hover:-translate-y-2"
+      >
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-gray-500 font-semibold">ข่าวสารทั้งหมด</p>
+            <p class="text-4xl font-bold text-gray-800 mt-2">{{ newsCount }}</p>
+          </div>
+          <div class="bg-blue-100 text-blue-600 p-3 rounded-full">
+            <i class="fas fa-newspaper text-2xl"></i>
+          </div>
         </div>
-        <i class="fas fa-newspaper text-blue-600 text-5xl opacity-50"></i>
+        <a href="#" class="text-blue-500 hover:underline text-sm mt-4">จัดการข่าวสาร &rarr;</a>
       </div>
-      <div class="bg-green-100 p-6 rounded-lg shadow-md flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-green-800">เอกสาร ITA</h3>
-          <p class="text-4xl font-bold text-green-900">48</p>
+
+      <div
+        class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-green-500 flex flex-col justify-between transform transition-transform duration-300 hover:-translate-y-2"
+      >
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-gray-500 font-semibold">เอกสาร ITA</p>
+            <p class="text-4xl font-bold text-gray-800 mt-2">{{ itaDocumentCount }}</p>
+          </div>
+          <div class="bg-green-100 text-green-600 p-3 rounded-full">
+            <i class="fas fa-file-alt text-2xl"></i>
+          </div>
         </div>
-        <i class="fas fa-file-alt text-green-600 text-5xl opacity-50"></i>
+        <a href="/dashboard/ita" class="text-green-500 hover:underline text-sm mt-4"
+          >จัดการ ITA &rarr;</a
+        >
       </div>
-      <div class="bg-yellow-100 p-6 rounded-lg shadow-md flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-yellow-800">ผู้ใช้งานระบบ</h3>
-          <p class="text-4xl font-bold text-yellow-900">12</p>
+
+      <div
+        class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500 flex flex-col justify-between transform transition-transform duration-300 hover:-translate-y-2"
+      >
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-gray-500 font-semibold">ผู้ใช้งานระบบ</p>
+            <p class="text-4xl font-bold text-gray-800 mt-2">{{ userCount }}</p>
+          </div>
+          <div class="bg-yellow-100 text-yellow-600 p-3 rounded-full">
+            <i class="fas fa-users text-2xl"></i>
+          </div>
         </div>
-        <i class="fas fa-users text-yellow-600 text-5xl opacity-50"></i>
+        <a href="#" class="text-yellow-500 hover:underline text-sm mt-4">จัดการผู้ใช้ &rarr;</a>
       </div>
-      <div class="bg-purple-100 p-6 rounded-lg shadow-md flex items-center justify-between">
-        <div>
-          <h3 class="text-lg font-semibold text-purple-800">บุคลากร</h3>
-          <p class="text-4xl font-bold text-purple-900">230</p>
+
+      <div
+        class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500 flex flex-col justify-between transform transition-transform duration-300 hover:-translate-y-2"
+      >
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-gray-500 font-semibold">บุคลากร</p>
+            <p class="text-4xl font-bold text-gray-800 mt-2">{{ personnelCount }}</p>
+          </div>
+          <div class="bg-purple-100 text-purple-600 p-3 rounded-full">
+            <i class="fas fa-user-md text-2xl"></i>
+          </div>
         </div>
-        <i class="fas fa-user-md text-purple-600 text-5xl opacity-50"></i>
+        <a href="#" class="text-purple-500 hover:underline text-sm mt-4">จัดการบุคลากร &rarr;</a>
       </div>
     </div>
 
@@ -122,6 +155,13 @@
 import { useToast } from 'vue-toastification'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { ref } from 'vue'
+
+// ค่าถูกดึงมาจาก API
+const newsCount = ref(125)
+const itaDocumentCount = ref(48)
+const userCount = ref(12)
+const personnelCount = ref(230)
 
 const authStore = useAuthStore()
 const toast = useToast()

@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
         // เรียก fetchUserProfile ทันทีเพื่อดึงข้อมูลผู้ใช้ (ซึ่งจะตั้งค่า user.value และ isAuthenticated.value)
         const profileFetched = await fetchUserProfile()
         if (profileFetched) {
-          console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value)
+          // console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value)
           return true
         } else {
           // หากดึงโปรไฟล์ไม่สำเร็จ ให้ถือว่าล็อกอินไม่สมบูรณ์
