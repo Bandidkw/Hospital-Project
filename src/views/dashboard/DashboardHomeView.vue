@@ -153,7 +153,7 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { activityService } from '@/services/activityService'
+// import { activityService } from '@/services/activityService'; // ปิดไว้ก่อน เพราะเราจะใช้ข้อมูลจำลอง
 import type { ActivityLog } from '@/types/main'
 
 const authStore = useAuthStore()
@@ -169,15 +169,37 @@ const personnelCount = ref(0)
 const recentActivities = ref<ActivityLog[]>([])
 const isLoadingActivities = ref(true)
 
-// --- API Functions ---
+// --- ข้อมูลจำลอง (เก็บไว้แค่อันเดียว) ---
+const mockActivities: ActivityLog[] = [
+  {
+    id: 1,
+    user_name: 'SuperAdmin',
+    action_type: 'CREATE',
+    target_type: 'ข่าวสาร',
+    target_name: 'ประกาศวันหยุดราชการ',
+    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5 นาทีที่แล้ว
+  },
+  {
+    id: 2,
+    user_name: 'Admin',
+    action_type: 'UPDATE',
+    target_type: 'เอกสาร ITA',
+    target_name: 'รายงานผลการดำเนินงาน 2567',
+    createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 ชั่วโมงที่แล้ว
+  },
+  {
+    id: 3,
+    user_name: 'SuperAdmin',
+    action_type: 'DELETE',
+    target_type: 'ผู้ใช้งาน',
+    target_name: 'user_test',
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 วันที่แล้ว
+  },
+]
 
+// --- API Functions ---
 const fetchSummaryData = async () => {
   try {
-    // *** TODO: เมื่อ API พร้อม ให้เปิดใช้งาน ***
-    // const summary = await dashboardService.getSummary();
-    // newsCount.value = summary.newsCount;
-    // ... etc ...
-
     // (ใช้ข้อมูลจำลองไปก่อน)
     newsCount.value = 125
     itaDocumentCount.value = 48
@@ -189,23 +211,25 @@ const fetchSummaryData = async () => {
   }
 }
 
+// ฟังก์ชันดึงข้อมูลกิจกรรม (เก็บไว้แค่อันเดียว และใช้ข้อมูลจำลอง)
 const fetchRecentActivities = async () => {
   isLoadingActivities.value = true
   try {
-    recentActivities.value = await activityService.getRecentActivities()
-  } catch (err: unknown) {
-    console.error('Failed to fetch recent activities:', err)
+    // ปิดการเรียก API จริง
+    // recentActivities.value = await activityService.getRecentActivities();
+
+    // หันมาใช้ข้อมูลจำลองแทน
+    await new Promise((resolve) => setTimeout(resolve, 500)) // จำลองการดีเลย์
+    recentActivities.value = mockActivities
+  } catch (error) {
+    console.error('Failed to fetch recent activities:', error)
     toast.error('ไม่สามารถโหลดข้อมูลกิจกรรมล่าสุดได้')
   } finally {
     isLoadingActivities.value = false
   }
 }
 
-// --- Helper Functions for UI ---
-
-/**
- * ฟังก์ชันสำหรับกำหนด Icon และสีตามประเภทของกิจกรรม
- */
+// --- Helper Functions for UI (ส่วนที่ต้องมี) ---
 const getActivityIcon = (actionType: ActivityLog['action_type']) => {
   switch (actionType) {
     case 'CREATE':
@@ -219,11 +243,7 @@ const getActivityIcon = (actionType: ActivityLog['action_type']) => {
   }
 }
 
-/**
- * ฟังก์ชันสำหรับสร้างข้อความแสดงผลในไทม์ไลน์
- */
 const formatActivityMessage = (activity: ActivityLog) => {
-  // ฟังก์ชันนี้จะคืนค่าเป็น HTML string เราจึงต้องใช้ v-html ใน template
   const user = `<span class="font-bold">${activity.user_name}</span>`
   const target = `<span class="font-semibold text-gray-900">"${activity.target_name || ''}"</span>`
 
@@ -235,13 +255,10 @@ const formatActivityMessage = (activity: ActivityLog) => {
     case 'DELETE':
       return `${user} ได้ลบ ${activity.target_type}: ${target}`
     default:
-      return activity.details
+      return activity.details || 'กิจกรรมที่ไม่รู้จัก'
   }
 }
 
-/**
- * ฟังก์ชันสำหรับแปลงเวลาให้เป็น "เมื่อ ... ที่แล้ว" (ฟังก์ชันอย่างง่าย)
- */
 const formatRelativeTime = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
@@ -266,7 +283,30 @@ const quickAction = (action: string) => {
         toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
       }
       break
-    // ... (case อื่นๆ ของคุณ) ...
+    case 'upload_ita':
+      if (authStore.isAdmin || authStore.isSuperAdmin) {
+        router.push({ name: 'dashboard-ita' })
+      } else {
+        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
+      }
+      break
+    case 'view_reports':
+      if (authStore.isSuperAdmin) {
+        router.push({ name: 'dashboard-statistics' })
+      } else {
+        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
+      }
+      break
+    case 'view_my_docs':
+      if (authStore.isUser) {
+        toast.warning('หน้านี้ยังอยู่ในระหว่างการพัฒนา')
+      } else {
+        toast.error('คุณไม่มีสิทธิ์เข้าถึงส่วนนี้!')
+      }
+      break
+    default:
+      toast.error('การดำเนินการไม่ถูกต้อง!')
+      break
   }
 }
 
