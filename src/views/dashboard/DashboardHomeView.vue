@@ -193,8 +193,9 @@ const fetchRecentActivities = async () => {
   isLoadingActivities.value = true
   try {
     recentActivities.value = await activityService.getRecentActivities()
-  } catch (error) {
-    console.error('Failed to fetch recent activities:', error)
+  } catch (err: unknown) {
+    console.error('Failed to fetch recent activities:', err)
+    toast.error('ไม่สามารถโหลดข้อมูลกิจกรรมล่าสุดได้')
   } finally {
     isLoadingActivities.value = false
   }
