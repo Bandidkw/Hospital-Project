@@ -368,7 +368,9 @@ const handleCreateTopicSubmit = async () => {
   }
 }
 
+// ตรวจสอบให้แน่ใจว่ามีฟังก์ชันนี้อยู่
 const editTopic = (topicId: string | number) => {
+  // นี่คือคำสั่ง "วาร์ป!"
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
 }
 

@@ -240,10 +240,16 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-// 1. เปิดใช้งาน import ที่ถูกต้อง
-import { itaService, type MoitWithYear } from '@/services/itaService'
-import type { ItaDocument } from '@/types/ita'
+// 1. ปิด import service ไว้ก่อน เพราะเราจะใช้ข้อมูลจำลอง
+// import { itaService, type MoitWithYear } from '@/services/itaService';
+import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 import { useToast } from 'vue-toastification'
+
+// --- Type พิเศษสำหรับหน้านี้ (ย้ายมาจาก service ชั่วคราว) ---
+// เราสร้าง Type นี้ไว้ตรงนี้ก่อน เพื่อให้โค้ดส่วนอื่นทำงานได้
+interface MoitWithYear extends Moit {
+  yearData: YearIta
+}
 
 // --- Setup ---
 const route = useRoute()
@@ -279,11 +285,14 @@ const fetchTopicDetails = async () => {
   loading.value = true
   error.value = null
   try {
-    // *** TODO: เมื่อ API พร้อม ให้เปิดใช้งานบรรทัดนี้ ***
+    // --- 3. ปิดการเรียก API จริง ---
     // moit.value = await itaService.getTopicById(moitId);
 
-    // 2. ข้อมูลจำลองที่สมบูรณ์และถูกต้อง 100% ตาม Interface
+    // --- ใช้ข้อมูลจำลองไปก่อน ---
     toast.info(`(จำลอง) กำลังโหลดข้อมูลสำหรับ Topic ID: ${moitId}`)
+    // จำลองการดีเลย์เหมือนกำลังโหลดข้อมูล
+    await new Promise((resolve) => setTimeout(resolve, 500))
+
     moit.value = {
       id: moitId,
       ita_topic_id: 'year-123',
@@ -352,8 +361,8 @@ const saveDocument = async () => {
   }
 
   toast.info(`(จำลอง) กำลังบันทึกข้อมูลเอกสาร...`)
-  // *** TODO: สร้าง FormData object และเรียกใช้ itaService ***
 
+  // --- 4. ปิดการเรียก API จริง ---
   if (editingDocument.value) {
     // await itaService.updateDocument(currentDocument.value.id, formData);
     toast.success('แก้ไขเอกสารสำเร็จ!')
@@ -361,7 +370,8 @@ const saveDocument = async () => {
     // await itaService.createDocument(moitId, formData);
     toast.success('เพิ่มเอกสารใหม่สำเร็จ!')
   }
-  fetchTopicDetails()
+  // จำลองการอัปเดตข้อมูลในหน้าจอ
+  await fetchTopicDetails()
   resetForm()
 }
 
@@ -370,9 +380,15 @@ const deleteDocument = async (docId: string) => {
 
   isDeleteConfirmationOpen.value = false
   toast.info(`(จำลอง) กำลังลบเอกสาร ID: ${docId}`)
+
+  // --- 5. ปิดการเรียก API จริง ---
   // await itaService.deleteDocument(docId);
+
   toast.success(`(จำลอง) ลบเอกสาร ID: ${docId} สำเร็จ!`)
-  fetchTopicDetails()
+  // จำลองการลบข้อมูลออกจากหน้าจอ
+  if (moit.value) {
+    moit.value.documents = moit.value.documents.filter((doc) => doc.id !== docId)
+  }
 }
 
 // --- UI Control Functions ---
