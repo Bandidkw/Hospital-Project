@@ -1,3 +1,4 @@
+<!-- ItaTopicListView.vue -->
 <template>
   <div class="container mx-auto p-8 bg-white rounded-lg shadow-xl">
     <div v-if="yearData" class="mb-8">
@@ -69,10 +70,7 @@
               >
                 จัดการเอกสาร
               </button>
-              <button
-                @click="deleteTopic(topic.id, topic.moit_name)"
-                class="text-red-600 hover:text-red-900"
-              >
+              <button @click="testButtonClick('ลบ')" class="text-red-600 hover:text-red-900">
                 ลบ
               </button>
             </td>
@@ -305,26 +303,28 @@ const editTopic = (topicId: string | number) => {
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
 }
 
-// --- 2. ฟังก์ชันลบหัวข้อ ---
-const deleteTopic = async (topicId: string | number, topicName: string) => {
-  if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ "${topicName}"? การกระทำนี้ไม่สามารถกู้คืนได้!`)) {
-    try {
-      toast.info(`กำลังลบหัวข้อ "${topicName}"...`)
-
-      // await itaService.deleteTopic(topicId); // <-- TODO: รอเชื่อม API จริง
-
-      toast.success(`(จำลอง) ลบหัวข้อ "${topicName}" สำเร็จ!`)
-
-      fetchTopicsForYear()
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      } else {
-        toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
-      }
-    }
-  }
+// --- ฟังก์ชันสำหรับเทสปุ่ม ---
+const testButtonClick = (action: string) => {
+  alert(`ปุ่ม '${action}' ถูกกดแล้ว! เช็กที่ Console ได้เลย!`)
+  console.log(`ปุ่ม '${action}' ทำงาน! Timestamp:`, new Date().toLocaleTimeString())
 }
+
+// --- ฟังก์ชันลบหัวข้อ ---
+// const deleteTopic = async (topicId: string | number, topicName: string) => {
+//   if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ "${topicName}"? การกระทำนี้ไม่สามารถกู้คืนได้!`)) {
+//     try {
+//       toast.info(`กำลังลบหัวข้อ "${topicName}"...`)
+//       await itaService.deleteTopic(topicId);
+//       fetchTopicsForYear()
+//     } catch (err: unknown) {
+//       if (err instanceof Error) {
+//         toast.error(err.message)
+//       } else {
+//         toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
+//       }
+//     }
+//   }
+// }
 
 onMounted(() => {
   fetchTopicsForYear()
