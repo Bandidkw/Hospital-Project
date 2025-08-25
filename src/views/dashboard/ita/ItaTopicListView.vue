@@ -29,6 +29,7 @@
       <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
       <p class="mt-4 text-xl text-gray-600">กำลังโหลดรายการหัวข้อ...</p>
     </div>
+
     <div v-else-if="error" class="text-center py-16 bg-red-50 p-8 rounded-lg">
       <p class="text-xl text-red-600">เกิดข้อผิดพลาด: {{ error }}</p>
     </div>
@@ -77,7 +78,7 @@
                 จัดการเอกสาร
               </button>
               <button
-                @click="deleteTopic(topic.id, topic.moit_name)"
+                @click="openDeleteConfirmModal(topic)"
                 class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
               >
                 ลบ
@@ -135,6 +136,39 @@
         </form>
       </div>
     </div>
+
+    <div
+      v-if="isDeleteModalOpen"
+      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
+    >
+      <div
+        class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full transform transition-all scale-100 opacity-100"
+      >
+        <h3 class="text-2xl font-bold text-red-700 mb-4 flex items-center">
+          <i class="fas fa-exclamation-triangle mr-3"></i>ยืนยันการลบ
+        </h3>
+        <p class="text-gray-700 mb-6 text-lg">
+          คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ <br />
+          <strong class="text-black">"{{ topicToDelete?.title }}"</strong>?
+          <br />
+          <span class="text-sm text-red-600">การกระทำนี้ไม่สามารถกู้คืนได้</span>
+        </p>
+        <div class="flex justify-end space-x-4">
+          <button
+            @click="closeDeleteConfirmModal"
+            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-5 rounded-full"
+          >
+            ยกเลิก
+          </button>
+          <button
+            @click="handleConfirmDelete"
+            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-full"
+          >
+            ยืนยันการลบ
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -161,6 +195,44 @@ const isCreateModalOpen = ref(false)
 const newTopicData = ref({
   templateValue: '',
 })
+
+// --- "ฟังก์ชันลบ" ---
+
+// --- State Modal ยืนยันการลบ ---
+const isDeleteModalOpen = ref(false)
+const topicToDelete = ref<Moit | null>(null)
+
+const openDeleteConfirmModal = (topic: Moit) => {
+  topicToDelete.value = topic
+  isDeleteModalOpen.value = true
+}
+
+const closeDeleteConfirmModal = () => {
+  isDeleteModalOpen.value = false
+  topicToDelete.value = null
+}
+
+const handleConfirmDelete = async () => {
+  if (!topicToDelete.value) return
+
+  try {
+    toast.info(`กำลังลบ "${topicToDelete.value.title}"...`)
+
+    // สั่งให้ itaService ทำงาน
+    await itaService.deleteTopic(topicToDelete.value.id)
+
+    toast.success(`ลบ "${topicToDelete.value.title}" สำเร็จ!`)
+
+    closeDeleteConfirmModal()
+    fetchTopicsForYear()
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      toast.error(err.message)
+    } else {
+      toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
+    }
+  }
+}
 
 // "แม่แบบ" ของหัวข้อ MOIT ทั้งหมดสำหรับให้ User เลือก
 const moitTemplates = [
@@ -301,23 +373,6 @@ const handleCreateTopicSubmit = async () => {
 
 const editTopic = (topicId: string | number) => {
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
-}
-
-// --- ฟังก์ชันลบหัวข้อ ---
-const deleteTopic = async (topicId: string | number, topicName: string) => {
-  if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ "${topicName}"? การกระทำนี้ไม่สามารถกู้คืนได้!`)) {
-    try {
-      toast.info(`กำลังลบหัวข้อ "${topicName}"...`)
-      await itaService.deleteTopic(topicId)
-      fetchTopicsForYear()
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message)
-      } else {
-        toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
-      }
-    }
-  }
 }
 
 onMounted(() => {
