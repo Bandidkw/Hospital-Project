@@ -305,17 +305,16 @@ const editTopic = (topicId: string | number) => {
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
 }
 
-// --- 2. ฟังก์ชันลบหัวข้อ (ฉบับสมบูรณ์) ---
+// --- 2. ฟังก์ชันลบหัวข้อ ---
 const deleteTopic = async (topicId: string | number, topicName: string) => {
-  console.log('ปุ่มทำงาน')
-
-  // ใช้ confirm() เพื่อยืนยันการลบ
   if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ "${topicName}"? การกระทำนี้ไม่สามารถกู้คืนได้!`)) {
     try {
       toast.info(`กำลังลบหัวข้อ "${topicName}"...`)
-      await itaService.deleteTopic(topicId)
-      toast.success(`ลบหัวข้อ "${topicName}" สำเร็จ!`)
-      console.log('ลบสำเร็จ')
+
+      // await itaService.deleteTopic(topicId); // <-- TODO: รอเชื่อม API จริง
+
+      toast.success(`(จำลอง) ลบหัวข้อ "${topicName}" สำเร็จ!`)
+
       fetchTopicsForYear()
     } catch (err: unknown) {
       if (err instanceof Error) {

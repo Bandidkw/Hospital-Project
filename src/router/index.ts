@@ -231,19 +231,19 @@ router.beforeEach(async (to, from, next) => {
 
   // กฎข้อที่ 1: ถ้าเป็น VIP (Admin/SuperAdmin) และพยายามจะออกจากโซน Dashboard
   if (isVipAdmin && isTryingToLeaveDashboard) {
-    console.log('Guard: VIP Admin is trying to leave. Redirecting back to dashboard.')
+    // console.log('Guard: VIP Admin is trying to leave. Redirecting back to dashboard.')
     // ไม่ต้องไปไหนทั้งนั้น กลับไปที่บ้านของ Dashboard ซะ
     next({ name: 'dashboard-home' })
   }
   // ถ้าไม่เข้ากฎข้อที่ 1 ก็จะมาเช็กกฎข้ออื่นๆ ตามปกติ
   else if (!isAuthenticated && requiresAuth) {
-    console.log('Guard: Access denied. Authentication required. Redirecting to home.')
+    // console.log('Guard: Access denied. Authentication required. Redirecting to home.')
     toast.error('กรุณาเข้าสู่ระบบเพื่อเข้าถึงหน้านี้')
     next({ name: 'home' })
   } else if (isAuthenticated && loginPages.includes(to.name as string)) {
-    console.log(
-      'Guard: Authenticated user trying to access a login page. Redirecting to dashboard.',
-    )
+    // console.log(
+    //   'Guard: Authenticated user trying to access a login page. Redirecting to dashboard.',
+    // )
     next({ name: 'dashboard-home' })
   } else if (isAuthenticated && requiresAuth && requiredRoles && requiredRoles.length > 0) {
     if (authStore.user && requiredRoles.includes(authStore.user.role)) {
@@ -252,14 +252,14 @@ router.beforeEach(async (to, from, next) => {
       )
       next()
     } else {
-      console.log(
-        `Guard: Access denied. Insufficient role. Required: ${JSON.stringify(requiredRoles)}, User has: ${authStore.user?.role}`,
-      )
+      // console.log(
+      //   `Guard: Access denied. Insufficient role. Required: ${JSON.stringify(requiredRoles)}, User has: ${authStore.user?.role}`,
+      // )
       toast.error('คุณไม่มีสิทธิ์เข้าถึงหน้านี้!')
       next({ name: 'home' })
     }
   } else {
-    console.log('Guard: Proceeding.')
+    // console.log('Guard: Proceeding.')
     next()
   }
 })
