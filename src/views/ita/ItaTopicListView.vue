@@ -137,6 +137,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { itaService } from '@/services/itaService'
 import type { YearIta, Moit } from '@/types/ita'
 import { useToast } from 'vue-toastification'
+import { log } from 'console'
 
 const route = useRoute()
 const router = useRouter()
@@ -307,12 +308,15 @@ const editTopic = (topicId: string | number) => {
 
 // --- 2. ฟังก์ชันลบหัวข้อ (ฉบับสมบูรณ์) ---
 const deleteTopic = async (topicId: string | number, topicName: string) => {
+  console.log('ปุ่มทำงาน')
+
   // ใช้ confirm() เพื่อยืนยันการลบ
   if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ "${topicName}"? การกระทำนี้ไม่สามารถกู้คืนได้!`)) {
     try {
       toast.info(`กำลังลบหัวข้อ "${topicName}"...`)
       await itaService.deleteTopic(topicId)
       toast.success(`ลบหัวข้อ "${topicName}" สำเร็จ!`)
+      console.log('ลบสำเร็จ')
       fetchTopicsForYear()
     } catch (err: unknown) {
       if (err instanceof Error) {
