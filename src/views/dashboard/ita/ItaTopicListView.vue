@@ -217,12 +217,8 @@ const handleConfirmDelete = async () => {
 
   try {
     toast.info(`กำลังลบ "${topicToDelete.value.title}"...`)
-
-    // สั่งให้ itaService ทำงาน
     await itaService.deleteTopic(topicToDelete.value.id)
-
     toast.success(`ลบ "${topicToDelete.value.title}" สำเร็จ!`)
-
     closeDeleteConfirmModal()
     fetchTopicsForYear()
   } catch (err: unknown) {
@@ -340,6 +336,7 @@ const openCreateTopicModal = () => {
   newTopicData.value.templateValue = ''
   isCreateModalOpen.value = true
 }
+
 const handleCreateTopicSubmit = async () => {
   if (!newTopicData.value.templateValue) {
     toast.error('กรุณาเลือกหัวข้อ')

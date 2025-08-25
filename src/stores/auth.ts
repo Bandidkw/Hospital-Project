@@ -311,7 +311,7 @@ export const useAuthStore = defineStore('auth', () => {
             typeof parsedUser.id === 'string' &&
             typeof parsedUser.username === 'string' &&
             typeof parsedUser.fullName === 'string' &&
-            typeof parsedUser.roleId === 'number' // ตรวจสอบว่า roleId เป็น number
+            typeof parsedUser.roleId === 'number'
           ) {
             const userRole = ROLE_MAPPING[parsedUser.roleId] || 'user'
             user.value = { ...parsedUser, role: userRole }
