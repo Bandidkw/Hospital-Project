@@ -137,7 +137,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { itaService } from '@/services/itaService'
 import type { YearIta, Moit } from '@/types/ita'
 import { useToast } from 'vue-toastification'
-import { log } from 'console'
 
 const route = useRoute()
 const router = useRouter()

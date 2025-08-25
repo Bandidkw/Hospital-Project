@@ -316,7 +316,7 @@ export const useAuthStore = defineStore('auth', () => {
             const userRole = ROLE_MAPPING[parsedUser.roleId] || 'user'
             user.value = { ...parsedUser, role: userRole }
             // isAuthenticated.value = true;
-            console.log('ดึงข้อมูลผู้ใช้จาก sessionStorage สำเร็จ:', user.value)
+            // console.log('ดึงข้อมูลผู้ใช้จาก sessionStorage สำเร็จ:', user.value)
           } else {
             console.warn('ข้อมูลผู้ใช้ใน sessionStorage ไม่ถูกต้อง ล้างข้อมูล...')
             logout() // ล้างข้อมูลหากไม่ถูกต้อง
