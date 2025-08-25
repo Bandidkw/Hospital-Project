@@ -69,7 +69,10 @@
               >
                 จัดการเอกสาร
               </button>
-              <button @click="deleteTopic(topic.id)" class="text-red-600 hover:text-red-900">
+              <button
+                @click="deleteTopic(topic.id, topic.moit_name)"
+                class="text-red-600 hover:text-red-900"
+              >
                 ลบ
               </button>
             </td>
