@@ -77,6 +77,7 @@
                 จัดการเอกสาร
               </button>
               <button
+                @click="deleteTopic(topic.id, topic.moit_name)"
                 class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
               >
                 ลบ
@@ -302,7 +303,22 @@ const editTopic = (topicId: string | number) => {
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
 }
 
-// const deleteTopic = async (topicId: string | number) => {}
+// --- ฟังก์ชันลบหัวข้อ ---
+const deleteTopic = async (topicId: string | number, topicName: string) => {
+  if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ "${topicName}"? การกระทำนี้ไม่สามารถกู้คืนได้!`)) {
+    try {
+      toast.info(`กำลังลบหัวข้อ "${topicName}"...`)
+      await itaService.deleteTopic(topicId)
+      fetchTopicsForYear()
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message)
+      } else {
+        toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
+      }
+    }
+  }
+}
 
 onMounted(() => {
   fetchTopicsForYear()
