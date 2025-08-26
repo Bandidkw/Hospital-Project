@@ -94,21 +94,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-// 1. Import Type ที่ถูกต้องจากไฟล์กลาง และ Service ที่จะใช้งาน
 import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 import { itaService } from '@/services/itaService'
 import { useToast } from 'vue-toastification'
 
 const toast = useToast()
 
-// 2. State ทั้งหมดที่ต้องใช้ (เริ่มต้นด้วยค่าว่าง)
+// State ทั้งหมด (เริ่มต้นด้วยค่าว่าง)
 const itaData = ref<YearIta[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 const selectedYear = ref<string | null>(null)
 const expandedQuarters = ref<{ [key: string]: boolean }>({})
 
-// 3. Computed Properties ชุดใหม่ที่ทำงานกับโครงสร้าง 3 ชั้น
+// Computed Properties (ทำงานกับข้อมูลจริง)
 const availableYears = computed(() => {
   if (!itaData.value) return []
   const years = new Set(itaData.value.map((data) => data.year))
@@ -127,7 +126,6 @@ const groupedMoitsByCategory = computed(() => {
   return selectedYearData.value.moits.map((moit: Moit) => {
     const grouped: { [category: string]: ItaDocument[] } = {}
 
-    // ป้องกันกรณีที่ documents อาจจะยังไม่มี
     if (moit.documents) {
       moit.documents.forEach((doc) => {
         const category = doc.sub_topic || 'เอกสารทั่วไป'
@@ -142,9 +140,9 @@ const groupedMoitsByCategory = computed(() => {
   })
 })
 
-// 4. Helper Functions สำหรับจัดกลุ่มและตรวจสอบข้อมูล
+// Helper Functions
 const groupedDocumentsBySubTopic = (documents: ItaDocument[] | undefined, quarter: number) => {
-  if (!documents) return {} // ป้องกันกรณีที่ documents เป็น undefined
+  if (!documents) return {}
   const filteredDocs = documents.filter((doc) => doc.quarter === quarter)
   const grouped: { [subTopic: string]: ItaDocument[] } = {}
   filteredDocs.forEach((doc) => {
@@ -158,11 +156,10 @@ const groupedDocumentsBySubTopic = (documents: ItaDocument[] | undefined, quarte
 }
 
 const hasDocumentsForQuarter = (documents: ItaDocument[] | undefined, quarter: number) => {
-  if (!documents) return false // ป้องกันกรณีที่ documents เป็น undefined
+  if (!documents) return false
   return documents.some((doc) => doc.quarter === quarter)
 }
-
-// 5. ฟังก์ชันสำหรับ Accordion
+// ฟังก์ชันสำหรับ Accordion
 const toggleQuarter = (moitId: string, quarter: number) => {
   const keyToToggle = `${moitId}-${quarter}`
   const wasOpen = !!expandedQuarters.value[keyToToggle]
@@ -178,12 +175,10 @@ const toggleQuarter = (moitId: string, quarter: number) => {
   expandedQuarters.value = newExpandedState
 }
 
-// 6. ฟังก์ชันสำหรับดึงข้อมูลจริง (เปิดใช้งานแล้ว!)
 const fetchAllITAData = async () => {
   loading.value = true
   error.value = null
   try {
-    // itaService.getAllTopics() จะไปเรียก GET /user/year-moit
     const dataFromApi = await itaService.getAllTopics()
     itaData.value = dataFromApi
 
@@ -202,7 +197,6 @@ const fetchAllITAData = async () => {
   }
 }
 
-// 7. สั่งให้ดึงข้อมูลทันทีที่เปิดหน้า
 onMounted(() => {
   fetchAllITAData()
 })
