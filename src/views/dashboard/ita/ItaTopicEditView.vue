@@ -12,8 +12,8 @@
           <span class="text-gray-500 font-normal">จัดการเอกสารในหัวข้อ:</span><br />
           {{ moit.title }}
         </h1>
-        <p v-if="moit.yearData" class="text-gray-600 mt-2 text-lg">
-          ปีงบประมาณ: <span class="font-semibold">{{ moit.yearData.year }}</span>
+        <p class="text-gray-600 mt-2 text-lg">
+          ปีงบประมาณ: <span class="font-semibold">{{ moit.year_ita.year }}</span>
         </p>
       </div>
     </div>
