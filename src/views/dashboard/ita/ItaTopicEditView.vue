@@ -13,7 +13,7 @@
           {{ moit.title }}
         </h1>
         <p class="text-gray-600 mt-2 text-lg">
-          ปีงบประมาณ: <span class="font-semibold">{{ moit.year_ita.year }}</span>
+          ปีงบประมาณ: <span class="font-semibold">{{ moit.yearData.year }}</span>
         </p>
       </div>
     </div>
