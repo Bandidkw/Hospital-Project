@@ -1,4 +1,3 @@
-<!-- ItaTopicListView.vue -->
 <template>
   <div class="container mx-auto p-8 bg-white rounded-lg shadow-xl">
     <div v-if="yearData" class="mb-8">
@@ -29,7 +28,6 @@
       <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
       <p class="mt-4 text-xl text-gray-600">กำลังโหลดรายการหัวข้อ...</p>
     </div>
-
     <div v-else-if="error" class="text-center py-16 bg-red-50 p-8 rounded-lg">
       <p class="text-xl text-red-600">เกิดข้อผิดพลาด: {{ error }}</p>
     </div>
@@ -73,15 +71,21 @@
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="editTopic(topic.id)"
-                class="inline-flex items-center px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700"
               >
-                จัดการเอกสาร
+                <i class="fas fa-folder-open mr-2"></i>จัดการเอกสาร
+              </button>
+              <button
+                @click="openEditTopicModal(topic)"
+                class="inline-flex items-center px-4 py-2 bg-yellow-400 text-gray-800 text-sm font-medium rounded-md hover:bg-yellow-500"
+              >
+                <i class="fas fa-pencil-alt mr-2"></i>แก้ไข
               </button>
               <button
                 @click="openDeleteConfirmModal(topic)"
-                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700"
               >
-                ลบ
+                <i class="fas fa-trash-alt mr-2"></i>ลบ
               </button>
             </td>
           </tr>
@@ -90,22 +94,22 @@
     </div>
 
     <div
-      v-if="isCreateModalOpen"
+      v-if="isModalOpen"
       class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
     >
       <div class="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">
-          สร้างหัวข้อใหม่สำหรับปี {{ yearData?.year }}
+          {{ isEditing ? 'แก้ไขหัวข้อ' : `สร้างหัวข้อใหม่สำหรับปี ${yearData?.year}` }}
         </h2>
-        <form @submit.prevent="handleCreateTopicSubmit" class="space-y-6">
-          <div>
+        <form @submit.prevent="handleFormSubmit" class="space-y-6">
+          <div v-if="!isEditing">
             <label for="moit-template" class="block text-gray-700 font-bold mb-2"
               >เลือกแม่แบบหัวข้อ (MOIT):</label
             >
             <select
               id="moit-template"
-              v-model="newTopicData.templateValue"
-              class="shadow border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+              v-model="formData.templateValue"
+              class="shadow border rounded-lg w-full py-3 px-4 text-gray-700"
               required
             >
               <option disabled value="">-- กรุณาเลือกหัวข้อ --</option>
@@ -118,10 +122,41 @@
               </option>
             </select>
           </div>
+          <div v-else class="space-y-4">
+            <div>
+              <label for="moit_name" class="block text-gray-700 font-bold mb-2">MOIT:</label>
+              <input
+                id="moit_name"
+                type="text"
+                v-model="formData.moit_name"
+                class="shadow rounded-lg w-full py-3 px-4 text-gray-700"
+                required
+              />
+            </div>
+            <div>
+              <label for="title" class="block text-gray-700 font-bold mb-2">ชื่อหัวข้อ:</label>
+              <input
+                id="title"
+                type="text"
+                v-model="formData.title"
+                class="shadow rounded-lg w-full py-3 px-4 text-gray-700"
+                required
+              />
+            </div>
+            <div>
+              <label for="description" class="block text-gray-700 font-bold mb-2">คำอธิบาย:</label>
+              <textarea
+                id="description"
+                v-model="formData.description"
+                rows="3"
+                class="shadow rounded-lg w-full py-3 px-4 text-gray-700"
+              ></textarea>
+            </div>
+          </div>
           <div class="flex justify-end space-x-4 pt-4 border-t">
             <button
               type="button"
-              @click="isCreateModalOpen = false"
+              @click="closeModal"
               class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full"
             >
               ยกเลิก
@@ -130,7 +165,7 @@
               type="submit"
               class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full"
             >
-              สร้างหัวข้อและไปต่อ
+              บันทึก
             </button>
           </div>
         </form>
@@ -141,9 +176,7 @@
       v-if="isDeleteModalOpen"
       class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
     >
-      <div
-        class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full transform transition-all scale-100 opacity-100"
-      >
+      <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
         <h3 class="text-2xl font-bold text-red-700 mb-4 flex items-center">
           <i class="fas fa-exclamation-triangle mr-3"></i>ยืนยันการลบ
         </h3>
@@ -190,47 +223,23 @@ const topics = ref<Moit[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-// State สำหรับ Modal
-const isCreateModalOpen = ref(false)
-const newTopicData = ref({
+// --- State ของ Modal สร้าง/แก้ไข ---
+const isModalOpen = ref(false)
+const isEditing = ref(false)
+const formData = ref({
+  id: '',
   templateValue: '',
+  moit_name: '',
+  title: '',
+  description: '',
 })
 
-// --- "ฟังก์ชันลบ" ---
-
-// --- State Modal ยืนยันการลบ ---
+// --- State ของ Modal ลบ ---
 const isDeleteModalOpen = ref(false)
 const topicToDelete = ref<Moit | null>(null)
 
-const openDeleteConfirmModal = (topic: Moit) => {
-  topicToDelete.value = topic
-  isDeleteModalOpen.value = true
-}
-
-const closeDeleteConfirmModal = () => {
-  isDeleteModalOpen.value = false
-  topicToDelete.value = null
-}
-
-const handleConfirmDelete = async () => {
-  if (!topicToDelete.value) return
-
-  try {
-    toast.info(`กำลังลบ "${topicToDelete.value.title}"...`)
-    await itaService.deleteTopic(topicToDelete.value.id)
-    toast.success(`ลบ "${topicToDelete.value.title}" สำเร็จ!`)
-    closeDeleteConfirmModal()
-    fetchTopicsForYear()
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message)
-    } else {
-      toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
-    }
-  }
-}
-
 // "แม่แบบ" ของหัวข้อ MOIT ทั้งหมดสำหรับให้ User เลือก
+
 const moitTemplates = [
   {
     value: 'MOIT 1',
@@ -245,68 +254,86 @@ const moitTemplates = [
     value: 'MOIT 4',
     text: 'MOIT 4: หน่วยงานมีการวางระบบการจัดซื้อจัดจ้างและการจัดหาพัสดุ ประจำปีงบประมาณ',
   },
+
   {
     value: 'MOIT 5',
     text: 'MOIT 5: หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
   },
+
   { value: 'MOIT 6', text: 'MOIT 6: ผู้บริหารแสดงนโยบายการบริหารและพัฒนาทรัพยากรบุคคล' },
+
   {
     value: 'MOIT 7',
     text: 'MOIT 7: หน่วยงานมีการรายงานการประเมินและเกี่ยวกับการประเมินผลการปฏิบัติราชการของบุคลากรในหน่วยงาน และเปิดเผยผลการปฏิบัติราชการ ระดับดีเด่น และระดับดีมาก ในที่เปิดเผยให้ทราบ',
   },
+
   {
     value: 'MOIT 8',
     text: 'MOIT 8: หน่วยงานมีการอบรมให้ความรู้แก่เจ้าหน้าที่ภายในหน่วยงานเกี่ยวกับการเสริมสร้างและพัฒนาทางด้านจริยธรรม และการรักษาวินัยรวมทั้งการป้องกันมิให้กระทำผิดวินัย',
   },
+
   {
     value: 'MOIT 9',
     text: 'MOIT 9: หน่วยงานมีแนวปฏิบัติการจัดการเรื่องร้องเรียน และช่องทางการร้องเรียน',
   },
+
   {
     value: 'MOIT 10',
     text: 'MOIT 10: หน่วยงานมีสรุปผลการดำเนินงานเรื่องรัองเรียนการปฏิบัติงานหรือการให้บริการของเจ้าหน้าที่ภายในหน่วยงาน และเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ',
   },
+
   {
     value: 'MOIT 11',
     text: 'MOIT 11: หน่วยงานของท่านเปิดโอกาสให้ผู้มีส่วนได้ส่วนเสียมีโอกาสเข้ามามีส่วนร่วมในการดำเนินงานตามภารกิจของหน่วยงาน',
   },
+
   { value: 'MOIT 12', text: 'MOIT 12: หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ' },
+
   {
     value: 'MOIT 13',
     text: 'MOIT 13: หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณตามเกณฑ์จริยธรรมการจัดซื้อจัดหาและการส่งเสริมการขายยาและเวชภัณฑ์ที่มิใช่ยาของกระทรวงสาธารณสุข พ.ศ. 2564',
   },
+
   {
     value: 'MOIT 14',
     text: 'MOIT 14: หน่วยงานมีแนวทางปฏิบัติเกี่ยวกับการใช้ทรัพย์สินของราชการ และมีขั้นตอนการขออนุญาตเพื่อยืมทรัพย์สินของราชการไปใช้ปฏิบัติในหน่วยงานที่ถูกต้อง',
   },
+
   {
     value: 'MOIT 15',
     text: 'MOIT 15: หน่วยงานมีแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ และแผนปฏิบัติการส่งเสริมคุณธรรมของชมรมจริยธรรม ประจำปีงบประมาณ',
   },
+
   {
     value: 'MOIT 16',
     text: 'MOIT 16: หน่วยงานมีรายงานการกำกับติดตามการดำเนินงานตามแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ',
   },
+
   {
     value: 'MOIT 17',
     text: 'MOIT 17: หน่วยงานมีการประเมินความเสี่ยงการทุจริต ประจำปีงบประมาณอย่างเป็นระบบ',
   },
+
   {
     value: 'MOIT 18',
     text: 'MOIT 18: หน่วยงานมีการปฏิบัติตามมาตรการป้องกันการทุจริต (การควบคุมความเสี่ยงการทุจริต)',
   },
+
   {
     value: 'MOIT 19',
     text: 'MOIT 19: หน่วยงานมีการรายงานผลการส่งเสริมการปฏิบัติตามประมวลจริยธรรมข้าราชการพลเรือน:กรณีการเรี่ยไรและกรณีการให้หรือรับของขวัญหรือประโยชน์อื่นใด ประจำปีงบประมาณ',
   },
+
   {
     value: 'MOIT 20',
     text: 'MOIT 20: หน่วยงานมีการอบรมให้ความรู้ภายในหน่วยงาน เรื่อง ผลประโยชน์ทับซ้อนในหลักสูตร ต้านทุจริตศึกษา(Anti-Corruption Education)กระทรวงสาธารณสุข (ฉบับปรับปรุง) พ.ศ.2565',
   },
+
   {
     value: 'MOIT 21',
     text: 'MOIT 21: หน่วยงานมีการเผยแพร่เจตจำนงสุจริตของการปฏิบัติหน้าที่ราชการ และนโยบายที่เคารพ สิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงานและของผู้บริหาร ต่อสาธารณชน',
   },
+
   {
     value: 'MOIT 22',
     text: 'MOIT 22: หน่วยงานมีแนวปฏิบัติที่เคารพสิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงาน และรายงานการป้องกันและแก้ไขปัญหาการล่วงละเมิดหรือคุกคามทางเพศในการทำงาน ประจำปีงบประมาณ',
@@ -333,51 +360,94 @@ const fetchTopicsForYear = async () => {
 }
 
 const openCreateTopicModal = () => {
-  newTopicData.value.templateValue = ''
-  isCreateModalOpen.value = true
+  isEditing.value = false
+  formData.value = { id: '', templateValue: '', moit_name: '', title: '', description: '' }
+  isModalOpen.value = true
 }
 
-const handleCreateTopicSubmit = async () => {
-  if (!newTopicData.value.templateValue) {
-    toast.error('กรุณาเลือกหัวข้อ')
-    return
+const openEditTopicModal = (topicToEdit: Moit) => {
+  isEditing.value = true
+  formData.value = {
+    id: topicToEdit.id,
+    moit_name: topicToEdit.moit_name,
+    title: topicToEdit.title,
+    description: topicToEdit.description || '',
+    templateValue: '',
   }
-  const selectedTemplate = moitTemplates.find((t) => t.value === newTopicData.value.templateValue)
-  if (!selectedTemplate) return
+  isModalOpen.value = true
+}
 
+const closeModal = () => {
+  isModalOpen.value = false
+}
+
+const handleFormSubmit = async () => {
   try {
-    const payload = {
-      year_ita_id: yearId,
-      moit_name: selectedTemplate.value,
-      title: selectedTemplate.text,
-      description: `รายละเอียดของ ${selectedTemplate.value}`,
-    }
-
-    toast.info(`กำลังสร้างหัวข้อ: "${selectedTemplate.value}"...`)
-    const newTopic = await itaService.createTopic(payload)
-
-    if (newTopic && newTopic.id) {
-      isCreateModalOpen.value = false
-      toast.success(`สร้างหัวข้อสำเร็จ!`)
-      fetchTopicsForYear() // ยังคงโหลดข้อมูลใหม่เพื่ออัปเดตตาราง
-
-      // router.push(`/dashboard/ita/topic/${newTopic.id}/edit`); // <-- **ปิดคำสั่งวาร์ปตรงนี้!**
+    if (isEditing.value) {
+      const payload = {
+        moit_name: formData.value.moit_name,
+        title: formData.value.title,
+        description: formData.value.description,
+      }
+      toast.info(`กำลังอัปเดตข้อมูล "${payload.moit_name}"...`)
+      await itaService.updateTopic(formData.value.id, payload)
+      toast.success(`อัปเดตข้อมูลสำเร็จ!`)
     } else {
-      throw new Error('ไม่ได้รับ ID ของหัวข้อใหม่จากเซิร์ฟเวอร์')
+      const selectedTemplate = moitTemplates.find((t) => t.value === formData.value.templateValue)
+      if (!selectedTemplate) {
+        toast.error('กรุณาเลือกหัวข้อ')
+        return
+      }
+      const payload = {
+        year_ita_id: yearId,
+        moit_name: selectedTemplate.value,
+        title: selectedTemplate.text,
+        description: `รายละเอียดของ ${selectedTemplate.value}`,
+      }
+      toast.info(`กำลังสร้างหัวข้อ: "${payload.moit_name}"...`)
+      await itaService.createTopic(payload)
+      toast.success(`สร้างหัวข้อสำเร็จ!`)
     }
+    closeModal()
+    await fetchTopicsForYear()
   } catch (err: unknown) {
     if (err instanceof Error) {
       toast.error(err.message)
     } else {
-      toast.error('เกิดข้อผิดพลาดในการสร้างหัวข้อใหม่')
+      toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิด')
     }
   }
 }
 
-// ตรวจสอบให้แน่ใจว่ามีฟังก์ชันนี้อยู่
 const editTopic = (topicId: string | number) => {
-  // นี่คือคำสั่ง "วาร์ป!"
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
+}
+
+const openDeleteConfirmModal = (topic: Moit) => {
+  topicToDelete.value = topic
+  isDeleteModalOpen.value = true
+}
+
+const closeDeleteConfirmModal = () => {
+  isDeleteModalOpen.value = false
+  topicToDelete.value = null
+}
+
+const handleConfirmDelete = async () => {
+  if (!topicToDelete.value) return
+  try {
+    toast.info(`กำลังลบ "${topicToDelete.value.title}"...`)
+    await itaService.deleteTopic(topicToDelete.value.id)
+    toast.success(`ลบ "${topicToDelete.value.title}" สำเร็จ!`)
+    closeDeleteConfirmModal()
+    await fetchTopicsForYear()
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      toast.error(err.message)
+    } else {
+      toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
+    }
+  }
 }
 
 onMounted(() => {

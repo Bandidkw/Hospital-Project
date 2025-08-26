@@ -73,7 +73,6 @@ export const itaService = {
 
   getAllTopics: async (): Promise<YearIta[]> => {
     try {
-      // เปลี่ยน Endpoint ให้ตรงกับที่ Backend ให้มาล่าสุด
       const response = await apiService.get('/user/year-moit')
       return response.data.data
     } catch (error) {
@@ -84,7 +83,7 @@ export const itaService = {
 
   getTopicById: async (topicId: string | number): Promise<MoitWithYear> => {
     try {
-      const response = await apiService.get(`/ita-topics/${topicId}`)
+      const response = await apiService.get(`/moit/year/${topicId}`)
       return response.data.data
     } catch (error) {
       console.error(`Error fetching ITA topic with ID ${topicId}:`, error)
@@ -104,6 +103,18 @@ export const itaService = {
     } catch (error) {
       console.error('Error creating ITA topic:', error)
       throw new Error('ไม่สามารถสร้างหัวข้อใหม่ได้')
+    }
+  },
+  updateTopic: async (
+    topicId: string | number,
+    topicData: { title: string; description: string; moit_name: string },
+  ): Promise<Moit> => {
+    try {
+      const response = await apiService.put(`/moit/${topicId}`, topicData)
+      return response.data.data
+    } catch (error) {
+      console.error(`Error updating ITA topic with ID ${topicId}:`, error)
+      throw new Error('ไม่สามารถอัปเดตข้อมูลหัวข้อได้')
     }
   },
 
