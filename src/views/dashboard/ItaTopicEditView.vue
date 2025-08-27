@@ -217,7 +217,7 @@ const resetForm = () => {
   currentDocument.value = {
     title: '',
     sub_topic: '',
-    quarter: 1,
+    quarter: '',
     description: '',
   }
   selectedFile.value = null

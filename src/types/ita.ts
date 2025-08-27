@@ -3,15 +3,16 @@
  */
 export interface ItaDocument {
   id: string
-  topic_id: string
+  moit_id?: string
+  topic_id?: string
   title: string
   description?: string
-  quarter: 1 | 2 | 3 | 4
   sub_topic: string
-  fileName: string
-  fileUrl: string
-  createdAt: string
-  updatedAt: string
+  quarter?: string
+  fileName?: string
+  fileUrl?: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 /**
