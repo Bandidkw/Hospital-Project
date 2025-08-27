@@ -1,28 +1,52 @@
 <template>
   <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
-    <h2 class="text-2xl font-semibold text-blue-700 mb-6 border-b pb-4">
+    <h2 class="text-2xl font-semibold text-blue-700 mb-6 border-b pb-4 flex items-center gap-2">
       <i class="fas" :class="isEditing ? 'fa-edit' : 'fa-plus-circle'"></i>
       {{ isEditing ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสารใหม่' }}
     </h2>
 
+    <!-- Error summary (accessibility) -->
+    <div
+      v-if="errors.title || errors.sub_topic || errors.quarter || errors.file"
+      class="mb-4 rounded-md border border-red-200 bg-red-50 text-red-700 p-3 text-sm"
+      role="alert"
+      aria-live="assertive"
+    >
+      <p class="font-semibold mb-1">กรุณาตรวจสอบข้อมูลที่กรอก:</p>
+      <ul class="list-disc pl-5 space-y-1">
+        <li v-if="errors.title">{{ errors.title }}</li>
+        <li v-if="errors.sub_topic">{{ errors.sub_topic }}</li>
+        <li v-if="errors.quarter">{{ errors.quarter }}</li>
+        <li v-if="errors.file">{{ errors.file }}</li>
+      </ul>
+    </div>
+
     <form @submit.prevent="submitForm" class="space-y-6" novalidate>
       <!-- Title -->
       <div>
-        <label for="docTitle" class="block text-gray-700 font-bold mb-2"
-          >ชื่อเอกสาร (Title):*</label
+        <label for="docTitle" class="block text-gray-700 font-semibold mb-1"
+          >ชื่อเอกสาร (Title):<span class="text-red-500">*</span></label
         >
-        <input
-          id="docTitle"
-          type="text"
-          v-model.trim="editableDocument.title"
-          @blur="validateTitle"
-          :aria-invalid="Boolean(errors.title)"
-          :aria-describedby="errors.title ? 'err-title' : undefined"
-          placeholder="ระบุชื่อเอกสารให้ชัดเจน"
-          class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 focus:outline-none focus:ring-2"
-          :class="errors.title ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'"
-          :disabled="isSubmitting"
-        />
+        <div class="relative">
+          <span
+            class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
+          >
+            <i class="fas fa-file-alt"></i>
+          </span>
+          <input
+            id="docTitle"
+            type="text"
+            v-model.trim="editableDocument.title"
+            @blur="validateTitle"
+            :aria-invalid="Boolean(errors.title)"
+            :aria-describedby="errors.title ? 'err-title' : undefined"
+            placeholder="ระบุชื่อเอกสารให้ชัดเจน"
+            class="shadow appearance-none border rounded-lg w-full py-3 pl-10 pr-4 text-gray-700 focus:outline-none focus:ring-2"
+            :class="errors.title ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'"
+            :disabled="isSubmitting"
+            autocomplete="off"
+          />
+        </div>
         <p v-if="errors.title" id="err-title" class="text-red-500 text-sm mt-1">
           {{ errors.title }}
         </p>
@@ -31,86 +55,111 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Sub-topic -->
         <div>
-          <label for="docSubTopic" class="block text-gray-700 font-bold mb-2"
-            >หัวข้อย่อย (Sub-topic):*</label
+          <label for="docSubTopic" class="block text-gray-700 font-semibold mb-1"
+            >หัวข้อย่อย (Sub-topic):<span class="text-red-500">*</span></label
           >
-          <input
-            id="docSubTopic"
-            type="text"
-            v-model.trim="editableDocument.sub_topic"
-            @blur="validateSubTopic"
-            :aria-invalid="Boolean(errors.sub_topic)"
-            :aria-describedby="errors.sub_topic ? 'err-subtopic' : undefined"
-            placeholder="เช่น ประกาศ, รายงานผล"
-            class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 focus:outline-none focus:ring-2"
-            :class="errors.sub_topic ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'"
-            :disabled="isSubmitting"
-          />
+          <div class="relative">
+            <span
+              class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
+            >
+              <i class="fas fa-list"></i>
+            </span>
+            <input
+              id="docSubTopic"
+              type="text"
+              v-model.trim="editableDocument.sub_topic"
+              @blur="validateSubTopic"
+              :aria-invalid="Boolean(errors.sub_topic)"
+              :aria-describedby="errors.sub_topic ? 'err-subtopic' : undefined"
+              placeholder="เช่น ประกาศ, รายงานผล"
+              class="shadow appearance-none border rounded-lg w-full py-3 pl-10 pr-4 text-gray-700 focus:outline-none focus:ring-2"
+              :class="
+                errors.sub_topic ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'
+              "
+              :disabled="isSubmitting"
+              autocomplete="off"
+            />
+          </div>
           <p v-if="errors.sub_topic" id="err-subtopic" class="text-red-500 text-sm mt-1">
             {{ errors.sub_topic }}
           </p>
         </div>
+
         <!-- Quarter -->
         <div>
-          <label for="docQuarter" class="block text-gray-700 font-bold mb-2"
-            >ไตรมาส (Quarter):*</label
+          <label for="docQuarter" class="block text-gray-700 font-semibold mb-1"
+            >ไตรมาส (Quarter):<span class="text-red-500">*</span></label
           >
-          <select
-            id="docQuarter"
-            v-model="editableDocument.quarter"
-            @change="validateQuarter"
-            :aria-invalid="Boolean(errors.quarter)"
-            :aria-describedby="errors.quarter ? 'err-quarter' : undefined"
-            class="shadow border rounded-lg w-full py-3 px-4 text-gray-700 focus:outline-none focus:ring-2"
-            :class="errors.quarter ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'"
-            :disabled="isSubmitting"
-          >
-            <option :value="1">ไตรมาส 1</option>
-            <option :value="2">ไตรมาส 2</option>
-            <option :value="3">ไตรมาส 3</option>
-            <option :value="4">ไตรมาส 4</option>
-          </select>
+          <div class="relative">
+            <span
+              class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
+            >
+              <i class="fas fa-calendar-alt"></i>
+            </span>
+            <select
+              id="docQuarter"
+              v-model="editableDocument.quarter"
+              @change="validateQuarter"
+              :aria-invalid="Boolean(errors.quarter)"
+              :aria-describedby="errors.quarter ? 'err-quarter' : undefined"
+              class="shadow border rounded-lg w-full py-3 pl-10 pr-8 text-gray-700 focus:outline-none focus:ring-2 appearance-none bg-white"
+              :class="errors.quarter ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'"
+              :disabled="isSubmitting"
+            >
+              <option value="1">ไตรมาส 1</option>
+              <option value="2">ไตรมาส 2</option>
+              <option value="3">ไตรมาส 3</option>
+              <option value="4">ไตรมาส 4</option>
+            </select>
+            <span
+              class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"
+            >
+              <i class="fas fa-chevron-down"></i>
+            </span>
+          </div>
           <p v-if="errors.quarter" id="err-quarter" class="text-red-500 text-sm mt-1">
             {{ errors.quarter }}
           </p>
         </div>
       </div>
-      <!-- Description -->
-      <div>
-        <label for="docDesc" class="block text-gray-700 font-bold mb-2"
-          >คำอธิบาย (Description):</label
-        >
-        <textarea
-          id="docDesc"
-          v-model.trim="editableDocument.description"
-          rows="3"
-          placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับเอกสารนี้"
-          class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          :disabled="isSubmitting"
-        />
-      </div>
 
-      <!-- File -->
+      <!-- File (Dropzone style) -->
       <div>
-        <label for="docFile" class="block text-gray-700 font-bold mb-2">
+        <label class="block text-gray-700 font-semibold mb-1">
           ไฟล์เอกสาร (PDF):<span class="text-red-500" v-if="!isEditing">*</span>
         </label>
         <input
           id="docFile"
           type="file"
+          class="sr-only"
           @change="handleFileSelect"
           accept="application/pdf,.pdf"
           :aria-invalid="Boolean(errors.file)"
           :aria-describedby="errors.file ? 'err-file' : 'file-hint'"
-          class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"
           :disabled="isSubmitting"
         />
-        <p id="file-hint" class="text-xs text-gray-500 mt-1">
-          รองรับเฉพาะ PDF ขนาดไม่เกิน {{ MAX_FILE_MB }}MB
-        </p>
-        <p v-if="errors.file" id="err-file" class="text-red-500 text-sm mt-1">{{ errors.file }}</p>
+        <label
+          for="docFile"
+          class="flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl p-6 cursor-pointer transition hover:bg-blue-50"
+          :class="errors.file ? 'border-red-400 bg-red-50/50' : 'border-gray-300'"
+          title="คลิกเพื่อเลือกไฟล์ PDF หรือวางไฟล์ลงที่นี่"
+        >
+          <i
+            class="fas fa-file-pdf text-3xl mb-2"
+            :class="errors.file ? 'text-red-500' : 'text-blue-500'"
+          ></i>
+          <span class="text-sm text-gray-700"
+            >ลากไฟล์ PDF มาวาง หรือ
+            <span class="text-blue-700 underline">คลิกเพื่อเลือก</span></span
+          >
+          <span id="file-hint" class="text-xs text-gray-500 mt-1"
+            >รองรับเฉพาะ PDF ขนาดไม่เกิน {{ MAX_FILE_MB }}MB</span
+          >
+        </label>
+        <p v-if="errors.file" id="err-file" class="text-red-500 text-sm mt-2">{{ errors.file }}</p>
 
-        <div v-if="selectedFile" class="flex items-center gap-3 text-sm text-gray-600 mt-2">
+        <div v-if="selectedFile" class="flex items-center gap-3 text-sm text-gray-600 mt-3">
+          <i class="fas fa-paperclip"></i>
           <span
             >ไฟล์ที่เลือก:
             <span class="font-medium text-blue-800">{{ selectedFile.name }}</span> ({{
@@ -127,15 +176,14 @@
           </button>
         </div>
 
-        <p v-else-if="editableDocument.fileUrl" class="text-sm text-gray-600 mt-2">
+        <p v-else-if="editableDocument.fileUrl" class="text-sm text-gray-600 mt-3">
           ไฟล์ปัจจุบัน:
           <a
             :href="editableDocument.fileUrl"
             target="_blank"
             class="font-medium text-blue-800 hover:underline"
+            >{{ editableDocument.fileName || 'ดูไฟล์' }}</a
           >
-            {{ editableDocument.fileName || 'ดูไฟล์' }}
-          </a>
         </p>
       </div>
 
@@ -145,14 +193,14 @@
           v-if="isEditing"
           type="button"
           @click="cancel"
-          class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-full"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-5 rounded-full"
           :disabled="isSubmitting"
         >
           ยกเลิก
         </button>
         <button
           type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
           :disabled="isSubmitting || !isValid"
         >
           <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
@@ -194,11 +242,11 @@ const emit = defineEmits<{
 const MAX_FILE_MB = 10
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 
-// Local state (quarter เป็น string)
+// Local state (quarter เป็น string ให้ตรงกับ API)
 const editableDocument = ref<Partial<ItaDocument>>({
   title: '',
   sub_topic: '',
-  quarter: '1', // ค่าเริ่มต้นเป็นสตริง
+  quarter: '1',
   description: '',
 })
 const selectedFile = ref<File | null>(null)
@@ -222,7 +270,7 @@ watch(
       id: d.id,
       title: d.title ?? '',
       sub_topic: d.sub_topic ?? '',
-      quarter: d.quarter ? String(d.quarter) : '1', // แคสต์เป็น string เสมอ
+      quarter: d.quarter ? String(d.quarter) : '1',
       description: d.description ?? '',
       fileUrl: d.fileUrl,
       fileName: d.fileName,
