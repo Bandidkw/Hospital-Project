@@ -92,6 +92,10 @@ const moit = ref<MoitWithYear | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 
+const isTitleInvalid = ref(false)
+const isSubTopicInvalid = ref(false)
+const isFileRequired = ref(false)
+
 const editingDocument = ref(false)
 const currentDocument = ref<Partial<ItaDocument>>({})
 const selectedFile = ref<File | null>(null)
@@ -127,44 +131,44 @@ const fetchTopicDetails = async () => {
 }
 
 const saveDocument = async (documentData: Partial<ItaDocument>) => {
-  if (!documentData.title || !documentData.sub_topic) {
-    toast.error('กรุณากรอกชื่อเอกสารและหัวข้อย่อยให้ครบถ้วน')
-    return
-  }
-  if (!editingDocument.value && !selectedFile.value) {
-    toast.error('กรุณาแนบไฟล์ PDF สำหรับเอกสารใหม่')
+  // validate
+  isTitleInvalid.value = !documentData.title?.trim()
+  isSubTopicInvalid.value = !documentData.sub_topic?.trim()
+  isFileRequired.value = !editingDocument.value && !selectedFile.value
+
+  if (isTitleInvalid.value || isSubTopicInvalid.value || isFileRequired.value) {
+    toast.error('กรุณากรอกข้อมูลในช่องที่มีเครื่องหมาย * ให้ครบถ้วน')
     return
   }
 
-  // สร้าง FormData object เพื่อส่งไฟล์และข้อมูล
+  // --- FormData ตามสเปค /quarter/create ---
   const formData = new FormData()
-  formData.append('title', documentData.title)
-  formData.append('sub_topic', documentData.sub_topic)
-  formData.append('quarter', String(documentData.quarter || 1))
-  if (documentData.description) {
-    formData.append('description', documentData.description)
-  }
-  if (selectedFile.value) {
-    formData.append('file', selectedFile.value)
-  }
+  formData.append('title', documentData.title!)
+  formData.append('sub_topic', documentData.sub_topic!)
+  // quarter ฝั่ง API เป็น string -> แปลงให้ชัด
+  formData.append('quarter', String(documentData.quarter ?? ''))
+  if (documentData.description) formData.append('description', documentData.description)
+  if (selectedFile.value) formData.append('file', selectedFile.value)
 
   try {
     toast.info('กำลังบันทึกข้อมูลเอกสาร...')
     if (editingDocument.value && documentData.id) {
+      // ถ้ายังไม่มี endpoint update แบบ quarter ให้คงตัวเดิมไว้ก่อน
       await itaService.updateDocument(documentData.id, formData)
       toast.success('แก้ไขเอกสารสำเร็จ!')
     } else {
-      await itaService.createDocument(moitId, formData)
+      // สำคัญ: ส่ง "MOIT id" เข้าไป (service จะ .set('moit_id', ...) ให้เอง)
+      if (!moit.value) {
+        toast.error('ไม่พบข้อมูลหัวข้อ (moit)')
+        return
+      }
+      await itaService.createDocument(moit.value.id, formData)
       toast.success('เพิ่มเอกสารใหม่สำเร็จ!')
     }
-    await fetchTopicDetails() // Refresh ข้อมูล
+    await fetchTopicDetails()
     resetForm()
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message)
-    } else {
-      toast.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล')
-    }
+    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล')
   }
 }
 

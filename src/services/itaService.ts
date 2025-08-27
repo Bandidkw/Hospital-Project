@@ -219,14 +219,20 @@ export const itaService = {
   },
 
   // --- 3) Documents (เอกสาร ITA) ---
-  async createDocument(topicId: string | number, formData: FormData): Promise<ItaDocument> {
+  async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
     try {
-      const response = await apiService.post(`/ita-topics/${topicId}/documents`, formData, {
+      // บังคับให้มี moit_id ใน payload
+      formData.set('moit_id', String(moitId))
+      // quarter เป็น string
+      const q = formData.get('quarter')
+      if (q !== null) formData.set('quarter', String(q))
+
+      const response = await apiService.post('/quarter/create', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       return response.data.data as ItaDocument
     } catch (error) {
-      console.error(`Error creating document for topic ID ${topicId}:`, error)
+      console.error(`Error creating document for MOIT ${moitId}:`, error)
       throw new Error('ไม่สามารถเพิ่มเอกสารใหม่ได้')
     }
   },
