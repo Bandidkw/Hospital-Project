@@ -1,4 +1,3 @@
-<!-- ItaTopicEditView.vue -->
 <template>
   <div class="container mx-auto p-4 sm:p-6 lg:p-8">
     <div v-if="moit" class="mb-8">
@@ -13,8 +12,8 @@
           <span class="text-gray-500 font-normal">จัดการเอกสารในหัวข้อ:</span><br />
           {{ moit.title }}
         </h1>
-        <p class="text-gray-600 mt-2 text-lg">
-          ปีงบประมาณ: <span class="font-semibold">{{ moit.yearData.year }}</span>
+        <p v-if="moit?.year_ita" class="text-gray-600 mt-2 text-lg">
+          ปีงบประมาณ: <span class="font-semibold">{{ moit.year_ita.year }}</span>
         </p>
       </div>
     </div>
@@ -28,6 +27,7 @@
     </div>
 
     <div v-else-if="moit">
+      <!-- ===== Form Card ===== -->
       <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
         <h2 class="text-2xl font-semibold text-blue-700 mb-6 border-b pb-4">
           <i class="fas" :class="editingDocument ? 'fa-edit' : 'fa-plus-circle'"></i>
@@ -48,6 +48,7 @@
             />
             <p v-if="isTitleInvalid" class="text-red-500 text-sm mt-1">กรุณาระบุชื่อเอกสาร</p>
           </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label for="docSubTopic" class="block text-gray-700 font-bold mb-2"
@@ -63,13 +64,14 @@
               />
               <p v-if="isSubTopicInvalid" class="text-red-500 text-sm mt-1">กรุณาระบุหัวข้อย่อย</p>
             </div>
+
             <div>
               <label for="docQuarter" class="block text-gray-700 font-bold mb-2"
                 >ไตรมาส (Quarter):*</label
               >
               <select
                 id="docQuarter"
-                v-model="currentDocument.quarter"
+                v-model.number="currentDocument.quarter"
                 class="shadow border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option :value="1">ไตรมาส 1</option>
@@ -79,6 +81,7 @@
               </select>
             </div>
           </div>
+
           <div>
             <label for="docDesc" class="block text-gray-700 font-bold mb-2"
               >คำอธิบาย (Description):</label
@@ -89,8 +92,9 @@
               rows="3"
               placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับเอกสารนี้"
               class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-            ></textarea>
+            />
           </div>
+
           <div>
             <label for="docFile" class="block text-gray-700 font-bold mb-2"
               >ไฟล์เอกสาร (PDF):*</label
@@ -113,10 +117,12 @@
                 :href="currentDocument.fileUrl"
                 target="_blank"
                 class="font-medium text-blue-800 hover:underline"
-                >{{ currentDocument.fileName || 'ดูไฟล์' }}</a
               >
+                {{ currentDocument.fileName || 'ดูไฟล์' }}
+              </a>
             </p>
           </div>
+
           <div class="flex items-center justify-end space-x-4 pt-4 border-t">
             <button
               v-if="editingDocument"
@@ -137,6 +143,7 @@
         </form>
       </div>
 
+      <!-- ===== Table ===== -->
       <div class="bg-white p-6 rounded-lg shadow-xl mt-12">
         <h2 class="text-2xl font-semibold text-blue-700 mb-6">รายการเอกสารทั้งหมดในหัวข้อนี้</h2>
         <div class="overflow-x-auto rounded-lg border border-gray-200">
@@ -210,6 +217,7 @@
       </div>
     </div>
 
+    <!-- ===== Delete Dialog ===== -->
     <div
       v-if="isDeleteConfirmationOpen"
       class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
@@ -240,13 +248,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { itaService, type MoitWithYear } from '@/services/itaService'
 import type { ItaDocument } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 
 const route = useRoute()
-// const router = useRouter()
 const toast = useToast()
 const moitId = route.params.id as string
 
@@ -280,16 +287,10 @@ const fetchTopicDetails = async () => {
   loading.value = true
   error.value = null
   try {
-    // --- เปลี่ยนมาเรียก API จริง ---
     moit.value = await itaService.getTopicById(moitId)
-
-    resetForm() // เคลียร์ฟอร์มเมื่อโหลดข้อมูลสำเร็จ
+    resetForm()
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      error.value = err.message
-    } else {
-      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
-    }
+    error.value = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     toast.error(error.value || 'ไม่สามารถดึงข้อมูลหัวข้อได้')
   } finally {
     loading.value = false
@@ -298,11 +299,7 @@ const fetchTopicDetails = async () => {
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
-  if (target.files && target.files.length > 0) {
-    selectedFile.value = target.files[0]
-  } else {
-    selectedFile.value = null
-  }
+  selectedFile.value = target.files && target.files.length > 0 ? target.files[0] : null
 }
 
 const saveDocument = async () => {
@@ -315,35 +312,27 @@ const saveDocument = async () => {
     return
   }
 
-  // *** TODO: สร้าง FormData object และเรียกใช้ itaService ***
   const formData = new FormData()
   formData.append('title', currentDocument.value.title || '')
   formData.append('sub_topic', currentDocument.value.sub_topic || '')
-  // ... append fields อื่นๆ ...
-  if (selectedFile.value) {
-    formData.append('file', selectedFile.value)
-  }
+  formData.append('quarter', String(currentDocument.value.quarter ?? 1))
+  if (currentDocument.value.description)
+    formData.append('description', currentDocument.value.description)
+  if (selectedFile.value) formData.append('file', selectedFile.value)
 
   try {
     toast.info('กำลังบันทึกข้อมูล...')
-    if (editingDocument.value) {
-      // await itaService.updateDocument(currentDocument.value.id, formData);
+    if (editingDocument.value && currentDocument.value.id) {
+      await itaService.updateDocument(currentDocument.value.id, formData)
       toast.success('แก้ไขเอกสารสำเร็จ!')
     } else {
-      // await itaService.createDocument(moitId, formData);
+      await itaService.createDocument(moitId, formData)
       toast.success('เพิ่มเอกสารใหม่สำเร็จ!')
     }
-    fetchTopicDetails() // Refresh ข้อมูล
+    await fetchTopicDetails()
     resetForm()
   } catch (err: unknown) {
-    // ตรวจสอบก่อนว่า err เป็น instance ของ Error object หรือไม่
-    if (err instanceof Error) {
-      // ถ้าใช่ ก็สามารถใช้ err.message ได้อย่างปลอดภัย
-      toast.error(err.message)
-    } else {
-      // ถ้าไม่ใช่ Error object หรือเป็นค่าอื่น ให้ใช้ข้อความสำรอง
-      toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิดในการบันทึกเอกสาร')
-    }
+    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิดในการบันทึกเอกสาร')
   }
 }
 
@@ -361,7 +350,7 @@ const confirmDeleteDocument = (docId: string, docTitle: string) => {
 }
 
 const handleConfirmDelete = () => {
-  if (deleteDocumentId.value !== null) {
+  if (deleteDocumentId.value) {
     deleteDocument(deleteDocumentId.value)
   } else {
     toast.error('เกิดข้อผิดพลาด: ไม่พบ ID ของเอกสารที่จะลบ')
@@ -371,24 +360,22 @@ const handleConfirmDelete = () => {
 
 const deleteDocument = async (docId: string) => {
   if (!isDeleteConfirmationOpen.value) return
-
   isDeleteConfirmationOpen.value = false
-  toast.info(`(จำลอง) กำลังลบเอกสาร ID: ${docId}`)
-  // await itaService.deleteDocument(docId);
-  toast.success(`(จำลอง) ลบเอกสาร ID: ${docId} สำเร็จ!`)
-  fetchTopicDetails()
+  try {
+    toast.info(`กำลังลบเอกสาร ID: ${docId}...`)
+    await itaService.deleteDocument(docId)
+    toast.success(`ลบเอกสาร ID: ${docId} สำเร็จ!`)
+    await fetchTopicDetails()
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบเอกสาร')
+  }
 }
 
 const resetForm = () => {
   editingDocument.value = false
-  currentDocument.value = {
-    title: '',
-    sub_topic: '',
-    quarter: 1,
-    description: '',
-  }
+  currentDocument.value = { title: '', sub_topic: '', quarter: 1, description: '' }
   selectedFile.value = null
-  const fileInput = document.getElementById('docFile') as HTMLInputElement
+  const fileInput = document.getElementById('docFile') as HTMLInputElement | null
   if (fileInput) fileInput.value = ''
 }
 

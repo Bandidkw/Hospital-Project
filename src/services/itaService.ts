@@ -2,47 +2,103 @@
 import apiService from './apiService'
 import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 
-// ===== Types that the View will use =====
+/**
+ * YearIta (ย่อ) สำหรับใช้ใน Moit ตาม response จริง
+ * เก็บ year เป็น string เพื่อรองรับปี พ.ศ. เช่น "2567"
+ */
+export type YearItaLite = {
+  id?: string
+  year: string
+  title?: string
+  description?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+/**
+ * รูปร่างข้อมูลที่ View ใช้งานหลัง normalize แล้ว
+ */
 export type MoitWithYear = Moit & {
-  year_ita: { year: number } | null
+  year_ita: YearItaLite | null
   documents: ItaDocument[]
 }
 
-// ===== Raw shapes that backend might return =====
-type RawYearIta = { year: number | string } | number | string | null | undefined
+/**
+ * รูปร่างดิบของ year_ita ที่ backend อาจส่งมา
+ */
+type RawYearIta =
+  | ({ year: number | string } & Partial<YearItaLite>)
+  | number
+  | string
+  | null
+  | undefined
 
+/**
+ * รูปร่างดิบของ Moit ที่ backend อาจส่งมา
+ */
 type RawMoitWithYear = Moit & {
   year_ita?: RawYearIta
   documents?: ItaDocument[] | null
 }
 
-// ----- Type guards -----
-function hasYearField(v: unknown): v is { year: number | string } {
+/**
+ * Type เฉพาะ object ที่รับรองว่ามี year (ใช้กับ type guard)
+ */
+type RawYearItaObj = {
+  year: number | string
+  id?: string
+  title?: string
+  description?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+/**
+ * Type guard: ตรวจว่า v เป็น object และมีฟิลด์ year
+ */
+function hasYearField(v: unknown): v is RawYearItaObj {
   return typeof v === 'object' && v !== null && 'year' in (v as Record<string, unknown>)
 }
 
-// ----- Normalizer -----
-function normalizeMoitWithYear(raw: RawMoitWithYear): MoitWithYear {
-  let year_ita: { year: number } | null = null
+/**
+ * แปลง year_ita ดิบให้เป็น YearItaLite | null
+ */
+function normalizeYearIta(yi: RawYearIta): YearItaLite | null {
+  if (yi === null || yi === undefined) return null
 
-  const yi = raw.year_ita
-  if (yi !== null && yi !== undefined) {
-    if (hasYearField(yi)) {
-      year_ita = { year: Number(yi.year) }
-    } else if (typeof yi === 'number' || typeof yi === 'string') {
-      year_ita = { year: Number(yi) }
+  // เคส object (มี year แน่นอน)
+  if (hasYearField(yi)) {
+    return {
+      id: 'id' in yi ? yi.id : undefined,
+      year: String(yi.year),
+      title: 'title' in yi ? yi.title : undefined,
+      description: 'description' in yi ? yi.description : undefined,
+      createdAt: 'createdAt' in yi ? yi.createdAt : undefined,
+      updatedAt: 'updatedAt' in yi ? yi.updatedAt : undefined,
     }
   }
 
+  // เคส backend ส่ง year เป็น number/string ตรง ๆ
+  if (typeof yi === 'number' || typeof yi === 'string') {
+    return { year: String(yi) }
+  }
+
+  return null
+}
+
+/**
+ * แปลง RawMoitWithYear ให้เป็น MoitWithYear (documents เป็น array เสมอ)
+ */
+function normalizeMoitWithYear(raw: RawMoitWithYear): MoitWithYear {
   return {
     ...raw,
-    year_ita,
+    year_ita: normalizeYearIta(raw.year_ita),
     documents: Array.isArray(raw.documents) ? raw.documents : [],
   }
 }
 
 export const itaService = {
-  // --- 1. Year (YearIta) ---
+  // --- 1) Year (ตารางปี ITA ระดับระบบ) ---
   async getYears(): Promise<YearIta[]> {
     try {
       const response = await apiService.get('/ita/year-moit')
@@ -99,7 +155,7 @@ export const itaService = {
     }
   },
 
-  // --- 2. Topic (Moit) ---
+  // --- 2) Topic (MOIT) ---
   async getAllTopics(): Promise<YearIta[]> {
     try {
       const response = await apiService.get('/user/year-moit')
@@ -110,7 +166,10 @@ export const itaService = {
     }
   },
 
-  // คืนค่าพร้อม normalize ให้ View ใช้งานได้เสถียร
+  /**
+   * คืนข้อมูลหัวข้อ + ปี (normalize แล้ว)
+   * หมายเหตุ: endpoint /moit/year/:id ตามที่คุณใช้อยู่
+   */
   async getTopicById(topicOrYearId: string | number): Promise<MoitWithYear> {
     try {
       const response = await apiService.get(`/moit/year/${topicOrYearId}`)
@@ -159,7 +218,7 @@ export const itaService = {
     }
   },
 
-  // --- 3. Documents (ItaDocument) ---
+  // --- 3) Documents (เอกสาร ITA) ---
   async createDocument(topicId: string | number, formData: FormData): Promise<ItaDocument> {
     try {
       const response = await apiService.post(`/ita-topics/${topicId}/documents`, formData, {
