@@ -12,8 +12,8 @@
           <span class="text-gray-500 font-normal">จัดการเอกสารในหัวข้อ:</span><br />
           {{ moit.title }}
         </h1>
-        <p v-if="moit.year_ita" class="text-gray-600 mt-2 text-lg">
-          ปีงบประมาณ: <span class="font-semibold">{{ moit.year_ita.year }}</span>
+        <p v-if="moit?.year_ita" class="text-gray-600 mt-2 text-lg">
+          ปีงบประมาณ: <span class="font-semibold">{{ moit?.year_ita?.year ?? '-' }}</span>
         </p>
       </div>
     </div>
@@ -74,6 +74,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { itaService, type MoitWithYear } from '@/services/itaService'
+// import { computed } from 'vue'
 import type { ItaDocument } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 import DocumentForm from '@/views/dashboard/ita/DocumentForm.vue'
@@ -98,6 +99,8 @@ const selectedFile = ref<File | null>(null)
 const isDeleteConfirmationOpen = ref(false)
 const deleteDocumentId = ref<string | null>(null)
 const deleteDocumentTitle = ref('')
+
+// --- Data Fetching and Mutations (ฟังก์ชันที่ติดต่อกับ API) ---
 
 const fetchTopicDetails = async () => {
   if (!moitId) {

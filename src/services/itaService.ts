@@ -2,65 +2,95 @@
 import apiService from './apiService'
 import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 
-// Type พิเศษสำหรับหน้า Edit ที่ต้องการข้อมูลปีมาด้วย
-export interface MoitWithYear extends Moit {
-  yearData: YearIta
+// ===== Types that the View will use =====
+export type MoitWithYear = Moit & {
+  year_ita: { year: number } | null
+  documents: ItaDocument[]
+}
+
+// ===== Raw shapes that backend might return =====
+type RawYearIta = { year: number | string } | number | string | null | undefined
+
+type RawMoitWithYear = Moit & {
+  year_ita?: RawYearIta
+  documents?: ItaDocument[] | null
+}
+
+// ----- Type guards -----
+function hasYearField(v: unknown): v is { year: number | string } {
+  return typeof v === 'object' && v !== null && 'year' in (v as Record<string, unknown>)
+}
+
+// ----- Normalizer -----
+function normalizeMoitWithYear(raw: RawMoitWithYear): MoitWithYear {
+  let year_ita: { year: number } | null = null
+
+  const yi = raw.year_ita
+  if (yi !== null && yi !== undefined) {
+    if (hasYearField(yi)) {
+      year_ita = { year: Number(yi.year) }
+    } else if (typeof yi === 'number' || typeof yi === 'string') {
+      year_ita = { year: Number(yi) }
+    }
+  }
+
+  return {
+    ...raw,
+    year_ita,
+    documents: Array.isArray(raw.documents) ? raw.documents : [],
+  }
 }
 
 export const itaService = {
-  // --- 1. ฟังก์ชันสำหรับจัดการ "ปี" (YearIta) ---
-
-  getYears: async (): Promise<YearIta[]> => {
+  // --- 1. Year (YearIta) ---
+  async getYears(): Promise<YearIta[]> {
     try {
       const response = await apiService.get('/ita/year-moit')
-      return response.data.data
+      return response.data.data as YearIta[]
     } catch (error) {
       console.error('Error fetching ITA years:', error)
       throw new Error('ไม่สามารถดึงข้อมูลปีงบประมาณได้')
     }
   },
-  createYear: async (yearData: {
+
+  async createYear(yearData: {
     year: string
     title: string
     description: string
-  }): Promise<YearIta> => {
+  }): Promise<YearIta> {
     try {
       const response = await apiService.post('/ita/year-moit', yearData)
-      return response.data.data
+      return response.data.data as YearIta
     } catch (error) {
       console.error('Error creating ITA year:', error)
       throw new Error('ไม่สามารถสร้างปีงบประมาณใหม่ได้')
     }
   },
-  getTopicsByYearId: async (yearId: string | number): Promise<YearIta> => {
+
+  async getTopicsByYearId(yearId: string | number): Promise<YearIta> {
     try {
       const response = await apiService.get(`/ita/year-moit/${yearId}`)
-      return response.data.data
+      return response.data.data as YearIta
     } catch (error) {
       console.error(`Error fetching topics for year ID ${yearId}:`, error)
       throw new Error('ไม่สามารถดึงข้อมูลหัวข้อสำหรับปีที่เลือกได้')
     }
   },
-  /**
-   * อัปเดตข้อมูลปีงบประมาณ
-   * @param yearId ID ของปีที่ต้องการแก้ไข
-   * @param yearData ข้อมูลที่ต้องการอัปเดต
-   * @returns ข้อมูลปีที่อัปเดตแล้ว
-   */
-  updateYear: async (
+
+  async updateYear(
     yearId: string | number,
     yearData: { title: string; description: string },
-  ): Promise<YearIta> => {
+  ): Promise<YearIta> {
     try {
       const response = await apiService.put(`/ita/year-moit/${yearId}`, yearData)
-      return response.data.data
+      return response.data.data as YearIta
     } catch (error) {
       console.error(`Error updating ITA year with ID ${yearId}:`, error)
       throw new Error('ไม่สามารถอัปเดตข้อมูลปีงบประมาณได้')
     }
   },
 
-  deleteYear: async (yearId: string | number): Promise<void> => {
+  async deleteYear(yearId: string | number): Promise<void> {
     try {
       await apiService.delete(`/ita/year-moit/${yearId}`)
     } catch (error) {
@@ -69,58 +99,59 @@ export const itaService = {
     }
   },
 
-  // --- 2. ฟังก์ชันสำหรับจัดการ "หัวข้อ" (Moit) ---
-
-  getAllTopics: async (): Promise<YearIta[]> => {
+  // --- 2. Topic (Moit) ---
+  async getAllTopics(): Promise<YearIta[]> {
     try {
       const response = await apiService.get('/user/year-moit')
-      return response.data.data
+      return response.data.data as YearIta[]
     } catch (error) {
       console.error('Error fetching all ITA data:', error)
       throw new Error('ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
     }
   },
 
-  getTopicById: async (topicId: string | number): Promise<MoitWithYear> => {
+  // คืนค่าพร้อม normalize ให้ View ใช้งานได้เสถียร
+  async getTopicById(topicOrYearId: string | number): Promise<MoitWithYear> {
     try {
-      const response = await apiService.get(`/moit/year/${topicId}`)
-      return response.data.data
+      const response = await apiService.get(`/moit/year/${topicOrYearId}`)
+      const raw = response.data.data as RawMoitWithYear
+      return normalizeMoitWithYear(raw)
     } catch (error) {
-      console.error(`Error fetching ITA topic with ID ${topicId}:`, error)
-      throw new Error('ไม่สามารถดึงข้อมูลหัวข้อได้')
+      console.error(`Error fetching topics for year ID ${topicOrYearId}:`, error)
+      throw new Error('ไม่สามารถดึงข้อมูลหัวข้อสำหรับปีที่เลือกได้')
     }
   },
 
-  createTopic: async (topicData: {
+  async createTopic(topicData: {
     year_ita_id: string | number
     moit_name: string
     title: string
     description: string
-  }): Promise<Moit> => {
+  }): Promise<Moit> {
     try {
       const response = await apiService.post('/moit', topicData)
-      return response.data.data
+      return response.data.data as Moit
     } catch (error) {
       console.error('Error creating ITA topic:', error)
       throw new Error('ไม่สามารถสร้างหัวข้อใหม่ได้')
     }
   },
-  updateTopic: async (
+
+  async updateTopic(
     topicId: string | number,
     topicData: { title: string; description: string; moit_name: string },
-  ): Promise<Moit> => {
+  ): Promise<Moit> {
     try {
       const response = await apiService.put(`/moit/${topicId}`, topicData)
-      return response.data.data
+      return response.data.data as Moit
     } catch (error) {
       console.error(`Error updating ITA topic with ID ${topicId}:`, error)
       throw new Error('ไม่สามารถอัปเดตข้อมูลหัวข้อได้')
     }
   },
 
-  deleteTopic: async (topicId: string | number): Promise<void> => {
+  async deleteTopic(topicId: string | number): Promise<void> {
     try {
-      // 1. เปลี่ยน Endpoint เป็น /moit/:id ให้ถูกต้อง
       await apiService.delete(`/moit/${topicId}`)
     } catch (error) {
       console.error(`Error deleting ITA topic with ID ${topicId}:`, error)
@@ -128,33 +159,33 @@ export const itaService = {
     }
   },
 
-  // --- 3. ฟังก์ชันสำหรับจัดการ "เอกสาร" (ItaDocument) ---
-
-  createDocument: async (topicId: string | number, formData: FormData): Promise<ItaDocument> => {
+  // --- 3. Documents (ItaDocument) ---
+  async createDocument(topicId: string | number, formData: FormData): Promise<ItaDocument> {
     try {
       const response = await apiService.post(`/ita-topics/${topicId}/documents`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      return response.data.data
+      return response.data.data as ItaDocument
     } catch (error) {
       console.error(`Error creating document for topic ID ${topicId}:`, error)
       throw new Error('ไม่สามารถเพิ่มเอกสารใหม่ได้')
     }
   },
-  updateDocument: async (docId: string | number, formData: FormData): Promise<ItaDocument> => {
+
+  async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
     try {
       const response = await apiService.post(`/ita-documents/${docId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      return response.data.data
+      return response.data.data as ItaDocument
     } catch (error) {
       console.error(`Error updating document with ID ${docId}:`, error)
       throw new Error('ไม่สามารถบันทึกการแก้ไขเอกสารได้')
     }
   },
-  deleteDocument: async (docId: string | number): Promise<void> => {
+
+  async deleteDocument(docId: string | number): Promise<void> {
     try {
-      // Endpoint
       await apiService.delete(`/ita-documents/${docId}`)
     } catch (error) {
       console.error(`Error deleting document with ID ${docId}:`, error)
