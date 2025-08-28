@@ -206,7 +206,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { itaService } from '@/services/itaService'
 import type { YearIta, Moit } from '@/types/ita'
@@ -216,7 +216,8 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
-const yearId = route.params.yearId as string
+// ✅ อ่าน yearId ให้ปลอดภัย (รองรับทั้ง :yearId และ :id)
+const yearId = computed(() => (route.params.yearId ?? route.params.id) as string | undefined)
 
 const yearData = ref<YearIta | null>(null)
 const topics = ref<Moit[]>([])
@@ -239,7 +240,6 @@ const isDeleteModalOpen = ref(false)
 const topicToDelete = ref<Moit | null>(null)
 
 // "แม่แบบ" ของหัวข้อ MOIT ทั้งหมดสำหรับให้ User เลือก
-
 const moitTemplates = [
   {
     value: 'MOIT 1',
@@ -254,86 +254,68 @@ const moitTemplates = [
     value: 'MOIT 4',
     text: 'MOIT 4: หน่วยงานมีการวางระบบการจัดซื้อจัดจ้างและการจัดหาพัสดุ ประจำปีงบประมาณ',
   },
-
   {
     value: 'MOIT 5',
     text: 'MOIT 5: หน่วยงานมีการสรุปผลการจัดซื้อจัดจ้างและการจัดหาพัสดุรายเดือน ประจำปีงบประมาณ',
   },
-
   { value: 'MOIT 6', text: 'MOIT 6: ผู้บริหารแสดงนโยบายการบริหารและพัฒนาทรัพยากรบุคคล' },
-
   {
     value: 'MOIT 7',
     text: 'MOIT 7: หน่วยงานมีการรายงานการประเมินและเกี่ยวกับการประเมินผลการปฏิบัติราชการของบุคลากรในหน่วยงาน และเปิดเผยผลการปฏิบัติราชการ ระดับดีเด่น และระดับดีมาก ในที่เปิดเผยให้ทราบ',
   },
-
   {
     value: 'MOIT 8',
     text: 'MOIT 8: หน่วยงานมีการอบรมให้ความรู้แก่เจ้าหน้าที่ภายในหน่วยงานเกี่ยวกับการเสริมสร้างและพัฒนาทางด้านจริยธรรม และการรักษาวินัยรวมทั้งการป้องกันมิให้กระทำผิดวินัย',
   },
-
   {
     value: 'MOIT 9',
     text: 'MOIT 9: หน่วยงานมีแนวปฏิบัติการจัดการเรื่องร้องเรียน และช่องทางการร้องเรียน',
   },
-
   {
     value: 'MOIT 10',
     text: 'MOIT 10: หน่วยงานมีสรุปผลการดำเนินงานเรื่องรัองเรียนการปฏิบัติงานหรือการให้บริการของเจ้าหน้าที่ภายในหน่วยงาน และเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ',
   },
-
   {
     value: 'MOIT 11',
     text: 'MOIT 11: หน่วยงานของท่านเปิดโอกาสให้ผู้มีส่วนได้ส่วนเสียมีโอกาสเข้ามามีส่วนร่วมในการดำเนินงานตามภารกิจของหน่วยงาน',
   },
-
   { value: 'MOIT 12', text: 'MOIT 12: หน่วยงานมีมาตรการ "การป้องกันการรับสินบน" ที่เป็นระบบ' },
-
   {
     value: 'MOIT 13',
     text: 'MOIT 13: หน่วยงานประเมินการดำเนินการตามแนวทางปฏิบัติของหน่วยงาน ในปีงบประมาณตามเกณฑ์จริยธรรมการจัดซื้อจัดหาและการส่งเสริมการขายยาและเวชภัณฑ์ที่มิใช่ยาของกระทรวงสาธารณสุข พ.ศ. 2564',
   },
-
   {
     value: 'MOIT 14',
     text: 'MOIT 14: หน่วยงานมีแนวทางปฏิบัติเกี่ยวกับการใช้ทรัพย์สินของราชการ และมีขั้นตอนการขออนุญาตเพื่อยืมทรัพย์สินของราชการไปใช้ปฏิบัติในหน่วยงานที่ถูกต้อง',
   },
-
   {
     value: 'MOIT 15',
     text: 'MOIT 15: หน่วยงานมีแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ และแผนปฏิบัติการส่งเสริมคุณธรรมของชมรมจริยธรรม ประจำปีงบประมาณ',
   },
-
   {
     value: 'MOIT 16',
     text: 'MOIT 16: หน่วยงานมีรายงานการกำกับติดตามการดำเนินงานตามแผนปฏิบัติการป้องกัน ปราบปรามการทุจริตและประพฤติมิชอบ',
   },
-
   {
     value: 'MOIT 17',
     text: 'MOIT 17: หน่วยงานมีการประเมินความเสี่ยงการทุจริต ประจำปีงบประมาณอย่างเป็นระบบ',
   },
-
   {
     value: 'MOIT 18',
     text: 'MOIT 18: หน่วยงานมีการปฏิบัติตามมาตรการป้องกันการทุจริต (การควบคุมความเสี่ยงการทุจริต)',
   },
-
   {
     value: 'MOIT 19',
     text: 'MOIT 19: หน่วยงานมีการรายงานผลการส่งเสริมการปฏิบัติตามประมวลจริยธรรมข้าราชการพลเรือน:กรณีการเรี่ยไรและกรณีการให้หรือรับของขวัญหรือประโยชน์อื่นใด ประจำปีงบประมาณ',
   },
-
   {
     value: 'MOIT 20',
     text: 'MOIT 20: หน่วยงานมีการอบรมให้ความรู้ภายในหน่วยงาน เรื่อง ผลประโยชน์ทับซ้อนในหลักสูตร ต้านทุจริตศึกษา(Anti-Corruption Education)กระทรวงสาธารณสุข (ฉบับปรับปรุง) พ.ศ.2565',
   },
-
   {
     value: 'MOIT 21',
     text: 'MOIT 21: หน่วยงานมีการเผยแพร่เจตจำนงสุจริตของการปฏิบัติหน้าที่ราชการ และนโยบายที่เคารพ สิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงานและของผู้บริหาร ต่อสาธารณชน',
   },
-
   {
     value: 'MOIT 22',
     text: 'MOIT 22: หน่วยงานมีแนวปฏิบัติที่เคารพสิทธิมนุษยชนและศักดิ์ศรีของผู้ปฏิบัติงาน และรายงานการป้องกันและแก้ไขปัญหาการล่วงละเมิดหรือคุกคามทางเพศในการทำงาน ประจำปีงบประมาณ',
@@ -344,15 +326,16 @@ const fetchTopicsForYear = async () => {
   loading.value = true
   error.value = null
   try {
-    const result = await itaService.getTopicsByYearId(yearId)
-    yearData.value = result
-    topics.value = result.moits
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      error.value = err.message
-    } else {
-      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+    if (!yearId.value) {
+      error.value = 'ไม่พบ yearId ในเส้นทาง'
+      return
     }
+    // ✅ ใช้เมธอดใหม่ที่ถูกต้อง
+    const result = await itaService.getYearById(yearId.value)
+    yearData.value = result
+    topics.value = result.moits ?? []
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     toast.error(error.value || 'ไม่สามารถดึงข้อมูลหัวข้อได้')
   } finally {
     loading.value = false
@@ -398,8 +381,12 @@ const handleFormSubmit = async () => {
         toast.error('กรุณาเลือกหัวข้อ')
         return
       }
+      if (!yearId.value) {
+        toast.error('ไม่พบรหัสปี (yearId)')
+        return
+      }
       const payload = {
-        year_ita_id: yearId,
+        year_ita_id: yearId.value, // ✅ ใช้ yearId ที่ถูกต้อง
         moit_name: selectedTemplate.value,
         title: selectedTemplate.text,
         description: `รายละเอียดของ ${selectedTemplate.value}`,
@@ -411,11 +398,7 @@ const handleFormSubmit = async () => {
     closeModal()
     await fetchTopicsForYear()
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message)
-    } else {
-      toast.error('เกิดข้อผิดพลาดที่ไม่คาดคิด')
-    }
+    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด')
   }
 }
 
@@ -442,15 +425,9 @@ const handleConfirmDelete = async () => {
     closeDeleteConfirmModal()
     await fetchTopicsForYear()
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message)
-    } else {
-      toast.error('เกิดข้อผิดพลาดในการลบหัวข้อ')
-    }
+    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบหัวข้อ')
   }
 }
 
-onMounted(() => {
-  fetchTopicsForYear()
-})
+onMounted(fetchTopicsForYear)
 </script>

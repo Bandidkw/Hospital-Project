@@ -142,7 +142,7 @@ watch(
         currentDocument.value = {
           title: '',
           sub_topic: '',
-          quarter: 1,
+          quarter: '',
           description: '',
         }
       }

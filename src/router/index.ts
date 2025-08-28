@@ -159,8 +159,10 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: ['superadmin'] }, // เฉพาะ SuperAdmin
         },
         {
-          path: '/dashboard/ita/year/:yearId/topics', // :yearId คือ parameter
-          name: 'ItaTopicList',
+          // -  path: '/dashboard/ita/year/:yearId/topics', // :yearId คือ parameter
+          // -  name: 'ItaTopicList',
+          path: 'ita/year/:yearId/topics', // ✅ ทำให้เป็น child จริง ๆ (ไม่ใส่ / นำหน้า)
+          name: 'dashboard-ita-topics', // ✅ ชื่อ route ให้ตรงกับที่ลิงก์ใช้
           component: () => import('@/views/dashboard/ita/ItaTopicListView.vue'),
           meta: { requiresAuth: true },
         },
