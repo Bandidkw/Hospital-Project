@@ -2,7 +2,8 @@
   <div class="container mx-auto p-4 sm:p-6 lg:p-8">
     <div v-if="moit" class="mb-8">
       <router-link
-        :to="`/dashboard/ita/year/${moit.ita_topic_id}/topics`"
+        v-if="moit?.year_ita?.id"
+        :to="{ name: 'dashboard-ita-topics', params: { yearId: moit.year_ita!.id } }"
         class="text-blue-600 hover:underline text-lg mb-4 inline-block"
       >
         <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้ารายการหัวข้อ
@@ -213,7 +214,7 @@ const resetForm = () => {
   currentDocument.value = {
     title: '',
     sub_topic: '',
-    quarter: 1,
+    quarter: '',
     description: '',
   }
   selectedFile.value = null
