@@ -2,8 +2,8 @@
   <div class="container mx-auto p-4 sm:p-6 lg:p-8">
     <div v-if="moit" class="mb-8">
       <router-link
-        v-if="moit?.year_ita?.id"
-        :to="{ name: 'dashboard-ita-topics', params: { yearId: moit.year_ita!.id } }"
+        v-if="yearId"
+        :to="{ name: 'dashboard-ita-topics', params: { yearId } }"
         class="text-blue-600 hover:underline text-lg mb-4 inline-block"
       >
         <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้ารายการหัวข้อ
@@ -14,7 +14,7 @@
           {{ moit.title }}
         </h1>
         <p v-if="moit?.year_ita" class="text-gray-600 mt-2 text-lg">
-          ปีงบประมาณ: <span class="font-semibold">{{ moit?.year_ita?.year ?? '-' }}</span>
+          ปีงบประมาณ: <span class="font-semibold">{{ moit.year_ita?.year ?? '-' }}</span>
         </p>
       </div>
     </div>
@@ -72,23 +72,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { itaService, type MoitWithYear } from '@/services/itaService'
-// import { computed } from 'vue'
-import type { ItaDocument } from '@/types/ita'
+import { itaService } from '@/services/itaService'
+import type { MoitWithYear, Moit, ItaDocument } from '@/types/ita'
+import { getMoitYearId } from '@/types/ita'
 import { useToast } from 'vue-toastification'
 import DocumentForm from '@/views/dashboard/ita/DocumentForm.vue'
 import DocumentTable from '@/views/dashboard/ita/DocumentTable.vue'
 
-// --- Setup ---
 const route = useRoute()
-// const router = useRouter()
 const toast = useToast()
 
-const moitId = route.params.id as string
+// รองรับทั้ง :id และ :moitId ใน router (กันพังถ้าชื่อ param ไม่ตรง)
+const moitId = (route.params.moitId ?? route.params.id) as string | undefined
 
-// --- State (หน้านี้เป็น "ศูนย์กลางควบคุม" ทั้งหมด) ---
 const moit = ref<MoitWithYear | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -101,7 +99,17 @@ const isDeleteConfirmationOpen = ref(false)
 const deleteDocumentId = ref<string | null>(null)
 const deleteDocumentTitle = ref('')
 
-// --- Data Fetching and Mutations (ฟังก์ชันที่ติดต่อกับ API) ---
+// ✅ yearId จาก helper (กัน undefined โดยไม่อ้าง field ตรง ๆ)
+const yearId = computed(() => (moit.value ? getMoitYearId(moit.value) : undefined))
+
+// แปลง Moit ดิบ -> MoitWithYear (ให้ year_ita & documents พร้อมใช้เสมอ)
+function toMoitWithYear(raw: Moit): MoitWithYear {
+  return {
+    ...raw,
+    year_ita: raw.year_ita ?? (raw.year_ita_id ? { id: raw.year_ita_id } : null),
+    documents: raw.documents ?? [],
+  }
+}
 
 const fetchTopicDetails = async () => {
   if (!moitId) {
@@ -112,15 +120,12 @@ const fetchTopicDetails = async () => {
   loading.value = true
   error.value = null
   try {
-    moit.value = await itaService.getTopicById(moitId)
-    resetForm() // เคลียร์ฟอร์มเมื่อโหลดข้อมูลสำเร็จ
+    const data = await itaService.getMoitById(moitId)
+    moit.value = toMoitWithYear(data)
+    resetForm()
   } catch (err: unknown) {
     console.error('An error occurred during fetchTopicDetails:', err)
-    if (err instanceof Error) {
-      error.value = err.message
-    } else {
-      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
-    }
+    error.value = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     toast.error(error.value || 'ไม่สามารถดึงข้อมูลหัวข้อได้')
   } finally {
     loading.value = false
@@ -137,35 +142,37 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
     return
   }
 
-  // สร้าง FormData object เพื่อส่งไฟล์และข้อมูล
   const formData = new FormData()
   formData.append('title', documentData.title)
   formData.append('sub_topic', documentData.sub_topic)
-  formData.append('quarter', String(documentData.quarter || 1))
-  if (documentData.description) {
-    formData.append('description', documentData.description)
-  }
-  if (selectedFile.value) {
-    formData.append('file', selectedFile.value)
-  }
+  formData.append('quarter', String(documentData.quarter ?? 1)) // ใช้ ?? แทน ||
+  if (documentData.description) formData.append('description', documentData.description)
+  if (selectedFile.value) formData.append('file', selectedFile.value)
 
   try {
     toast.info('กำลังบันทึกข้อมูลเอกสาร...')
+
     if (editingDocument.value && documentData.id) {
+      // ✔ update: ไม่ต้องใช้ moitId
       await itaService.updateDocument(documentData.id, formData)
       toast.success('แก้ไขเอกสารสำเร็จ!')
     } else {
-      await itaService.createDocument(moitId, formData)
+      // ✔ create: ต้องมี moitId ที่ไม่เป็น undefined
+      // ใช้ id จาก moit ที่โหลดมาแล้วเป็นหลัก ถ้าไม่มีค่อย fallback ไปที่ param
+      const targetMoitId = moit.value?.id ?? moitId
+      if (!targetMoitId) {
+        toast.error('ไม่พบรหัสหัวข้อ (moitId) สำหรับเพิ่มเอกสาร')
+        return
+      }
+      await itaService.createDocument(String(targetMoitId), formData) // บังคับเป็น string ชัดเจน
       toast.success('เพิ่มเอกสารใหม่สำเร็จ!')
     }
-    await fetchTopicDetails() // Refresh ข้อมูล
+
+    await fetchTopicDetails()
     resetForm()
+    selectedFile.value = null
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      toast.error(err.message)
-    } else {
-      toast.error('เกิดข้อผิดพลาดในการบันทึกข้อมูล')
-    }
+    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล')
   }
 }
 

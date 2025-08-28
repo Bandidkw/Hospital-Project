@@ -2,103 +2,17 @@
 import apiService from './apiService'
 import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 
-/**
- * YearIta (ย่อ) สำหรับใช้ใน Moit ตาม response จริง
- * เก็บ year เป็น string เพื่อรองรับปี พ.ศ. เช่น "2567"
- */
-export type YearItaLite = {
-  id?: string
-  year: string
-  title?: string
-  description?: string
-  createdAt?: string
-  updatedAt?: string
-}
-
-/**
- * รูปร่างข้อมูลที่ View ใช้งานหลัง normalize แล้ว
- */
-export type MoitWithYear = Moit & {
-  year_ita: YearItaLite | null
-  documents: ItaDocument[]
-}
-
-/**
- * รูปร่างดิบของ year_ita ที่ backend อาจส่งมา
- */
-type RawYearIta =
-  | ({ year: number | string } & Partial<YearItaLite>)
-  | number
-  | string
-  | null
-  | undefined
-
-/**
- * รูปร่างดิบของ Moit ที่ backend อาจส่งมา
- */
-type RawMoitWithYear = Moit & {
-  year_ita?: RawYearIta
-  documents?: ItaDocument[] | null
-}
-
-/**
- * Type เฉพาะ object ที่รับรองว่ามี year (ใช้กับ type guard)
- */
-type RawYearItaObj = {
-  year: number | string
-  id?: string
-  title?: string
-  description?: string
-  createdAt?: string
-  updatedAt?: string
-}
-
-/**
- * Type guard: ตรวจว่า v เป็น object และมีฟิลด์ year
- */
-function hasYearField(v: unknown): v is RawYearItaObj {
-  return typeof v === 'object' && v !== null && 'year' in (v as Record<string, unknown>)
-}
-
-/**
- * แปลง year_ita ดิบให้เป็น YearItaLite | null
- */
-function normalizeYearIta(yi: RawYearIta): YearItaLite | null {
-  if (yi === null || yi === undefined) return null
-
-  // เคส object (มี year แน่นอน)
-  if (hasYearField(yi)) {
-    return {
-      id: 'id' in yi ? yi.id : undefined,
-      year: String(yi.year),
-      title: 'title' in yi ? yi.title : undefined,
-      description: 'description' in yi ? yi.description : undefined,
-      createdAt: 'createdAt' in yi ? yi.createdAt : undefined,
-      updatedAt: 'updatedAt' in yi ? yi.updatedAt : undefined,
-    }
-  }
-
-  // เคส backend ส่ง year เป็น number/string ตรง ๆ
-  if (typeof yi === 'number' || typeof yi === 'string') {
-    return { year: String(yi) }
-  }
-
-  return null
-}
-
-/**
- * แปลง RawMoitWithYear ให้เป็น MoitWithYear (documents เป็น array เสมอ)
- */
-function normalizeMoitWithYear(raw: RawMoitWithYear): MoitWithYear {
-  return {
-    ...raw,
-    year_ita: normalizeYearIta(raw.year_ita),
-    documents: Array.isArray(raw.documents) ? raw.documents : [],
+// --- helper ป้องกันการส่ง id ว่าง/undefined ---
+function ensureId(name: string, v: unknown) {
+  if (v === undefined || v === null || v === '') {
+    throw new Error(`${name} is required`)
   }
 }
+
+/* ... (ส่วน type/normalize ของคุณคงไว้เหมือนเดิม) ... */
 
 export const itaService = {
-  // --- 1) Year (ตารางปี ITA ระดับระบบ) ---
+  // --- 1) Year ---
   async getYears(): Promise<YearIta[]> {
     try {
       const response = await apiService.get('/ita/year-moit')
@@ -123,13 +37,15 @@ export const itaService = {
     }
   },
 
-  async getTopicsByYearId(yearId: string | number): Promise<YearIta> {
+  // 🔁 เปลี่ยนชื่อให้สื่อความหมาย
+  async getYearById(yearId: string | number): Promise<YearIta> {
+    ensureId('yearId', yearId)
     try {
-      const response = await apiService.get(`/ita/year-moit/${yearId}`)
+      const response = await apiService.get(`/ita/year-moit/${encodeURIComponent(String(yearId))}`)
       return response.data.data as YearIta
     } catch (error) {
-      console.error(`Error fetching topics for year ID ${yearId}:`, error)
-      throw new Error('ไม่สามารถดึงข้อมูลหัวข้อสำหรับปีที่เลือกได้')
+      console.error(`Error fetching year with ID ${yearId}:`, error)
+      throw new Error('ไม่สามารถดึงข้อมูลปีที่เลือกได้')
     }
   },
 
@@ -137,8 +53,12 @@ export const itaService = {
     yearId: string | number,
     yearData: { title: string; description: string },
   ): Promise<YearIta> {
+    ensureId('yearId', yearId)
     try {
-      const response = await apiService.put(`/ita/year-moit/${yearId}`, yearData)
+      const response = await apiService.put(
+        `/ita/year-moit/${encodeURIComponent(String(yearId))}`,
+        yearData,
+      )
       return response.data.data as YearIta
     } catch (error) {
       console.error(`Error updating ITA year with ID ${yearId}:`, error)
@@ -147,15 +67,16 @@ export const itaService = {
   },
 
   async deleteYear(yearId: string | number): Promise<void> {
+    ensureId('yearId', yearId)
     try {
-      await apiService.delete(`/ita/year-moit/${yearId}`)
+      await apiService.delete(`/ita/year-moit/${encodeURIComponent(String(yearId))}`)
     } catch (error) {
       console.error(`Error deleting ITA year with ID ${yearId}:`, error)
       throw new Error('ไม่สามารถลบปีงบประมาณได้')
     }
   },
 
-  // --- 2) Topic (MOIT) ---
+  // --- 2) MOIT ---
   async getAllTopics(): Promise<YearIta[]> {
     try {
       const response = await apiService.get('/user/year-moit')
@@ -166,19 +87,13 @@ export const itaService = {
     }
   },
 
-  /**
-   * คืนข้อมูลหัวข้อ + ปี (normalize แล้ว)
-   * หมายเหตุ: endpoint /moit/year/:id ตามที่คุณใช้อยู่
-   */
-  async getTopicById(topicOrYearId: string | number): Promise<MoitWithYear> {
-    try {
-      const response = await apiService.get(`/moit/year/${topicOrYearId}`)
-      const raw = response.data.data as RawMoitWithYear
-      return normalizeMoitWithYear(raw)
-    } catch (error) {
-      console.error(`Error fetching topics for year ID ${topicOrYearId}:`, error)
-      throw new Error('ไม่สามารถดึงข้อมูลหัวข้อสำหรับปีที่เลือกได้')
-    }
+  // ✅ เส้น /moit/year/:moitId
+  async getMoitById(moitId: string | number): Promise<Moit> {
+    ensureId('moitId', moitId)
+    const response = await apiService.get(`/moit/year/${encodeURIComponent(String(moitId))}`)
+    // ถ้าต้อง normalize:
+    // return normalizeMoitWithYear(response.data.data as RawMoitWithYear)
+    return response.data.data as Moit
   },
 
   async createTopic(topicData: {
@@ -200,8 +115,12 @@ export const itaService = {
     topicId: string | number,
     topicData: { title: string; description: string; moit_name: string },
   ): Promise<Moit> {
+    ensureId('topicId', topicId)
     try {
-      const response = await apiService.put(`/moit/${topicId}`, topicData)
+      const response = await apiService.put(
+        `/moit/${encodeURIComponent(String(topicId))}`,
+        topicData,
+      )
       return response.data.data as Moit
     } catch (error) {
       console.error(`Error updating ITA topic with ID ${topicId}:`, error)
@@ -210,20 +129,20 @@ export const itaService = {
   },
 
   async deleteTopic(topicId: string | number): Promise<void> {
+    ensureId('topicId', topicId)
     try {
-      await apiService.delete(`/moit/${topicId}`)
+      await apiService.delete(`/moit/${encodeURIComponent(String(topicId))}`)
     } catch (error) {
       console.error(`Error deleting ITA topic with ID ${topicId}:`, error)
       throw new Error('ไม่สามารถลบหัวข้อได้')
     }
   },
 
-  // --- 3) Documents (เอกสาร ITA) ---
+  // --- 3) Documents ---
   async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
+    ensureId('moitId', moitId)
     try {
-      // บังคับให้มี moit_id ใน payload
       formData.set('moit_id', String(moitId))
-      // quarter เป็น string
       const q = formData.get('quarter')
       if (q !== null) formData.set('quarter', String(q))
 
@@ -238,10 +157,15 @@ export const itaService = {
   },
 
   async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
+    ensureId('docId', docId)
     try {
-      const response = await apiService.post(`/ita-documents/${docId}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
+      const response = await apiService.post(
+        `/ita-documents/${encodeURIComponent(String(docId))}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        },
+      )
       return response.data.data as ItaDocument
     } catch (error) {
       console.error(`Error updating document with ID ${docId}:`, error)
@@ -250,8 +174,9 @@ export const itaService = {
   },
 
   async deleteDocument(docId: string | number): Promise<void> {
+    ensureId('docId', docId)
     try {
-      await apiService.delete(`/ita-documents/${docId}`)
+      await apiService.delete(`/ita-documents/${encodeURIComponent(String(docId))}`)
     } catch (error) {
       console.error(`Error deleting document with ID ${docId}:`, error)
       throw new Error('ไม่สามารถลบเอกสารได้')

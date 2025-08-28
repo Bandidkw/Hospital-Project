@@ -39,26 +39,39 @@
             </th>
           </tr>
         </thead>
+
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-if="filteredDocuments.length === 0">
             <td colspan="4" class="px-6 py-10 text-center text-gray-500">
               ไม่พบเอกสารที่ตรงกับเงื่อนไข
             </td>
           </tr>
+
           <tr v-for="doc in filteredDocuments" :key="doc.id" class="hover:bg-gray-50">
             <td class="px-6 py-4">
-              <a
-                :href="doc.fileUrl"
-                target="_blank"
-                class="font-medium text-blue-600 hover:underline"
-                >{{ doc.title }}</a
-              >
+              <template v-if="doc.fileUrl">
+                <a
+                  :href="doc.fileUrl"
+                  target="_blank"
+                  class="font-medium text-blue-600 hover:underline"
+                >
+                  {{ doc.title }}
+                </a>
+              </template>
+              <template v-else>
+                <span class="font-medium text-gray-800">{{ doc.title }}</span>
+              </template>
               <p v-if="doc.description" class="text-sm text-gray-500 mt-1">{{ doc.description }}</p>
             </td>
-            <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ doc.sub_topic }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-700">
-              {{ doc.quarter || '-' }}
+
+            <td class="px-6 py-4 whitespace-nowrap text-gray-700">
+              {{ doc.sub_topic }}
             </td>
+
+            <td class="px-6 py-4 whitespace-nowrap text-center text-gray-700">
+              {{ doc.quarter ?? '-' }}
+            </td>
+
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
               <button
                 @click="emitEdit(doc)"
@@ -83,36 +96,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, toRefs } from 'vue'
+import { ref, computed } from 'vue'
 import type { ItaDocument } from '@/types/ita'
 
-// --- Props (รับ "เอกสารทั้งหมด" มาจากข้างนอก) ---
-const props = defineProps<{
-  documents: ItaDocument[]
+// ✅ รับได้ทั้ง array/null/undefined และตั้งค่าเริ่มต้นเป็น [] ด้วย withDefaults
+const props = withDefaults(
+  defineProps<{
+    documents?: ItaDocument[] | null
+  }>(),
+  {
+    documents: () => [],
+  },
+)
+
+// ✅ type-safe emits
+const emit = defineEmits<{
+  (e: 'edit', doc: ItaDocument): void
+  (e: 'delete', doc: ItaDocument): void
 }>()
 
-// --- Emits (ส่ง "สัญญาณ" กลับไปหาพ่อ) ---
-const emit = defineEmits(['edit', 'delete'])
-
-// --- Internal State (สำหรับ "เครื่องมือช่วยหา") ---
 const searchQuery = ref('')
-const { documents } = toRefs(props)
 
-// --- "มันสมอง" ของตาราง ---
-const filteredDocuments = computed(() => {
-  if (!documents.value) return []
-  if (!searchQuery.value) return documents.value
-
-  const query = searchQuery.value.toLowerCase()
-  return documents.value.filter((doc) => doc.title.toLowerCase().includes(query))
+// คืนเป็น array เสมอ (กัน null/undefined)
+const filteredDocuments = computed<ItaDocument[]>(() => {
+  const list = props.documents ?? []
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return list
+  return list.filter((doc) => doc.title.toLowerCase().includes(q))
 })
 
-// --- Functions (สำหรับส่งสัญญาณ) ---
-const emitEdit = (doc: ItaDocument) => {
-  emit('edit', doc)
-}
-
-const emitDelete = (doc: ItaDocument) => {
-  emit('delete', doc)
-}
+const emitEdit = (doc: ItaDocument) => emit('edit', doc)
+const emitDelete = (doc: ItaDocument) => emit('delete', doc)
 </script>
