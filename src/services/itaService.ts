@@ -2,66 +2,110 @@
 import apiService from './apiService'
 import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 
-// --- helper ป้องกันการส่ง id ว่าง/undefined ---
-function ensureId(name: string, v: unknown) {
-  if (v === undefined || v === null || v === '') {
-    throw new Error(`${name} is required`)
+/* ---------------------------------- Utils --------------------------------- */
+
+/** อ่าน BASE URL ของ API แล้วแปลงเป็น absolute URL ให้ไฟล์ */
+// ==== เพิ่ม/แก้ที่ด้านบนไฟล์ (ร่วมกับของเดิม) ====
+type EnvShape = { env: { VITE_API_BASE_URL?: string } }
+const API_BASE: string = ((import.meta as unknown as EnvShape).env.VITE_API_BASE_URL ?? '').replace(
+  /\/$/,
+  '',
+)
+
+const toAbsoluteUrl = (u?: string): string => {
+  if (!u) return ''
+  return /^https?:\/\//i.test(u) ? u : `${API_BASE}/${u.replace(/^\//, '')}`
+}
+
+function ensureId(name: string, v: unknown): void {
+  if (v === undefined || v === null || v === '') throw new Error(`${name} is required`)
+}
+
+type ApiOk<T> = { data?: { data?: T; description?: string } }
+function unwrap<T>(res: unknown, fallbackMsg: string): T {
+  const obj = res as ApiOk<T>
+  if (obj?.data && 'data' in obj.data!) return obj.data!.data as T
+  throw new Error(obj?.data?.description || fallbackMsg)
+}
+
+// รองรับ doc ที่มี moit ซ้อนมาด้วย
+function normalizeDoc(raw: unknown): ItaDocument {
+  const r = raw as Record<string, unknown>
+  const rawUrl =
+    (r.fileUrl as string | undefined) ??
+    (r.file_url as string | undefined) ??
+    (r.filePath as string | undefined) ??
+    (r.file_path as string | undefined) ??
+    ''
+  return {
+    id: String(r.id ?? ''),
+    moit_id: r.moit_id ? String(r.moit_id) : undefined,
+    topic_id: r.topic_id ? String(r.topic_id) : undefined,
+    title: String(r.title ?? ''),
+    description:
+      r.description === undefined || r.description === null ? undefined : String(r.description),
+    sub_topic: String(r.sub_topic ?? ''),
+    quarter: r.quarter === undefined || r.quarter === null ? undefined : String(r.quarter),
+    fileName: (r.fileName as string | undefined) ?? (r.file_name as string | undefined),
+    fileUrl: toAbsoluteUrl(rawUrl),
+    createdAt: r.createdAt ? String(r.createdAt) : undefined,
+    updatedAt: r.updatedAt ? String(r.updatedAt) : undefined,
   }
 }
 
-/* ... (ส่วน type/normalize ของคุณคงไว้เหมือนเดิม) ... */
+/* --------------------------------- Service -------------------------------- */
 
 export const itaService = {
-  // --- 1) Year ---
+  /* ------------------------------- Year (ITA) ------------------------------ */
+
   async getYears(): Promise<YearIta[]> {
     try {
-      const response = await apiService.get('/ita/year-moit')
-      return response.data.data as YearIta[]
-    } catch (error) {
-      console.error('Error fetching ITA years:', error)
+      const res = await apiService.get('/ita/year-moit')
+      return unwrap<YearIta[]>(res, 'ไม่สามารถดึงข้อมูลปีงบประมาณได้')
+    } catch (e: unknown) {
+      console.error('getYears error:', e)
       throw new Error('ไม่สามารถดึงข้อมูลปีงบประมาณได้')
     }
   },
 
-  async createYear(yearData: {
+  async createYear(payload: {
     year: string
     title: string
     description: string
   }): Promise<YearIta> {
     try {
-      const response = await apiService.post('/ita/year-moit', yearData)
-      return response.data.data as YearIta
-    } catch (error) {
-      console.error('Error creating ITA year:', error)
+      const res = await apiService.post('/ita/year-moit', payload)
+      return unwrap<YearIta>(res, 'ไม่สามารถสร้างปีงบประมาณใหม่ได้')
+    } catch (e: unknown) {
+      console.error('createYear error:', e)
       throw new Error('ไม่สามารถสร้างปีงบประมาณใหม่ได้')
     }
   },
 
-  // 🔁 เปลี่ยนชื่อให้สื่อความหมาย
   async getYearById(yearId: string | number): Promise<YearIta> {
     ensureId('yearId', yearId)
     try {
-      const response = await apiService.get(`/ita/year-moit/${encodeURIComponent(String(yearId))}`)
-      return response.data.data as YearIta
-    } catch (error) {
-      console.error(`Error fetching year with ID ${yearId}:`, error)
+      const res = await apiService.get(`/ita/year-moit/${encodeURIComponent(String(yearId))}`)
+      return unwrap<YearIta>(res, 'ไม่สามารถดึงข้อมูลปีที่เลือกได้')
+    } catch (e: unknown) {
+      console.error('getYearById error:', e)
       throw new Error('ไม่สามารถดึงข้อมูลปีที่เลือกได้')
     }
   },
 
   async updateYear(
     yearId: string | number,
-    yearData: { title: string; description: string },
+    payload: { title: string; description: string },
   ): Promise<YearIta> {
     ensureId('yearId', yearId)
     try {
-      const response = await apiService.put(
+      const res = await apiService.put(
         `/ita/year-moit/${encodeURIComponent(String(yearId))}`,
-        yearData,
+        payload,
       )
-      return response.data.data as YearIta
-    } catch (error) {
-      console.error(`Error updating ITA year with ID ${yearId}:`, error)
+      return unwrap<YearIta>(res, 'ไม่สามารถอัปเดตข้อมูลปีงบประมาณได้')
+    } catch (e: unknown) {
+      console.error('updateYear error:', e)
       throw new Error('ไม่สามารถอัปเดตข้อมูลปีงบประมาณได้')
     }
   },
@@ -70,60 +114,61 @@ export const itaService = {
     ensureId('yearId', yearId)
     try {
       await apiService.delete(`/ita/year-moit/${encodeURIComponent(String(yearId))}`)
-    } catch (error) {
-      console.error(`Error deleting ITA year with ID ${yearId}:`, error)
+    } catch (e: unknown) {
+      console.error('deleteYear error:', e)
       throw new Error('ไม่สามารถลบปีงบประมาณได้')
     }
   },
 
-  // --- 2) MOIT ---
+  /* --------------------------------- MOIT --------------------------------- */
+
   async getAllTopics(): Promise<YearIta[]> {
     try {
-      const response = await apiService.get('/user/year-moit')
-      return response.data.data as YearIta[]
-    } catch (error) {
-      console.error('Error fetching all ITA data:', error)
+      const res = await apiService.get('/user/year-moit')
+      return unwrap<YearIta[]>(res, 'ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
+    } catch (e: unknown) {
+      console.error('getAllTopics error:', e)
       throw new Error('ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
     }
   },
 
-  // ✅ เส้น /moit/year/:moitId
+  /** /moit/year/:moitId */
   async getMoitById(moitId: string | number): Promise<Moit> {
     ensureId('moitId', moitId)
-    const response = await apiService.get(`/moit/year/${encodeURIComponent(String(moitId))}`)
-    // ถ้าต้อง normalize:
-    // return normalizeMoitWithYear(response.data.data as RawMoitWithYear)
-    return response.data.data as Moit
+    try {
+      const res = await apiService.get(`/moit/year/${encodeURIComponent(String(moitId))}`)
+      return unwrap<Moit>(res, 'ไม่สามารถดึงข้อมูลหัวข้อได้')
+    } catch (e: unknown) {
+      console.error('getMoitById error:', e)
+      throw new Error('ไม่สามารถดึงข้อมูลหัวข้อได้')
+    }
   },
 
-  async createTopic(topicData: {
+  async createTopic(payload: {
     year_ita_id: string | number
     moit_name: string
     title: string
     description: string
   }): Promise<Moit> {
     try {
-      const response = await apiService.post('/moit', topicData)
-      return response.data.data as Moit
-    } catch (error) {
-      console.error('Error creating ITA topic:', error)
+      const res = await apiService.post('/moit', payload)
+      return unwrap<Moit>(res, 'ไม่สามารถสร้างหัวข้อใหม่ได้')
+    } catch (e: unknown) {
+      console.error('createTopic error:', e)
       throw new Error('ไม่สามารถสร้างหัวข้อใหม่ได้')
     }
   },
 
   async updateTopic(
     topicId: string | number,
-    topicData: { title: string; description: string; moit_name: string },
+    payload: { title: string; description: string; moit_name: string },
   ): Promise<Moit> {
     ensureId('topicId', topicId)
     try {
-      const response = await apiService.put(
-        `/moit/${encodeURIComponent(String(topicId))}`,
-        topicData,
-      )
-      return response.data.data as Moit
-    } catch (error) {
-      console.error(`Error updating ITA topic with ID ${topicId}:`, error)
+      const res = await apiService.put(`/moit/${encodeURIComponent(String(topicId))}`, payload)
+      return unwrap<Moit>(res, 'ไม่สามารถอัปเดตข้อมูลหัวข้อได้')
+    } catch (e: unknown) {
+      console.error('updateTopic error:', e)
       throw new Error('ไม่สามารถอัปเดตข้อมูลหัวข้อได้')
     }
   },
@@ -132,88 +177,112 @@ export const itaService = {
     ensureId('topicId', topicId)
     try {
       await apiService.delete(`/moit/${encodeURIComponent(String(topicId))}`)
-    } catch (error) {
-      console.error(`Error deleting ITA topic with ID ${topicId}:`, error)
+    } catch (e: unknown) {
+      console.error('deleteTopic error:', e)
       throw new Error('ไม่สามารถลบหัวข้อได้')
     }
   },
 
-  // --- 3) Documents ---
-  // async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
-  //   ensureId('moitId', moitId)
-  //   try {
-  //     formData.set('moit_id', String(moitId))
-  //     const q = formData.get('quarter')
-  //     if (q !== null) formData.set('quarter', String(q))
+  /* ------------------------------- Documents ------------------------------- */
+  // หมายเหตุ: ปรับ path ให้ตรงกับ backend ของคุณแล้ว:
+  // - GET   /documents?moit_id=...
+  // - GET   /documents/:id
+  // - POST  /quarter/create
+  // - PUT   /quarter/update/:id
+  // - DELETE/quarter/delete/:id
 
-  //     const response = await apiService.post('/quarter/create', formData, {
-  //       headers: { 'Content-Type': 'multipart/form-data' },
-  //     })
-  //     return response.data.data as ItaDocument
-  //   } catch (error) {
-  //     console.error(`Error creating document for MOIT ${moitId}:`, error)
-  //     throw new Error('ไม่สามารถเพิ่มเอกสารใหม่ได้')
-  //   }
-  // },
-
-  // async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
-  //   ensureId('docId', docId)
-  //   try {
-  //     const response = await apiService.post(
-  //       `/ita-documents/${encodeURIComponent(String(docId))}`,
-  //       formData,
-  //       {
-  //         headers: { 'Content-Type': 'multipart/form-data' },
-  //       },
-  //     )
-  //     return response.data.data as ItaDocument
-  //   } catch (error) {
-  //     console.error(`Error updating document with ID ${docId}:`, error)
-  //     throw new Error('ไม่สามารถบันทึกการแก้ไขเอกสารได้')
-  //   }
-  // },
-
-  // async deleteDocument(docId: string | number): Promise<void> {
-  //   ensureId('docId', docId)
-  //   try {
-  //     await apiService.delete(`/ita-documents/${encodeURIComponent(String(docId))}`)
-  //   } catch (error) {
-  //     console.error(`Error deleting document with ID ${docId}:`, error)
-  //     throw new Error('ไม่สามารถลบเอกสารได้')
-  //   }
-  // },
-
-  // Document API
   async getDocumentsByMoitId(moitId: string | number): Promise<ItaDocument[]> {
-    const response = await apiService.get(`/documents?moit_id=${moitId}`)
-    return response.data.data as ItaDocument[]
+    ensureId('moitId', moitId)
+    try {
+      // ✅ ใช้เส้นใหม่ตามโครงสร้าง postman (แนะนำ)
+      const res = await apiService.get(
+        `/document/list?moit_id=${encodeURIComponent(String(moitId))}`,
+      )
+      const list = unwrap<unknown[]>(res, 'ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
+      return list.map(normalizeDoc)
+    } catch (e: unknown) {
+      // ถ้ายังไม่มี /quarter/list ให้ fallback ไปเส้นเดิม (หาก backend ยังเปิดไว้)
+      try {
+        const res2 = await apiService.get(
+          `/documents?moit_id=${encodeURIComponent(String(moitId))}`,
+        )
+        const list2 = unwrap<unknown[]>(res2, 'ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
+        return list2.map(normalizeDoc)
+      } catch (e2: unknown) {
+        console.error('getDocumentsByMoitId error:', e, e2)
+        throw new Error('ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
+      }
+    }
   },
 
+  /** ดึงเอกสารเดี่ยว (ตาม response ที่ให้มา) */
   async getDocumentById(docId: string | number): Promise<ItaDocument> {
-    const response = await apiService.get(`/documents/${docId}`)
-    return response.data.data as ItaDocument
+    ensureId('docId', docId)
+    try {
+      const res = await apiService.get(`/document/detail/${encodeURIComponent(String(docId))}`)
+      const raw = unwrap<unknown>(res, 'ไม่สามารถดึงข้อมูลเอกสารได้')
+      return normalizeDoc(raw)
+    } catch (e: unknown) {
+      console.error('getDocumentById error:', e)
+      throw new Error('ไม่สามารถดึงข้อมูลเอกสารได้')
+    }
   },
 
+  /** สร้างเอกสารใหม่ (อัปโหลดไฟล์) */
   async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
-    formData.set('moit_id', String(moitId))
-    const response = await apiService.post('/quarter/create', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    return response.data.data as ItaDocument
-  },
+    ensureId('moitId', moitId)
+    try {
+      formData.set('moit_id', String(moitId))
+      // quarter เป็น string เสมอ
+      const q = formData.get('quarter')
+      formData.set('quarter', String(q ?? ''))
+      // description optional → ลบออกถ้าไม่มี
+      const desc = formData.get('description')
+      if (desc == null || desc === '') formData.delete('description')
 
-  async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
-    const response = await apiService.put(
-      `/quarter/update/${encodeURIComponent(String(docId))}`,
-      formData,
-      {
+      const res = await apiService.post('/document/create', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    )
-    return response.data.data as ItaDocument
+      })
+      const raw = unwrap<unknown>(res, 'ไม่สามารถเพิ่มเอกสารใหม่ได้')
+      return normalizeDoc(raw)
+    } catch (e: unknown) {
+      console.error('createDocument error:', e)
+      throw new Error('ไม่สามารถเพิ่มเอกสารใหม่ได้')
+    }
   },
 
+  /** แก้ไขเอกสาร */
+  async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
+    ensureId('docId', docId)
+    try {
+      // quarter เป็น string ถ้าส่งมา
+      const q = formData.get('quarter')
+      if (q != null) formData.set('quarter', String(q))
+      // description optional
+      const desc = formData.get('description')
+      if (desc == null || desc === '') formData.delete('description')
+
+      const res = await apiService.put(
+        `/document/update/${encodeURIComponent(String(docId))}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      )
+      const raw = unwrap<unknown>(res, 'ไม่สามารถบันทึกการแก้ไขเอกสารได้')
+      return normalizeDoc(raw)
+    } catch (e: unknown) {
+      console.error('updateDocument error:', e)
+      throw new Error('ไม่สามารถบันทึกการแก้ไขเอกสารได้')
+    }
+  },
+
+  /** ลบเอกสาร */
   async deleteDocument(docId: string | number): Promise<void> {
-    await apiService.delete(`/quarter/delete/${docId}`)
+    ensureId('docId', docId)
+    try {
+      await apiService.delete(`/document/delete/${encodeURIComponent(String(docId))}`)
+    } catch (e: unknown) {
+      console.error('deleteDocument error:', e)
+      throw new Error('ไม่สามารถลบเอกสารได้')
+    }
   },
 }
