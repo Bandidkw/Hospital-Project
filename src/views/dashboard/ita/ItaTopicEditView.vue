@@ -137,8 +137,14 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
     toast.error('กรุณากรอกชื่อเอกสารและหัวข้อย่อยให้ครบถ้วน')
     return
   }
+
   if (!editingDocument.value && !selectedFile.value) {
     toast.error('กรุณาแนบไฟล์ PDF สำหรับเอกสารใหม่')
+    return
+  }
+
+  if (selectedFile.value && selectedFile.value.size > 20 * 1024 * 1024) {
+    toast.error('ไฟล์มีขนาดเกิน 20MB กรุณาบีบอัดหรือแบ่งไฟล์ก่อนอัปโหลด')
     return
   }
 
