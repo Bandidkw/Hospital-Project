@@ -10,7 +10,6 @@
       >
         <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้ารายการหัวข้อ
       </router-link>
-
       <div class="bg-white p-6 rounded-lg shadow-md border-l-8 border-blue-500">
         <h1 class="text-3xl font-extrabold text-blue-800">
           <span class="text-gray-500 font-normal">จัดการเอกสารในหัวข้อ:</span><br />
