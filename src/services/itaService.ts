@@ -139,47 +139,81 @@ export const itaService = {
   },
 
   // --- 3) Documents ---
-  async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
-    ensureId('moitId', moitId)
-    try {
-      formData.set('moit_id', String(moitId))
-      const q = formData.get('quarter')
-      if (q !== null) formData.set('quarter', String(q))
+  // async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
+  //   ensureId('moitId', moitId)
+  //   try {
+  //     formData.set('moit_id', String(moitId))
+  //     const q = formData.get('quarter')
+  //     if (q !== null) formData.set('quarter', String(q))
 
-      const response = await apiService.post('/quarter/create', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      return response.data.data as ItaDocument
-    } catch (error) {
-      console.error(`Error creating document for MOIT ${moitId}:`, error)
-      throw new Error('ไม่สามารถเพิ่มเอกสารใหม่ได้')
-    }
+  //     const response = await apiService.post('/quarter/create', formData, {
+  //       headers: { 'Content-Type': 'multipart/form-data' },
+  //     })
+  //     return response.data.data as ItaDocument
+  //   } catch (error) {
+  //     console.error(`Error creating document for MOIT ${moitId}:`, error)
+  //     throw new Error('ไม่สามารถเพิ่มเอกสารใหม่ได้')
+  //   }
+  // },
+
+  // async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
+  //   ensureId('docId', docId)
+  //   try {
+  //     const response = await apiService.post(
+  //       `/ita-documents/${encodeURIComponent(String(docId))}`,
+  //       formData,
+  //       {
+  //         headers: { 'Content-Type': 'multipart/form-data' },
+  //       },
+  //     )
+  //     return response.data.data as ItaDocument
+  //   } catch (error) {
+  //     console.error(`Error updating document with ID ${docId}:`, error)
+  //     throw new Error('ไม่สามารถบันทึกการแก้ไขเอกสารได้')
+  //   }
+  // },
+
+  // async deleteDocument(docId: string | number): Promise<void> {
+  //   ensureId('docId', docId)
+  //   try {
+  //     await apiService.delete(`/ita-documents/${encodeURIComponent(String(docId))}`)
+  //   } catch (error) {
+  //     console.error(`Error deleting document with ID ${docId}:`, error)
+  //     throw new Error('ไม่สามารถลบเอกสารได้')
+  //   }
+  // },
+
+  // Document API
+  async getDocumentsByMoitId(moitId: string | number): Promise<ItaDocument[]> {
+    const response = await apiService.get(`/documents?moit_id=${moitId}`)
+    return response.data.data as ItaDocument[]
+  },
+
+  async getDocumentById(docId: string | number): Promise<ItaDocument> {
+    const response = await apiService.get(`/documents/${docId}`)
+    return response.data.data as ItaDocument
+  },
+
+  async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
+    formData.set('moit_id', String(moitId))
+    const response = await apiService.post('/quarter/create', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data.data as ItaDocument
   },
 
   async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
-    ensureId('docId', docId)
-    try {
-      const response = await apiService.post(
-        `/ita-documents/${encodeURIComponent(String(docId))}`,
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        },
-      )
-      return response.data.data as ItaDocument
-    } catch (error) {
-      console.error(`Error updating document with ID ${docId}:`, error)
-      throw new Error('ไม่สามารถบันทึกการแก้ไขเอกสารได้')
-    }
+    const response = await apiService.put(
+      `/ita-documents/${encodeURIComponent(String(docId))}`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      },
+    )
+    return response.data.data as ItaDocument
   },
 
   async deleteDocument(docId: string | number): Promise<void> {
-    ensureId('docId', docId)
-    try {
-      await apiService.delete(`/ita-documents/${encodeURIComponent(String(docId))}`)
-    } catch (error) {
-      console.error(`Error deleting document with ID ${docId}:`, error)
-      throw new Error('ไม่สามารถลบเอกสารได้')
-    }
+    await apiService.delete(`/documents/${docId}`)
   },
 }

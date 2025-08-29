@@ -330,13 +330,22 @@ const fetchTopicsForYear = async () => {
       error.value = 'ไม่พบ yearId ในเส้นทาง'
       return
     }
-    // ✅ ใช้เมธอดใหม่ที่ถูกต้อง
-    const result = await itaService.getYearById(yearId.value)
-    yearData.value = result
-    topics.value = result.moits ?? []
-  } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
-    toast.error(error.value || 'ไม่สามารถดึงข้อมูลหัวข้อได้')
+    const res = await itaService.getYearById(yearId.value)
+    yearData.value = res
+
+    // ✅ จัดเรียงหัวข้อ MOIT ตามเลขท้าย
+    topics.value = (res.moits ?? []).sort((a, b) => {
+      const numA = parseInt(a.moit_name.replace(/\D/g, ''), 10) || 0
+      const numB = parseInt(b.moit_name.replace(/\D/g, ''), 10) || 0
+      return numA - numB
+    })
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      error.value = e.message
+    } else {
+      error.value = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
+    }
+    toast.error(error.value)
   } finally {
     loading.value = false
   }
