@@ -204,7 +204,7 @@ export const itaService = {
 
   async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
     const response = await apiService.put(
-      `/ita-documents/${encodeURIComponent(String(docId))}`,
+      `/quarter/update/${encodeURIComponent(String(docId))}`,
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -214,6 +214,6 @@ export const itaService = {
   },
 
   async deleteDocument(docId: string | number): Promise<void> {
-    await apiService.delete(`/documents/${docId}`)
+    await apiService.delete(`/quarter/delete/${docId}`)
   },
 }
