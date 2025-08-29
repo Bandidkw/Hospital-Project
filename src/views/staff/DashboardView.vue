@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import DashboardSidebar from '../../components/dashboard/DashboardSidebar.vue'
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar.vue' // ← ใช้ @
 </script>
 
 <style scoped></style>
