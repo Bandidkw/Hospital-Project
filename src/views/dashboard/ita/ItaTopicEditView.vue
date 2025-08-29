@@ -120,8 +120,22 @@ const fetchTopicDetails = async () => {
   loading.value = true
   error.value = null
   try {
-    const data = await itaService.getMoitById(moitId)
-    moit.value = toMoitWithYear(data)
+    // โหลด moit + documents พร้อมกัน (ไวกว่าเรียกทีละอัน)
+    const [moitRaw, docs] = await Promise.all([
+      itaService.getMoitById(moitId),
+      itaService.getDocumentsByMoitId(moitId),
+    ])
+
+    // แปลงรูป moit ให้ year_ita พร้อมใช้เสมอ และยัด documents ที่เพิ่งดึงมา
+    moit.value = {
+      ...toMoitWithYear(moitRaw),
+      documents: docs ?? [], // กัน null/undefined
+    }
+
+    // (ดีบักชั่วคราว) ดูว่ามีเอกสารกี่ไฟล์
+    // console.log('[MOIT]', moit.value)
+    // console.log('[DOCS]', moit.value.documents)
+
     resetForm()
   } catch (err: unknown) {
     console.error('An error occurred during fetchTopicDetails:', err)

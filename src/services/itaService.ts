@@ -185,36 +185,42 @@ export const itaService = {
 
   /* ------------------------------- Documents ------------------------------- */
   // หมายเหตุ: ปรับ path ให้ตรงกับ backend ของคุณแล้ว:
+  // - GET   /document/all
   // - GET   /documents?moit_id=...
-  // - GET   /documents/:id
-  // - POST  /quarter/create
-  // - PUT   /quarter/update/:id
-  // - DELETE/quarter/delete/:id
+  // - GET   /document/detail/:id
+  // - POST  /document/create
+  // - PUT   /document/update/:id
+  // - DELETE/document/delete/:id
 
   async getDocumentsByMoitId(moitId: string | number): Promise<ItaDocument[]> {
     ensureId('moitId', moitId)
     try {
-      // ✅ ใช้เส้นใหม่ตามโครงสร้าง postman (แนะนำ)
       const res = await apiService.get(
         `/document/list?moit_id=${encodeURIComponent(String(moitId))}`,
       )
-      const list = unwrap<unknown[]>(res, 'ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
-      return list.map(normalizeDoc)
-    } catch (e: unknown) {
-      // ถ้ายังไม่มี /quarter/list ให้ fallback ไปเส้นเดิม (หาก backend ยังเปิดไว้)
-      try {
-        const res2 = await apiService.get(
-          `/documents?moit_id=${encodeURIComponent(String(moitId))}`,
-        )
-        const list2 = unwrap<unknown[]>(res2, 'ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
-        return list2.map(normalizeDoc)
-      } catch (e2: unknown) {
-        console.error('getDocumentsByMoitId error:', e, e2)
-        throw new Error('ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
+
+      // payload อาจเป็น array ตรง ๆ หรือเป็น object มี items/rows/data
+      const payload = unwrap<unknown>(res, 'ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
+
+      const toArray = (v: unknown): unknown[] => {
+        if (Array.isArray(v)) return v
+        if (v && typeof v === 'object') {
+          const o = v as Record<string, unknown>
+          if (Array.isArray(o.items)) return o.items as unknown[]
+          if (Array.isArray(o.rows)) return o.rows as unknown[]
+          if (Array.isArray(o.data)) return o.data as unknown[]
+          if (Array.isArray(o.results)) return o.results as unknown[]
+        }
+        return []
       }
+
+      const rawList = toArray(payload)
+      return rawList.map(normalizeDoc)
+    } catch (e: unknown) {
+      console.error('getDocumentsByMoitId error:', e)
+      throw new Error('ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
     }
   },
-
   /** ดึงเอกสารเดี่ยว (ตาม response ที่ให้มา) */
   async getDocumentById(docId: string | number): Promise<ItaDocument> {
     ensureId('docId', docId)
@@ -227,7 +233,6 @@ export const itaService = {
       throw new Error('ไม่สามารถดึงข้อมูลเอกสารได้')
     }
   },
-
   /** สร้างเอกสารใหม่ (อัปโหลดไฟล์) */
   async createDocument(moitId: string | number, formData: FormData): Promise<ItaDocument> {
     ensureId('moitId', moitId)
@@ -250,7 +255,6 @@ export const itaService = {
       throw new Error('ไม่สามารถเพิ่มเอกสารใหม่ได้')
     }
   },
-
   /** แก้ไขเอกสาร */
   async updateDocument(docId: string | number, formData: FormData): Promise<ItaDocument> {
     ensureId('docId', docId)
@@ -274,7 +278,6 @@ export const itaService = {
       throw new Error('ไม่สามารถบันทึกการแก้ไขเอกสารได้')
     }
   },
-
   /** ลบเอกสาร */
   async deleteDocument(docId: string | number): Promise<void> {
     ensureId('docId', docId)
