@@ -133,7 +133,7 @@
           type="file"
           class="sr-only"
           @change="handleFileSelect"
-          accept="application/pdf,.pdf"
+          accept=".pdf,application/pdf"
           :aria-invalid="Boolean(errors.file)"
           :aria-describedby="errors.file ? 'err-file' : 'file-hint'"
           :disabled="isSubmitting"
@@ -238,8 +238,8 @@ const emit = defineEmits<{
   (e: 'update:file', file: File | null): void
 }>()
 
-// Constants
-const MAX_FILE_MB = 10
+// Constants (ปรับเป็น 20MB)
+const MAX_FILE_MB = 20
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 
 // Local state (quarter เป็น string ให้ตรงกับ API)
@@ -336,11 +336,11 @@ const handleFileSelect = (event: Event) => {
   if (file) {
     if (file.size > MAX_FILE_BYTES) {
       selectedFile.value = null
-      errors.file = `ไฟล์มีขนาดเกิน ${MAX_FILE_MB}MB`
+      errors.file = `ไฟล์มีขนาดเกิน ${MAX_FILE_MB}MB (${prettySize(file.size)})`
       emit('update:file', null)
       return
     }
-    // type check เบา ๆ เผื่อบาง browser ไม่ลงท้าย application/pdf
+    // ตรวจชนิดไฟล์อย่างน้อยจากนามสกุล
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       selectedFile.value = null
       errors.file = 'รองรับเฉพาะไฟล์ .pdf เท่านั้น'
