@@ -195,12 +195,11 @@ export const itaService = {
   async getDocumentsByMoitId(moitId: string | number): Promise<ItaDocument[]> {
     ensureId('moitId', moitId)
     try {
-      const res = await apiService.get(
-        `/document/list?moit_id=${encodeURIComponent(String(moitId))}`,
-      )
+      // ✅ ใช้เส้นที่มีจริง
+      const res = await apiService.get('/document/all')
 
-      // payload อาจเป็น array ตรง ๆ หรือเป็น object มี items/rows/data
-      const payload = unwrap<unknown>(res, 'ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
+      // payload อาจเป็น array ตรง ๆ หรืออยู่ใน fields ยอดนิยม
+      const payload = unwrap<unknown>(res, 'ไม่สามารถดึงรายการเอกสารทั้งหมดได้')
 
       const toArray = (v: unknown): unknown[] => {
         if (Array.isArray(v)) return v
@@ -214,10 +213,14 @@ export const itaService = {
         return []
       }
 
-      const rawList = toArray(payload)
-      return rawList.map(normalizeDoc)
+      const allRaw = toArray(payload)
+      const allDocs = allRaw.map(normalizeDoc)
+      const target = String(moitId)
+
+      // ✅ กรองตาม moit_id ของหัวข้อปัจจุบัน
+      return allDocs.filter((d) => d.moit_id === target)
     } catch (e: unknown) {
-      console.error('getDocumentsByMoitId error:', e)
+      console.error('getDocumentsByMoitId (filter frontend) error:', e)
       throw new Error('ไม่สามารถดึงรายการเอกสารของหัวข้อนี้ได้')
     }
   },
