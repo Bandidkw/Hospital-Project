@@ -37,7 +37,7 @@
       />
 
       <DocumentTable
-        :documents="moit.documents"
+        :documents="moit?.documents ?? []"
         @edit="editDocument"
         @delete="confirmDeleteDocument"
       />
@@ -120,21 +120,15 @@ const fetchTopicDetails = async () => {
   loading.value = true
   error.value = null
   try {
-    // โหลด moit + documents พร้อมกัน (ไวกว่าเรียกทีละอัน)
     const [moitRaw, docs] = await Promise.all([
       itaService.getMoitById(moitId),
-      itaService.getDocumentsByMoitId(moitId),
+      itaService.getDocumentsByMoitId(moitId), // ← ดึงทั้งหมดแล้วกรอง
     ])
 
-    // แปลงรูป moit ให้ year_ita พร้อมใช้เสมอ และยัด documents ที่เพิ่งดึงมา
     moit.value = {
       ...toMoitWithYear(moitRaw),
-      documents: docs ?? [], // กัน null/undefined
+      documents: docs ?? [],
     }
-
-    // (ดีบักชั่วคราว) ดูว่ามีเอกสารกี่ไฟล์
-    // console.log('[MOIT]', moit.value)
-    // console.log('[DOCS]', moit.value.documents)
 
     resetForm()
   } catch (err: unknown) {
