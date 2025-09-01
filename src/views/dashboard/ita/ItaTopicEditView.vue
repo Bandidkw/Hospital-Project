@@ -122,7 +122,7 @@ const fetchTopicDetails = async () => {
   try {
     const [moitRaw, docs] = await Promise.all([
       itaService.getMoitById(moitId),
-      itaService.getDocumentsByMoitId(moitId),
+      itaService.getDocumentsByMoitId(moitId), // ← ดึงทั้งหมดแล้วกรอง
     ])
 
     moit.value = {

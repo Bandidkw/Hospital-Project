@@ -445,7 +445,6 @@ const formValid = computed(() => {
 // image preview
 const isValidUrl = (u: string) => {
   try {
-    // eslint-disable-next-line no-new
     new URL(u)
     return true
   } catch {
