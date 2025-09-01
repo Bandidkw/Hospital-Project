@@ -25,7 +25,7 @@
 
         <!-- จัดการเนื้อหา - ส่วนหัวข้อ -->
         <!-- แสดงหัวข้อนี้ถ้ามีเมนูย่อยที่ผู้ใช้เห็นได้ในกลุ่มนี้ -->
-        <li class="mb-2 mt-4" v-if="authStore.isSuperAdmin">
+        <li class="mb-2 mt-4" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <div class="menu-title text-gray-400 text-xs uppercase mb-2 flex items-center">
             <i class="fas fa-folder mr-2"></i> จัดการเนื้อหา
           </div>

@@ -1,3 +1,4 @@
+// src/types/ita.ts
 export interface ItaDocument {
   id: string
   moit_id?: string
@@ -5,7 +6,7 @@ export interface ItaDocument {
   title: string
   description?: string
   sub_topic: string
-  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4' | string
+  quarter?: '1' | '2' | '3' | '4' | string
   fileName?: string
   fileUrl?: string
   createdAt?: string
@@ -28,11 +29,11 @@ export interface Moit {
   description?: string
   createdAt: string
   updatedAt: string
-  year_ita_id?: string // จาก /ita/year-moit/:yearId
-  year_ita?: YearItaLite | null // จาก /moit/year/:moitId
+  year_ita_id?: string
+  year_ita?: YearItaLite | null
   documents?: ItaDocument[] | null
 
-  /** @deprecated: ของเดิมในโปรเจ็ค */
+  /** @deprecated **/
   ita_topic_id?: string
 }
 
@@ -58,7 +59,7 @@ export const assertMoitYearId = (moit: Moit): string => {
   return id
 }
 
-// src/types/ita.ts
+// สำหรับ view ฝั่ง edit
 export interface MoitWithYear extends Moit {
   year_ita: YearItaLite | null
   documents?: ItaDocument[] | null
