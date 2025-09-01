@@ -1,78 +1,39 @@
 // src/services/apiService.ts
-import axios, { type AxiosError, type AxiosInstance, type AxiosRequestHeaders } from 'axios'
+import axios, { AxiosError, type AxiosInstance } from 'axios'
 
-type BackendErrorPayload = {
-  status?: number
-  name?: string
-  description?: string
-  error?: boolean
-  message?: string
-  data?: unknown
-}
-
-function buildApiBase(): string {
-  const raw = (import.meta.env.VITE_API_BASE_URL || '').trim()
-  if (!raw) {
-    if (import.meta.env.DEV) {
-      console.warn('[apiService] VITE_API_BASE_URL is not defined. Fallback to /api/v1')
-    }
-    return '/api/v1'
-  }
-  const base = raw.replace(/\/+$/, '')
-  if (/(\/api(\/v\d+)?)$/i.test(base)) return base
-  return base + '/api/v1'
-}
-
-const API_BASE = buildApiBase()
-const WITH_CREDENTIALS =
-  String(import.meta.env.VITE_WITH_CREDENTIALS || '').toLowerCase() === 'true'
+type EnvShape = { env: { VITE_API_BASE_URL?: string } }
+const ORIGIN = ((import.meta as unknown as EnvShape).env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
+// API อยู่ใต้ /api/v1
+const API_BASE_URL = `${ORIGIN}/api/v1`
 
 const apiService: AxiosInstance = axios.create({
-  baseURL: API_BASE,
-  withCredentials: WITH_CREDENTIALS,
-  timeout: 30000,
+  baseURL: API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
 })
 
-if (import.meta.env.DEV) {
-  console.debug('[apiService] baseURL =', API_BASE, 'withCredentials =', WITH_CREDENTIALS)
-}
-
-export function isAxiosError<T = unknown>(err: unknown): err is AxiosError<T> {
-  return axios.isAxiosError(err)
-}
-
+// inject token
 apiService.interceptors.request.use((config) => {
-  const headers = (config.headers ?? {}) as AxiosRequestHeaders
-  const token = sessionStorage.getItem('token') || localStorage.getItem('token')
-  if (token) headers.Authorization = `Bearer ${token}`
-
-  if (config.data instanceof FormData) {
-    // อย่าตั้ง Content-Type เองสำหรับ FormData (boundary จะหาย)
-    if ('Content-Type' in headers) delete headers['Content-Type']
-  } else {
-    if (!headers['Content-Type']) headers['Content-Type'] = 'application/json'
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token')
+  if (token) {
+    config.headers = config.headers ?? {}
+    config.headers.Authorization = `Bearer ${token}`
   }
-
-  config.headers = headers
   return config
 })
 
+// unwrap / error handling คร่าว ๆ
 apiService.interceptors.response.use(
-  (res) => res,
-  (err: unknown) => {
-    if (isAxiosError<BackendErrorPayload>(err)) {
-      const code = err.response?.status
-      const body = err.response?.data
-      const msg =
-        body?.description ??
-        body?.message ??
-        (code ? `HTTP ${code}` : err.message) ??
-        'Request failed'
-      return Promise.reject(new Error(msg))
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      console.error('Unauthorized (401): token อาจหมดอายุ/ไม่ถูกต้อง')
     }
-    if (err instanceof Error) return Promise.reject(err)
-    return Promise.reject(new Error('Unknown error'))
+    return Promise.reject(error)
   },
 )
+
+export function isAxiosError(error: unknown): error is AxiosError {
+  return axios.isAxiosError(error)
+}
 
 export default apiService
