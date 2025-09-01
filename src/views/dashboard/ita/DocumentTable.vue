@@ -99,6 +99,7 @@
 import { ref, computed } from 'vue'
 import type { ItaDocument } from '@/types/ita'
 
+// ✅ รับได้ทั้ง array/null/undefined และตั้งค่าเริ่มต้นเป็น [] ด้วย withDefaults
 const props = withDefaults(
   defineProps<{
     documents?: ItaDocument[] | null

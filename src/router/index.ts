@@ -81,10 +81,9 @@ const router = createRouter({
         {
           path: 'news',
           name: 'dashboard-news',
-          component: () => import('../views/dashboard/DashboardNewsView.vue'),
-          meta: { requiresAuth: true, roles: ['admin', 'superadmin'] },
+          component: () => import('@/views/dashboard/DashboardNewsView.vue'),
+          meta: { requiresAuth: true, roles: ADMIN_ONLY },
         },
-
         {
           path: 'categories',
           name: 'dashboard-categories',
