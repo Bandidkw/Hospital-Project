@@ -142,9 +142,19 @@ const fetchTopicDetails = async () => {
   loading.value = true
   error.value = null
   try {
+    // 1) โหลดรายละเอียดหัวข้อ
     const data = await itaService.getMoitById(moitId)
     moit.value = toMoitWithYear(data)
-    resetForm() // เคลียร์ฟอร์มเมื่อโหลดข้อมูลสำเร็จ
+
+    // 2) โหลดเอกสารทั้งหมดของหัวข้อนี้ (จาก /document/all แล้ว filter ตาม moit_id)
+    if (moit.value?.id) {
+      const docs = await itaService.getDocumentsByMoitId(moit.value.id)
+      moit.value.documents = docs // ผูกเอกสารกลับเข้าไป
+    } else {
+      moit.value.documents = [] // กันไว้ให้เป็น array เสมอ
+    }
+
+    resetForm()
   } catch (err: unknown) {
     console.error('An error occurred during fetchTopicDetails:', err)
     error.value = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
