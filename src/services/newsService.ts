@@ -1,44 +1,49 @@
-// src/services/newsService.ts
-import apiService from './apiService'
-
-export interface News {
-  id: string
-  title: string
-  content: string
-  imageUrl?: string
-  createdAt: string
-  updatedAt: string
-  // ถ้ามี field เพิ่ม (category, isPublished ฯลฯ) ใส่ตรงนี้ได้เลย
+// News core
+export interface NewsItem {
+  id: string // uuid / snowflake
+  title: string // 4–120 chars
+  content: string // >=10 chars (รองรับ markdown/plain)
+  date: string // ISO date (YYYY-MM-DD) // วันที่เผยแพร่
+  imageUrl?: string | null // absolute URL
+  isPublished: boolean // true=เผยแพร่, false=ฉบับร่าง
+  slug?: string // สำหรับ public/SEO (ออปชัน)
+  createdAt: string // ISO datetime
+  updatedAt: string // ISO datetime
+  createdBy?: string // user id/username (ออปชัน)
+  updatedBy?: string // user id/username (ออปชัน)
 }
 
-type ListEnvelope<T> = { status: number; error: boolean; description?: string; data: T }
+export interface NewsCreate {
+  title: string
+  content: string
+  date: string // ISO date
+  imageUrl?: string | null
+  isPublished?: boolean // default: false
+}
 
-export const newsService = {
-  async getAll(): Promise<News[]> {
-    const res = await apiService.get('/news')
-    const body = res.data as ListEnvelope<News[]>
-    return body.data ?? []
-  },
-  async getById(id: string): Promise<News> {
-    const res = await apiService.get(`/news/${encodeURIComponent(id)}`)
-    const body = res.data as ListEnvelope<News>
-    return body.data
-  },
-  async create(formData: FormData): Promise<News> {
-    const res = await apiService.post('/news', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    const body = res.data as ListEnvelope<News>
-    return body.data
-  },
-  async update(id: string, formData: FormData): Promise<News> {
-    const res = await apiService.put(`/news/${encodeURIComponent(id)}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
-    const body = res.data as ListEnvelope<News>
-    return body.data
-  },
-  async remove(id: string): Promise<void> {
-    await apiService.delete(`/news/${encodeURIComponent(id)}`)
-  },
+export interface NewsUpdate {
+  title?: string
+  content?: string
+  date?: string
+  imageUrl?: string | null
+  isPublished?: boolean
+}
+
+// มาตรฐานตอบกลับแบบมีหน้า (pagination)
+export interface PageMeta {
+  page: number // เริ่มที่ 1
+  pageSize: number
+  totalItems: number
+  totalPages: number
+}
+
+export interface Paginated<T> {
+  items: T[]
+  meta: PageMeta
+}
+
+// รูปแบบ response แนะนำ (เรียบง่ายและสม่ำเสมอ)
+export interface ApiOk<T> {
+  data: T
+  message?: string
 }
