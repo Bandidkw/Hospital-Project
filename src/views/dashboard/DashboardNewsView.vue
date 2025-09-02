@@ -7,7 +7,7 @@
       </h2>
       <p class="text-gray-600">
         หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบข่าวสารและประกาศของโรงพยาบาล
-        <span class="text-gray-400">(Add, edit, delete hospital news & announcements)</span>
+        <!-- <span class="text-gray-400">(Add, edit, delete hospital news & announcements)</span> -->
       </p>
     </header>
 
