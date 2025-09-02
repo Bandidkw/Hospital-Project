@@ -7,6 +7,27 @@ import axios, {
 } from 'axios'
 
 /** -------------------------------
+ *  ชนิดช่วย (หลีกเลี่ยง any)
+ *  ------------------------------- */
+type BackendErrorPayload = {
+  status?: number
+  name?: string
+  description?: string
+  error?: boolean
+  message?: string
+  data?: unknown
+}
+
+type AxiosErrorWithMessage<T = unknown> = AxiosError<T> & {
+  userMessage?: string
+}
+
+interface HtmlResponseError extends Error {
+  status?: number
+  url?: string
+}
+
+/** -------------------------------
  *  Base URL builder
  *  ------------------------------- */
 function buildApiBase(): string {
@@ -46,15 +67,6 @@ export function isAxiosError<T = unknown>(err: unknown): err is AxiosError<T> {
   return axios.isAxiosError(err)
 }
 
-type BackendErrorPayload = {
-  status?: number
-  name?: string
-  description?: string
-  error?: boolean
-  message?: string
-  data?: unknown
-}
-
 function toUserMessage(status?: number, backendMsg?: string) {
   if (status === 401) return 'กรุณาเข้าสู่ระบบใหม่'
   if (status === 403) return 'คุณไม่มีสิทธิ์เข้าถึงส่วนนี้'
@@ -68,7 +80,7 @@ function toUserMessage(status?: number, backendMsg?: string) {
  *  ------------------------------- */
 apiService.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // บังคับ headers เป็น AxiosHeaders เสมอ
+    // บังคับ headers เป็น AxiosHeaders เสมอ (Axios v1)
     const headers = (config.headers = AxiosHeaders.from(config.headers))
 
     const token = getToken()
@@ -78,11 +90,10 @@ apiService.interceptors.request.use(
 
     const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData
     if (isFormData) {
-      headers.delete('Content-Type') // axios จะตั้ง boundary เอง
-    } else {
-      if (!headers.has('Content-Type')) {
-        headers.set('Content-Type', 'application/json')
-      }
+      // ปล่อยให้ axios ตั้ง boundary เอง
+      headers.delete('Content-Type')
+    } else if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json')
     }
 
     headers.set('X-Request-Id', Math.random().toString(36).slice(2, 10))
@@ -100,24 +111,35 @@ apiService.interceptors.request.use(
  *  Response Interceptor
  *  ------------------------------- */
 apiService.interceptors.response.use(
-  (res) => res,
-  (err: unknown) => {
-    if (isAxiosError<BackendErrorPayload>(err)) {
+  (res) => {
+    // debug + ตรวจ content-type แบบ type-safe (ไม่มี any)
+    const headersRecord = res.headers as unknown as Record<string, unknown>
+    const ct = String(headersRecord['content-type'] ?? '')
+
+    if (import.meta.env.DEV) {
+      console.debug('[apiService] ←', res.status, res.config?.url, 'ct=', ct)
+    }
+
+    // ถ้าได้ HTML แทน JSON ให้เด้ง error พร้อมข้อมูลประกอบ
+    if (ct.includes('text/html')) {
+      const htmlErr: HtmlResponseError = new Error('Server returned HTML (not JSON)')
+      htmlErr.status = res.status
+      htmlErr.url = `${res.config?.baseURL ?? ''}${res.config?.url ?? ''}`
+      return Promise.reject(htmlErr)
+    }
+
+    return res
+  },
+  (err) => {
+    // คง AxiosError เดิมไว้ และแนบ userMessage แบบ type-safe
+    if (axios.isAxiosError<BackendErrorPayload>(err)) {
       const code = err.response?.status
       const backendMsg =
         err.response?.data?.description || err.response?.data?.message || err.message
 
-      if (import.meta.env.DEV) {
-        console.error('[apiService] ←', {
-          code,
-          url: err.config?.url,
-          method: err.config?.method,
-          backend: backendMsg,
-        })
-      }
-
-      // handle 401 แบบรวมศูนย์ได้ตรงนี้ (logout/redirect)
-      return Promise.reject(new Error(toUserMessage(code, backendMsg)))
+      const ax = err as AxiosErrorWithMessage<BackendErrorPayload>
+      ax.userMessage = toUserMessage(code, backendMsg)
+      return Promise.reject(ax)
     }
     return Promise.reject(new Error('เกิดข้อผิดพลาดที่ไม่คาดคิด'))
   },
