@@ -31,7 +31,7 @@
           </div>
         </li>
         <!-- ข่าวสาร - เฉพาะ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
             to="/dashboard/news"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
