@@ -123,11 +123,48 @@ export const itaService = {
   /* --------------------------------- MOIT --------------------------------- */
 
   async getAllTopics(): Promise<YearIta[]> {
+    const path = '/user/year-moit'
+    const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now()
+
     try {
-      const res = await apiService.get('/user/year-moit')
+      // Log ก่อนยิง (เฉพาะตอน dev)
+      if (import.meta.env.DEV) {
+        console.debug('[itaService] → GET', path, {
+          baseURL: apiService.defaults.baseURL,
+          withCredentials: apiService.defaults.withCredentials,
+        })
+      }
+
+      const res = await apiService.get(path)
+
+      // Log หลังได้คำตอบ (เฉพาะตอน dev)
+      if (import.meta.env.DEV) {
+        const took = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0
+        const preview =
+          typeof res.data === 'string'
+            ? res.data.slice(0, 200)
+            : Array.isArray(res.data)
+              ? `array(${res.data.length})`
+              : typeof res.data
+
+        console.debug('[itaService] ← response', {
+          status: res.status,
+          url: res.config?.url,
+          fullUrl: `${res.config?.baseURL ?? ''}${res.config?.url ?? ''}`,
+          timeMs: Math.round(took),
+          dataType: typeof res.data,
+          preview,
+        })
+      }
+
+      // กันพลาด: ถ้า backend ส่ง HTML มา (เช่น SPA index.html) ให้ throw ทันที
+      if (typeof res.data === 'string' && /^\s*<!doctype html/i.test(res.data)) {
+        throw new Error('Invalid API response: expected JSON but received HTML')
+      }
+
       return unwrap<YearIta[]>(res, 'ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
     } catch (e: unknown) {
-      console.error('getAllTopics error:', e)
+      console.error('[itaService] getAllTopics error:', e)
       throw new Error('ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
     }
   },
