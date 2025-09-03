@@ -513,20 +513,20 @@ const previewImageOk = ref(true)
 function touchImagePreview() {
   previewImageOk.value = true
 }
+// DashboardNewsView.vue
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
+  if (!el) return
   const fallback =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
          <rect width="100%" height="100%" fill="#e5e7eb"/>
          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-               font-family="sans-serif" font-size="18" fill="#4b5563">
-           Image unavailable
-         </text>
+               font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
        </svg>`,
     )
-  if (el && el.src !== fallback) el.src = fallback
+  if (el.src !== fallback) el.src = fallback
 }
 
 /** ---------- CRUD ---------- */

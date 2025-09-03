@@ -44,16 +44,22 @@ function unwrap<T>(res: AxiosResponse<unknown>): T {
 }
 
 /** แปลง relative path -> absolute URL */
+// newsService.ts
 function toAbsoluteUrl(path?: string | null): string | null {
   if (!path) return null
   if (/^https?:\/\//i.test(path)) return path
-  const base = apiService.defaults.baseURL || ''
+
+  // ยึด baseURL ตรง ๆ (เช่น https://.../api/v1)
+  const base = apiService.defaults.baseURL || window.location.origin
   try {
-    const u = new URL(base, window.location.origin)
-    const origin = `${u.protocol}//${u.host}`
-    return `${origin}/${path.replace(/^\/+/, '')}`
+    // ใช้ WHATWG URL ให้ resolve ถูกต้องเสมอ
+    // base: https://host/api/v1
+    // path: uploads/ABC.jpg  => https://host/api/v1/uploads/ABC.jpg
+    const u = new URL(path.replace(/^\/+/, ''), base.endsWith('/') ? base : base + '/')
+    return u.toString()
   } catch {
-    return window.location.origin + '/' + path.replace(/^\/+/, '')
+    // fallback ง่าย ๆ
+    return base.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '')
   }
 }
 
