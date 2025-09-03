@@ -551,34 +551,60 @@ async function onSubmit() {
   if (!isValid.value || saving.value) return
   saving.value = true
   try {
+    // ทำให้ imageUrl สะอาด ('' หรือ '   ' -> null)
+    const cleanImageUrl = (currentNews.value.imageUrl?.trim() || null) as string | null
+
     if (editingNews.value) {
-      const id = currentNews.value.id
+      const id = String(currentNews.value.id) // บังคับเป็น string
       const updated = await updateNews(id, {
-        title: currentNews.value.title,
-        content: currentNews.value.content,
-        date: currentNews.value.date,
-        imageUrl: currentNews.value.imageUrl || null,
+        title: currentNews.value.title.trim(),
+        content: currentNews.value.content.trim(),
+        date: currentNews.value.date, // สมมติเป็น YYYY-MM-DD ถูกต้องแล้ว
+        imageUrl: cleanImageUrl,
         isPublished: currentNews.value.isPublished,
       })
-      const idx = newsList.value.findIndex((n) => n.id === id)
-      if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
+      const idx = newsList.value.findIndex((n) => String(n.id) === id)
+      if (idx !== -1) {
+        // รวมข้อมูลเดิมกับที่ backend ส่งกลับมา (กันฟิลด์สูญหาย)
+        newsList.value[idx] = { ...newsList.value[idx], ...updated }
+      }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
     } else {
       const created = await createNews({
-        title: currentNews.value.title,
-        content: currentNews.value.content,
+        title: currentNews.value.title.trim(),
+        content: currentNews.value.content.trim(),
         date: currentNews.value.date,
-        imageUrl: currentNews.value.imageUrl || null,
+        imageUrl: cleanImageUrl,
         isPublished: currentNews.value.isPublished,
       })
-      newsList.value.unshift(created)
+
+      // กันซ้ำ: ถ้ามี id นี้อยู่แล้ว ให้แทนที่; ถ้าไม่มี ค่อย unshift
+      const existIdx = newsList.value.findIndex((n) => String(n.id) === String(created.id))
+      if (existIdx >= 0) {
+        newsList.value[existIdx] = { ...newsList.value[existIdx], ...created }
+      } else {
+        newsList.value.unshift(created)
+      }
+
+      // (ถ้าคุณมี client-side pagination) กลับไปหน้าแรกเพื่อให้เห็นรายการใหม่ทันที
+      page.value = 1
+
       toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
-      console.log('Created news ID:', created.id)
+      console.debug('Created news ID:', created.id)
     }
+
     resetForm()
-  } catch (e) {
-    if (isAxiosError(e)) toast.error(e.message ?? 'บันทึกข่าวสารไม่สำเร็จ')
-    else toast.error('บันทึกข่าวสารไม่สำเร็จ')
+  } catch (e: unknown) {
+    // แสดงข้อความจาก backend ถ้ามี
+    if (isAxiosError(e)) {
+      const msg =
+        (e.response?.data as { message?: string } | undefined)?.message ??
+        e.message ??
+        'บันทึกข่าวสารไม่สำเร็จ'
+      toast.error(msg)
+    } else {
+      toast.error('บันทึกข่าวสารไม่สำเร็จ')
+    }
   } finally {
     saving.value = false
   }
