@@ -313,7 +313,7 @@
               <!-- Status -->
               <td class="px-4 py-3">
                 <span
-                  class="px-2.5 py-1 rounded-full text-xs font-semibold"
+                  class="px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
                   :class="
                     news.isPublished
                       ? 'bg-green-100 text-green-700'
