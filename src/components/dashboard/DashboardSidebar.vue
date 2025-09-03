@@ -243,7 +243,7 @@ const toast = useToast()
 watch(
   () => authStore.isAuthenticated,
   (newVal) => {
-    console.log('DashboardSidebar: isAuthenticated changed to', newVal)
+    // console.log('DashboardSidebar: isAuthenticated changed to', newVal)
     if (!newVal) {
       console.log('DashboardSidebar: User logged out, redirecting to home.')
       router.push({ name: 'home' })

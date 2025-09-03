@@ -573,6 +573,7 @@ async function onSubmit() {
       })
       newsList.value.unshift(created)
       toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
+      console.log('Created news ID:', created.id)
     }
     resetForm()
   } catch (e) {

@@ -53,7 +53,7 @@ function toAbsoluteUrl(path?: string | null): string | null {
   const base = apiService.defaults.baseURL || window.location.origin
   try {
     // ใช้ WHATWG URL ให้ resolve ถูกต้องเสมอ
-    // base: https://host/api/v1
+    // base: https://host/api/v1npm
     // path: uploads/ABC.jpg  => https://host/api/v1/uploads/ABC.jpg
     const u = new URL(path.replace(/^\/+/, ''), base.endsWith('/') ? base : base + '/')
     return u.toString()
