@@ -224,141 +224,105 @@
     <!-- LIST + CONTROLS -->
     <section class="card bg-white p-6 rounded-lg shadow-md">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-semibold text-gray-800">รายการข่าวสาร</h3>
-        <div class="flex gap-2 items-center">
-          <div class="relative">
-            <input
-              type="search"
-              v-model.trim="query"
-              :class="inputBase"
-              placeholder="ค้นหาจากหัวข้อ…"
-              aria-label="ค้นหาข่าว"
-            />
-            <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-          </div>
-          <select v-model="sortKey" :class="inputBase" aria-label="เรียงลำดับตาม">
+        <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+          <i class="fas fa-list"></i> รายการข่าวสาร
+        </h3>
+        <div class="flex items-center gap-2">
+          <input
+            type="search"
+            v-model.trim="query"
+            :class="inputBase"
+            placeholder="ค้นหาจากหัวข้อ…"
+            class="!py-1.5 !px-3 text-sm"
+          />
+          <select v-model="sortKey" class="border rounded-md p-1.5 text-sm">
             <option value="date">วันที่</option>
             <option value="title">หัวข้อ</option>
             <option value="status">สถานะ</option>
           </select>
           <button
-            class="px-3 py-2 border rounded-md hover:bg-gray-50"
+            class="p-2 border rounded-md hover:bg-gray-50"
             @click="sortAsc = !sortAsc"
             :title="sortAsc ? 'เรียง น้อย→มาก' : 'เรียง มาก→น้อย'"
-            aria-label="สลับทิศทางการเรียง"
           >
             <i :class="sortAsc ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
           </button>
-          <div class="hidden sm:flex items-center gap-2">
-            <label class="text-sm text-gray-600">แสดง</label>
-            <select v-model.number="pageSize" class="border rounded-md p-1">
-              <option :value="5">5</option>
-              <option :value="10">10</option>
-              <option :value="20">20</option>
-            </select>
-            <span class="text-sm text-gray-500">ต่อหน้า</span>
+        </div>
+      </div>
+
+      <!-- แสดงข่าวแบบ Card -->
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" v-if="pagedSortedNews.length > 0">
+        <div
+          v-for="news in pagedSortedNews"
+          :key="news.id"
+          class="border rounded-lg shadow-sm hover:shadow-md transition bg-white flex flex-col"
+        >
+          <!-- Thumbnail -->
+          <div class="aspect-video bg-gray-100 overflow-hidden rounded-t-lg">
+            <img
+              v-if="news.imageUrl"
+              :src="news.imageUrl"
+              alt="รูปข่าว"
+              class="w-full h-full object-cover"
+              @error="onImgError"
+            />
+            <div v-else class="flex items-center justify-center h-full text-gray-400 text-sm">
+              <i class="far fa-image text-2xl mr-2"></i> ไม่มีรูป
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="flex-1 flex flex-col p-4">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs text-gray-500">{{ prettyDate(news.date) }}</span>
+              <span
+                class="text-xs font-medium px-2 py-0.5 rounded-full"
+                :class="
+                  news.isPublished ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                "
+              >
+                {{ news.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
+              </span>
+            </div>
+            <h4 class="font-semibold text-gray-800 line-clamp-2 mb-1" :title="news.title">
+              {{ news.title }}
+            </h4>
+            <p class="text-sm text-gray-600 line-clamp-3 flex-1">
+              {{ news.content }}
+            </p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between p-3 border-t text-sm">
+            <div class="flex gap-2">
+              <button
+                @click="togglePublish(news)"
+                class="p-2 rounded hover:bg-indigo-50 text-indigo-600"
+                :title="news.isPublished ? 'ยกเลิกเผยแพร่' : 'เผยแพร่'"
+              >
+                <i :class="news.isPublished ? 'fas fa-bullhorn' : 'far fa-bullhorn'"></i>
+              </button>
+              <button
+                @click="editNews(news)"
+                class="p-2 rounded hover:bg-amber-50 text-amber-600"
+                title="แก้ไข"
+              >
+                <i class="fas fa-edit"></i>
+              </button>
+              <button
+                @click="confirmDeleteNews(news.id)"
+                class="p-2 rounded hover:bg-red-50 text-red-600"
+                title="ลบ"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Table -->
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-          <thead>
-            <tr class="bg-gray-100 text-left text-gray-600 uppercase text-sm leading-normal">
-              <th class="py-3 px-6 text-left">#</th>
-              <th class="py-3 px-6 text-left">หัวข้อ</th>
-              <th class="py-3 px-6 text-left">วันที่</th>
-              <th class="py-3 px-6 text-left">สถานะ</th>
-              <th class="py-3 px-6 text-center">การจัดการ</th>
-            </tr>
-          </thead>
-          <tbody class="text-gray-700 text-sm">
-            <tr
-              v-for="(news, index) in pagedSortedNews"
-              :key="news.id"
-              class="border-b border-gray-200 hover:bg-gray-50"
-            >
-              <td class="py-3 px-6">{{ (page - 1) * pageSize + index + 1 }}</td>
-              <td class="py-3 px-6">
-                <div class="flex items-center gap-2">
-                  <img
-                    v-if="news.imageUrl"
-                    :src="news.imageUrl ?? undefined"
-                    alt=""
-                    class="w-8 h-8 rounded object-cover border"
-                    @error="onImgError"
-                  />
-                  <span class="font-medium line-clamp-1" :title="news.title">{{ news.title }}</span>
-                </div>
-              </td>
-              <td class="py-3 px-6">{{ prettyDate(news.date) }}</td>
-              <td class="py-3 px-6">
-                <span
-                  :class="
-                    news.isPublished ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  "
-                  class="py-1 px-3 rounded-full text-xs"
-                >
-                  {{ news.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
-                </span>
-              </td>
-              <td class="py-3 px-6 text-center whitespace-nowrap">
-                <button
-                  @click="togglePublish(news)"
-                  class="inline-flex items-center bg-indigo-600 text-white px-3 py-1 rounded-md text-xs hover:bg-indigo-700 transition mr-2"
-                  title="สลับเผยแพร่"
-                >
-                  <i class="fas fa-bullhorn mr-1"></i>
-                  {{ news.isPublished ? 'Unpublish' : 'Publish' }}
-                </button>
-                <button
-                  @click="editNews(news)"
-                  class="inline-flex items-center bg-amber-500 text-white px-3 py-1 rounded-md text-xs hover:bg-amber-600 transition mr-2"
-                  title="แก้ไข"
-                >
-                  <i class="fas fa-edit mr-1"></i> แก้ไข
-                </button>
-                <button
-                  @click="confirmDeleteNews(news.id)"
-                  class="inline-flex items-center bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition"
-                  title="ลบ"
-                >
-                  <i class="fas fa-trash-alt mr-1"></i> ลบ
-                </button>
-              </td>
-            </tr>
-
-            <tr v-if="pagedSortedNews.length === 0">
-              <td colspan="5" class="py-8 text-center text-gray-500">ไม่พบข่าวที่ตรงกับการค้นหา</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex items-center justify-between mt-4">
-        <p class="text-sm text-gray-600">
-          แสดง {{ (page - 1) * pageSize + 1 }}–
-          {{ Math.min(page * pageSize, sortedNews.length) }} จาก {{ sortedNews.length }} รายการ
-        </p>
-        <div class="flex items-center gap-2">
-          <button
-            class="px-3 py-1.5 border rounded-md disabled:opacity-50"
-            :disabled="page <= 1"
-            @click="page--"
-          >
-            ก่อนหน้า
-          </button>
-          <span class="text-sm">หน้า {{ page }}</span>
-          <button
-            class="px-3 py-1.5 border rounded-md disabled:opacity-50"
-            :disabled="page * pageSize >= sortedNews.length"
-            @click="page++"
-          >
-            ถัดไป
-          </button>
-        </div>
+      <div v-else class="text-center text-gray-500 py-10">
+        <i class="fas fa-info-circle mr-2"></i> ยังไม่มีข่าวสาร
       </div>
     </section>
 
