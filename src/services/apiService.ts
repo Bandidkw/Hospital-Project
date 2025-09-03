@@ -6,7 +6,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 
-// กำหนด Base URL ของ Backend API (คงเดิม)
+// กำหนด Base URL ของ Backend API
 const API_BASE_URL = 'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1'
 
 const apiService: AxiosInstance = axios.create({
@@ -16,18 +16,14 @@ const apiService: AxiosInstance = axios.create({
   },
 })
 
-// ✅ ปรับให้เข้ากับ Axios v1 โดยไม่เปลี่ยนตัวแปรเดิม
 apiService.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // ให้ headers เป็น AxiosHeaders เสมอ (type-safe)
     const headers = (config.headers = AxiosHeaders.from(config.headers))
-
     const token = localStorage.getItem('token')
     if (token) {
       headers.set('Authorization', `Bearer ${token}`)
     }
 
-    // ถ้าเป็น FormData ให้ลบ Content-Type ออก ปล่อยให้ axios ใส่ boundary เอง
     const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData
     if (isFormData) {
       headers.delete('Content-Type')
