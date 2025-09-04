@@ -6,7 +6,7 @@
         <i class="fas fa-newspaper mr-3 text-blue-500"></i>
         จัดการข่าวสาร (News Management)
       </h2>
-      <p class="text-gray-600">เพิ่ม / แก้ไข / ลบข่าวสาร และสลับสถานะเผยแพร่</p>
+      <p class="text-gray-600">เพิ่ม / แก้ไข / สลับสถานะเผยแพร่ข่าวสาร</p>
     </header>
 
     <!-- Error banner -->
@@ -92,6 +92,21 @@
             </div>
           </div>
 
+          <!-- Excerpt (optional) -->
+          <div>
+            <label for="newsExcerpt" class="block text-sm font-medium text-gray-700">
+              คำโปรย (ไม่บังคับ)
+            </label>
+            <input
+              id="newsExcerpt"
+              type="text"
+              v-model.trim="currentNews.excerpt"
+              :class="inputBase"
+              placeholder="ข้อความสั้น ๆ สรุปข่าว"
+              maxlength="200"
+            />
+          </div>
+
           <!-- Date + Publish -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -135,21 +150,21 @@
             </div>
           </div>
 
-          <!-- Image URL -->
+          <!-- Image (file) -->
           <div>
-            <label for="newsImage" class="block text-sm font-medium text-gray-700">
-              รูปภาพประกอบ (URL)
+            <label for="newsImageFile" class="block text-sm font-medium text-gray-700">
+              รูปภาพประกอบ (อัปโหลดไฟล์)
             </label>
             <input
-              type="url"
-              id="newsImage"
-              v-model.trim="currentNews.imageUrl"
-              :class="inputBase"
-              placeholder="https://…"
-              inputmode="url"
-              @change="touchImagePreview"
+              id="newsImageFile"
+              type="file"
+              accept="image/*"
+              @change="onFileChange"
+              class="mt-1 block w-full text-sm"
             />
-            <p class="mt-1 text-xs text-gray-500">ใส่ URL รูปภาพ หรือเว้นว่าง</p>
+            <p class="mt-1 text-xs text-gray-500">
+              รองรับไฟล์ภาพ; ระบบจะอัปโหลดผ่าน multipart/form-data
+            </p>
           </div>
 
           <!-- Actions -->
@@ -445,7 +460,15 @@ import {
 } from '@/services/newsService'
 
 type NewsItem = ServiceNewsItem
-type NewsForm = Pick<NewsItem, 'id' | 'title' | 'content' | 'date' | 'imageUrl' | 'isPublished'>
+type NewsForm = {
+  id: string
+  title: string
+  content: string
+  excerpt?: string
+  date: string
+  imageUrl: string
+  isPublished: boolean
+}
 
 /** ---------- State ---------- */
 const toast = useToast()
@@ -458,13 +481,16 @@ const currentNews = ref<NewsForm>({
   id: '',
   title: '',
   content: '',
+  excerpt: '',
   date: new Date().toISOString().split('T')[0],
   imageUrl: '',
   isPublished: false,
 })
 
+const imageFile = ref<File | null>(null)
+
 const editingNews = ref(false)
-const saving = ref(false) // ← ลบ backtick เกินออก
+const saving = ref(false)
 const newsToDeleteId = ref<string | null>(null)
 const showConfirmModal = ref(false)
 
@@ -536,8 +562,14 @@ watch([page, pageSize], () => {
 
 /** ---------- Image Helpers ---------- */
 const previewImageOk = ref(true)
-function touchImagePreview() {
-  previewImageOk.value = true
+function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  imageFile.value = file
+  if (file) {
+    currentNews.value.imageUrl = URL.createObjectURL(file) // preview
+    previewImageOk.value = true
+  }
 }
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
@@ -572,12 +604,13 @@ async function fetchNews() {
 
 onMounted(fetchNews)
 
-/** helper: แปลง NewsItem → NewsForm (กัน excess property check) */
+/** helper: NewsItem -> NewsForm */
 function toForm(n: NewsItem): NewsForm {
   return {
     id: n.id,
     title: n.title,
     content: n.content,
+    excerpt: n.excerpt ?? '',
     date: n.date,
     imageUrl: n.imageUrl ?? '',
     isPublished: n.isPublished,
@@ -588,37 +621,40 @@ async function onSubmit() {
   if (!isValid.value || saving.value) return
   saving.value = true
   try {
-    const cleanImageUrl = (currentNews.value.imageUrl?.trim() || null) as string | null
+    // base fields
+    const base = {
+      title: currentNews.value.title.trim(),
+      content: currentNews.value.content.trim(),
+      excerpt: currentNews.value.excerpt?.trim() || undefined,
+      date: currentNews.value.date,
+    }
 
     if (editingNews.value) {
       const id = String(currentNews.value.id)
+      // ส่ง multipart เฉพาะเมื่อมีไฟล์ใหม่
       const updated = await updateNews(id, {
-        title: currentNews.value.title.trim(),
-        content: currentNews.value.content.trim(),
-        date: currentNews.value.date,
-        imageUrl: cleanImageUrl,
+        ...base,
         isPublished: currentNews.value.isPublished,
+        image: imageFile.value ?? null,
       })
       const idx = newsList.value.findIndex((n) => String(n.id) === id)
       if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
     } else {
+      // CREATE: multipart เสมอ
       const created = await createNews({
-        title: currentNews.value.title.trim(),
-        content: currentNews.value.content.trim(),
-        date: currentNews.value.date,
-        imageUrl: cleanImageUrl,
-        isPublished: currentNews.value.isPublished,
+        ...base,
+        image: imageFile.value ?? null,
       })
       const existIdx = newsList.value.findIndex((n) => String(n.id) === String(created.id))
       if (existIdx >= 0) newsList.value[existIdx] = { ...newsList.value[existIdx], ...created }
       else newsList.value.unshift(created)
       page.value = 1
       toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
-      console.debug('Created news ID:', created.id)
     }
 
     resetForm()
+    imageFile.value = null
   } catch (e: unknown) {
     const msg = isAxiosError(e)
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
@@ -630,7 +666,8 @@ async function onSubmit() {
 }
 
 function editNews(news: NewsItem) {
-  currentNews.value = toForm(news) // ← ใช้ตัวช่วยแทน {...news}
+  currentNews.value = toForm(news)
+  imageFile.value = null
   editingNews.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -645,6 +682,7 @@ function confirmDeleteNews(id: string) {
 }
 
 async function deleteNews() {
+  // ยังไม่มี DELETE /news/:id ใน backend
   toast.info('ยังไม่รองรับการลบข่าว (รอ backend เพิ่ม DELETE /news/:id)')
   resetDeleteConfirm()
 }
@@ -653,7 +691,7 @@ async function togglePublishStatus(news: NewsItem) {
   const id = news.id
   const prev = news.isPublished
   const next = !prev
-  news.isPublished = next
+  news.isPublished = next // optimistic
   try {
     const updated = await togglePublish(id, next)
     Object.assign(news, updated)
@@ -676,10 +714,12 @@ function resetForm() {
     id: '',
     title: '',
     content: '',
+    excerpt: '',
     date: new Date().toISOString().split('T')[0],
     imageUrl: '',
     isPublished: false,
   }
+  imageFile.value = null
   editingNews.value = false
   errors.value = { title: null, content: null, date: null }
   previewImageOk.value = true
