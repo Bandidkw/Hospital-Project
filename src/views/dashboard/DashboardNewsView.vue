@@ -596,12 +596,26 @@ function stripHtml(input: string): string {
   div.innerHTML = input
   return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim()
 }
-function makeExcerpt(raw: string, max = 200): string {
-  const clean = stripHtml(raw)
-  if (clean.length <= max) return clean
+
+function makeExcerpt(title: string, content: string, max = 200): string {
+  const t = stripHtml(title)
+  const c = stripHtml(content)
+  // รวม title + content เพื่อให้ได้บริบทมากขึ้น
+  const base = (t ? `${t} — ` : '') + c
+  const clean = base.trim()
+
+  if (!clean) return '' // ไม่มีอะไรให้สรุป
+
+  // ต้องยาวอย่างน้อย X ตัวอักษร (กันเคส “test”)
+  const MIN = 12
+  if (clean.length <= max) {
+    return clean.length < MIN ? t || c : clean
+  }
+
   const cut = clean.slice(0, max)
   const lastSpace = cut.lastIndexOf(' ')
-  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim() + '…'
+  const clipped = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim()
+  return (clipped.length < MIN ? t || clipped : clipped) + '…'
 }
 
 /** ---------- CRUD ---------- */
@@ -643,10 +657,11 @@ async function onSubmit() {
     const base = {
       title: currentNews.value.title.trim(),
       content: currentNews.value.content.trim(),
-      excerpt: (currentNews.value.excerpt?.trim() || makeExcerpt(currentNews.value.content)).slice(
-        0,
-        200,
-      ),
+      excerpt: (
+        currentNews.value.excerpt?.trim() ||
+        makeExcerpt(currentNews.value.title, currentNews.value.content)
+      ) // ✅ ใช้ title+content
+        .slice(0, 200),
       date: currentNews.value.date,
     }
 
