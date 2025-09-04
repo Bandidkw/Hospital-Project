@@ -1,7 +1,9 @@
 // src/services/newsService.ts
 import apiService from './apiService'
 
-/** --------- Types --------- */
+/** --------------------------------
+ * Types
+ * -------------------------------- */
 export type IdLike = string
 
 export interface NewsItem {
@@ -21,34 +23,41 @@ export interface ApiSuccess<T> {
   data: T
 }
 
+/** สร้างข่าวใหม่ (multipart/form-data) */
 export interface CreateNewsFormPayload {
   title: string
   content: string
-  excerpt?: string
+  /** backend บังคับ → ต้องส่งเสมอ (ฝั่ง caller ควรจัดให้ไม่ว่าง; ถ้าไม่กรอกให้สร้างจาก content แล้วส่งมา) */
+  excerpt: string
   date: string // YYYY-MM-DD
   image?: File | null
 }
 
-/** ใช้สำหรับอัปเดต (รองรับไฟล์ใหม่ด้วย) */
+/** อัปเดตข่าว (ถ้ามี image ใหม่จะส่ง multipart) */
 export interface UpdateNewsPayload {
   title?: string
   content?: string
+  /** backend บังคับ → ถึงจะ optional แต่เราจะเติม fallback เป็น '' ให้เสมอ */
   excerpt?: string
   date?: string
   isPublished?: boolean
-  image?: File | null // ถ้ามีไฟล์ → ส่งแบบ multipart
+  image?: File | null
 }
 
-/** --------- Helpers --------- */
-function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null) {
+/** --------------------------------
+ * Helpers
+ * -------------------------------- */
+function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null): void {
   if (value != null) {
     fd.append(key, value)
   }
 }
 
-/** --------- API Calls --------- */
+/** --------------------------------
+ * API Calls
+ * -------------------------------- */
 
-/** GET /news — ดึงทั้งหมด (ไม่มีหน้า) */
+/** GET /news — ดึงทั้งหมด */
 export async function getAllNews(): Promise<NewsItem[]> {
   const res = await apiService.get<ApiSuccess<NewsItem[]>>('/news')
   return res.data.data
@@ -63,10 +72,12 @@ export async function getNewsById(id: IdLike): Promise<NewsItem> {
 /** POST /news — สร้างข่าวใหม่ (multipart/form-data) */
 export async function createNews(payload: CreateNewsFormPayload): Promise<NewsItem> {
   const fd = new FormData()
+  // ฟิลด์ที่ backend บังคับ → append ตรง ๆ
   fd.append('title', payload.title)
   fd.append('content', payload.content)
-  appendIfDefined(fd, 'excerpt', payload.excerpt)
+  fd.append('excerpt', payload.excerpt ?? '') // การันตีไม่เป็น undefined
   fd.append('date', payload.date)
+  // ฟิลด์ optional → ใช้ helper
   appendIfDefined(fd, 'image', payload.image ?? null)
 
   const res = await apiService.post<ApiSuccess<NewsItem>>('/news', fd)
@@ -74,24 +85,44 @@ export async function createNews(payload: CreateNewsFormPayload): Promise<NewsIt
 }
 
 /** PUT /news/:id — แก้ไขข่าว
- *  ถ้ามี image ใหม่ → ส่ง multipart; ถ้าไม่มีก็ส่ง JSON ปกติ (ถ้า backend รองรับ)
+ *  - ถ้ามี image ใหม่ → ส่ง multipart
+ *  - ถ้าไม่มี image → ส่ง JSON (ตัด field image ออก และการันตี excerpt)
  */
 export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promise<NewsItem> {
-  if (payload.image) {
+  const hasFile = !!payload.image
+
+  if (hasFile) {
+    // ── multipart/form-data ──
     const fd = new FormData()
-    if (payload.title !== undefined) fd.append('title', payload.title)
-    if (payload.content !== undefined) fd.append('content', payload.content)
-    if (payload.excerpt !== undefined) fd.append('excerpt', payload.excerpt)
-    if (payload.date !== undefined) fd.append('date', payload.date)
-    if (payload.isPublished !== undefined) fd.append('isPublished', String(payload.isPublished))
-    fd.append('image', payload.image)
+    appendIfDefined(fd, 'title', payload.title)
+    appendIfDefined(fd, 'content', payload.content)
+
+    // excerpt เป็น required ทาง backend → ส่งเสมอ (fallback เป็น '')
+    fd.append('excerpt', payload.excerpt ?? '')
+
+    appendIfDefined(fd, 'date', payload.date)
+
+    if (payload.isPublished !== undefined) {
+      fd.append('isPublished', String(payload.isPublished))
+    }
+
+    // มีไฟล์แน่นอนในทางเดินนี้
+    fd.append('image', payload.image as File)
 
     const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, fd)
     return res.data.data
   }
 
-  // ไม่มีไฟล์ → ส่ง JSON
-  const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, payload)
+  // ── JSON ──
+  // ตัด image ออก แล้วการันตี excerpt ไม่เป็น undefined
+  const body: Omit<UpdateNewsPayload, 'image'> & { excerpt: string } = {
+    ...payload,
+    excerpt: payload.excerpt ?? '',
+  }
+  // ลบ field image ออกให้ชัดเจน (กัน backend reject)
+  delete (body as unknown as { image?: unknown }).image
+
+  const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, body)
   return res.data.data
 }
 
@@ -103,12 +134,11 @@ export async function togglePublish(id: IdLike, isPublished: boolean): Promise<N
   return res.data.data
 }
 
-/* หมายเหตุ:
-   - ตอนนี้ backend ยังไม่มี DELETE /news/:id
-     ถ้าเพิ่มเมื่อไรให้เสริมฟังก์ชันนี้:
-
-export async function deleteNews(id: IdLike): Promise<void> {
-  await apiService.delete(`/news/${id}`)
-}
-
-*/
+/** หมายเหตุ:
+ * - ขณะนี้ backend ยังไม่มี DELETE /news/:id
+ *   เมื่อพร้อมสามารถเพิ่มฟังก์ชันนี้ได้:
+ *
+ * export async function deleteNews(id: IdLike): Promise<void> {
+ *   await apiService.delete(`/news/${id}`)
+ * }
+ */

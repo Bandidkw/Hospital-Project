@@ -92,10 +92,10 @@
             </div>
           </div>
 
-          <!-- Excerpt (optional) -->
+          <!-- Excerpt (optional, จะถูกเติมอัตโนมัติถ้าเว้นว่าง) -->
           <div>
             <label for="newsExcerpt" class="block text-sm font-medium text-gray-700">
-              คำโปรย (ไม่บังคับ)
+              คำโปรย (ถ้าเว้นว่าง ระบบจะสร้างให้อัตโนมัติ)
             </label>
             <input
               id="newsExcerpt"
@@ -105,6 +105,10 @@
               placeholder="ข้อความสั้น ๆ สรุปข่าว"
               maxlength="200"
             />
+            <div class="flex justify-between mt-1 text-xs text-gray-500">
+              <span>{{ (currentNews.excerpt ?? '').length }}/200</span>
+              <span>ระบบจะจำกัดความยาวอัตโนมัติ</span>
+            </div>
           </div>
 
           <!-- Date + Publish -->
@@ -560,7 +564,7 @@ watch([page, pageSize], () => {
   /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ที่นี่ */
 })
 
-/** ---------- Image Helpers ---------- */
+/** ---------- Image & Preview Helpers ---------- */
 const previewImageOk = ref(true)
 function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
@@ -584,6 +588,20 @@ function onImgError(e: Event) {
        </svg>`,
     )
   if (el.src !== fallback) el.src = fallback
+}
+
+/** ---------- Excerpt Helpers (auto generate when empty) ---------- */
+function stripHtml(input: string): string {
+  const div = document.createElement('div')
+  div.innerHTML = input
+  return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim()
+}
+function makeExcerpt(raw: string, max = 200): string {
+  const clean = stripHtml(raw)
+  if (clean.length <= max) return clean
+  const cut = clean.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim() + '…'
 }
 
 /** ---------- CRUD ---------- */
@@ -621,17 +639,19 @@ async function onSubmit() {
   if (!isValid.value || saving.value) return
   saving.value = true
   try {
-    // base fields
+    // base fields (เติม excerpt อัตโนมัติถ้าเว้นว่าง)
     const base = {
       title: currentNews.value.title.trim(),
       content: currentNews.value.content.trim(),
-      excerpt: currentNews.value.excerpt?.trim() || undefined,
+      excerpt: (currentNews.value.excerpt?.trim() || makeExcerpt(currentNews.value.content)).slice(
+        0,
+        200,
+      ),
       date: currentNews.value.date,
     }
 
     if (editingNews.value) {
       const id = String(currentNews.value.id)
-      // ส่ง multipart เฉพาะเมื่อมีไฟล์ใหม่
       const updated = await updateNews(id, {
         ...base,
         isPublished: currentNews.value.isPublished,
@@ -641,7 +661,6 @@ async function onSubmit() {
       if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
     } else {
-      // CREATE: multipart เสมอ
       const created = await createNews({
         ...base,
         image: imageFile.value ?? null,
