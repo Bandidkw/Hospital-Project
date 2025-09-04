@@ -459,6 +459,7 @@ import {
   createNews,
   updateNews,
   togglePublish,
+  deleteNews as apiDeleteNews,
   type NewsItem as ServiceNewsItem,
 } from '@/services/newsService'
 
@@ -718,8 +719,26 @@ function confirmDeleteNews(id: string) {
 }
 
 async function deleteNews() {
-  toast.info('ยังไม่รองรับการลบข่าว (รอ backend เพิ่ม DELETE /news/:id)')
-  resetDeleteConfirm()
+  if (!newsToDeleteId.value) return
+  const id = newsToDeleteId.value
+
+  // optimistic: เอาออกจากหน้าจอก่อน แล้วค่อยเรียก API
+  const snapshot = [...newsList.value]
+  newsList.value = newsList.value.filter((n) => n.id !== id)
+
+  try {
+    await apiDeleteNews(id)
+    toast.success('ลบข่าวสารสำเร็จ!')
+  } catch (e) {
+    // rollback ถ้าล้มเหลว
+    newsList.value = snapshot
+    const msg = isAxiosError(e)
+      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
+      : 'ลบข่าวสารไม่สำเร็จ'
+    toast.error(msg)
+  } finally {
+    resetDeleteConfirm()
+  }
 }
 
 async function togglePublishStatus(news: NewsItem) {
