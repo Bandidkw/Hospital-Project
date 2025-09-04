@@ -134,11 +134,6 @@ export async function togglePublish(id: IdLike, isPublished: boolean): Promise<N
   return res.data.data
 }
 
-/** หมายเหตุ:
- * - ขณะนี้ backend ยังไม่มี DELETE /news/:id
- *   เมื่อพร้อมสามารถเพิ่มฟังก์ชันนี้ได้:
- *
- * export async function deleteNews(id: IdLike): Promise<void> {
- *   await apiService.delete(`/news/${id}`)
- * }
- */
+export async function deleteNews(id: IdLike): Promise<void> {
+  await apiService.delete(`/news/${id}`)
+}
