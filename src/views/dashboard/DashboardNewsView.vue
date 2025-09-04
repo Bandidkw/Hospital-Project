@@ -198,7 +198,7 @@
                 <div class="flex items-center justify-between">
                   <span class="text-xs text-gray-500">{{ prettyDate(currentNews.date) }}</span>
                   <span
-                    class="text-xs px-2 py-0.5 rounded-full"
+                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
                     :class="
                       currentNews.isPublished
                         ? 'bg-green-100 text-green-800'
@@ -292,6 +292,7 @@
                     :src="news.imageUrl"
                     class="w-10 h-10 rounded object-cover border"
                     @error="onImgError"
+                    alt=""
                   />
                   <div
                     v-else
@@ -328,7 +329,7 @@
               <td class="px-4 py-3 text-center">
                 <div class="flex justify-center gap-2">
                   <button
-                    @click="togglePublish(news)"
+                    @click="togglePublishStatus(news)"
                     class="p-2 rounded-md hover:bg-indigo-50 text-indigo-600"
                     :title="news.isPublished ? 'ยกเลิกเผยแพร่' : 'เผยแพร่'"
                   >
@@ -436,17 +437,15 @@ import { computed, ref, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from '@/services/apiService'
 import {
-  getAdminNewsList,
+  getAllNews,
   createNews,
   updateNews,
-  deleteNews as apiDeleteNews,
-  publishNews,
+  togglePublish,
   type NewsItem as ServiceNewsItem,
-  type PaginatedResponse,
 } from '@/services/newsService'
 
-/** ใช้ชนิดจาก service ตรง ๆ เพื่อไม่เกิด mismatch */
 type NewsItem = ServiceNewsItem
+type NewsForm = Pick<NewsItem, 'id' | 'title' | 'content' | 'date' | 'imageUrl' | 'isPublished'>
 
 /** ---------- State ---------- */
 const toast = useToast()
@@ -455,7 +454,7 @@ const newsList = ref<NewsItem[]>([])
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 
-const currentNews = ref<NewsItem>({
+const currentNews = ref<NewsForm>({
   id: '',
   title: '',
   content: '',
@@ -463,9 +462,9 @@ const currentNews = ref<NewsItem>({
   imageUrl: '',
   isPublished: false,
 })
-const editingNews = ref(false)
-const saving = ref(false)
 
+const editingNews = ref(false)
+const saving = ref(false) // ← ลบ backtick เกินออก
 const newsToDeleteId = ref<string | null>(null)
 const showConfirmModal = ref(false)
 
@@ -532,7 +531,7 @@ const pagedSortedNews = computed(() => {
 })
 
 watch([page, pageSize], () => {
-  /* ถ้าจะทำ server-side pagination ค่อยเรียก fetchNews() ตรงนี้ */
+  /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ที่นี่ */
 })
 
 /** ---------- Image Helpers ---------- */
@@ -540,7 +539,6 @@ const previewImageOk = ref(true)
 function touchImagePreview() {
   previewImageOk.value = true
 }
-// DashboardNewsView.vue
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
   if (!el) return
@@ -561,12 +559,12 @@ async function fetchNews() {
   loading.value = true
   errorMsg.value = null
   try {
-    // backend ส่ง data เป็น array → service แปลง normalized ให้แล้ว
-    const { items }: PaginatedResponse<ServiceNewsItem> = await getAdminNewsList(1, 100)
-    newsList.value = items
+    newsList.value = await getAllNews()
   } catch (e) {
-    if (isAxiosError(e)) errorMsg.value = e.message ?? 'ไม่สามารถดึงรายการข่าวได้'
-    else errorMsg.value = 'ไม่สามารถดึงรายการข่าวได้'
+    const msg = isAxiosError(e)
+      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
+      : 'ไม่สามารถดึงรายการข่าวได้'
+    errorMsg.value = msg
   } finally {
     loading.value = false
   }
@@ -574,27 +572,35 @@ async function fetchNews() {
 
 onMounted(fetchNews)
 
+/** helper: แปลง NewsItem → NewsForm (กัน excess property check) */
+function toForm(n: NewsItem): NewsForm {
+  return {
+    id: n.id,
+    title: n.title,
+    content: n.content,
+    date: n.date,
+    imageUrl: n.imageUrl ?? '',
+    isPublished: n.isPublished,
+  }
+}
+
 async function onSubmit() {
   if (!isValid.value || saving.value) return
   saving.value = true
   try {
-    // ทำให้ imageUrl สะอาด ('' หรือ '   ' -> null)
     const cleanImageUrl = (currentNews.value.imageUrl?.trim() || null) as string | null
 
     if (editingNews.value) {
-      const id = String(currentNews.value.id) // บังคับเป็น string
+      const id = String(currentNews.value.id)
       const updated = await updateNews(id, {
         title: currentNews.value.title.trim(),
         content: currentNews.value.content.trim(),
-        date: currentNews.value.date, // สมมติเป็น YYYY-MM-DD ถูกต้องแล้ว
+        date: currentNews.value.date,
         imageUrl: cleanImageUrl,
         isPublished: currentNews.value.isPublished,
       })
       const idx = newsList.value.findIndex((n) => String(n.id) === id)
-      if (idx !== -1) {
-        // รวมข้อมูลเดิมกับที่ backend ส่งกลับมา (กันฟิลด์สูญหาย)
-        newsList.value[idx] = { ...newsList.value[idx], ...updated }
-      }
+      if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
     } else {
       const created = await createNews({
@@ -604,41 +610,27 @@ async function onSubmit() {
         imageUrl: cleanImageUrl,
         isPublished: currentNews.value.isPublished,
       })
-
-      // กันซ้ำ: ถ้ามี id นี้อยู่แล้ว ให้แทนที่; ถ้าไม่มี ค่อย unshift
       const existIdx = newsList.value.findIndex((n) => String(n.id) === String(created.id))
-      if (existIdx >= 0) {
-        newsList.value[existIdx] = { ...newsList.value[existIdx], ...created }
-      } else {
-        newsList.value.unshift(created)
-      }
-
-      // (ถ้าคุณมี client-side pagination) กลับไปหน้าแรกเพื่อให้เห็นรายการใหม่ทันที
+      if (existIdx >= 0) newsList.value[existIdx] = { ...newsList.value[existIdx], ...created }
+      else newsList.value.unshift(created)
       page.value = 1
-
       toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
       console.debug('Created news ID:', created.id)
     }
 
     resetForm()
   } catch (e: unknown) {
-    // แสดงข้อความจาก backend ถ้ามี
-    if (isAxiosError(e)) {
-      const msg =
-        (e.response?.data as { message?: string } | undefined)?.message ??
-        e.message ??
-        'บันทึกข่าวสารไม่สำเร็จ'
-      toast.error(msg)
-    } else {
-      toast.error('บันทึกข่าวสารไม่สำเร็จ')
-    }
+    const msg = isAxiosError(e)
+      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
+      : 'บันทึกข่าวสารไม่สำเร็จ'
+    toast.error(msg)
   } finally {
     saving.value = false
   }
 }
 
 function editNews(news: NewsItem) {
-  currentNews.value = { ...news }
+  currentNews.value = toForm(news) // ← ใช้ตัวช่วยแทน {...news}
   editingNews.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
@@ -653,39 +645,25 @@ function confirmDeleteNews(id: string) {
 }
 
 async function deleteNews() {
-  if (!newsToDeleteId.value) return
-  const id = newsToDeleteId.value
-
-  const snapshot = [...newsList.value]
-  newsList.value = newsList.value.filter((n) => n.id !== id)
-
-  try {
-    await apiDeleteNews(id)
-    toast.success('ลบข่าวสารสำเร็จ!')
-  } catch (e) {
-    newsList.value = snapshot
-    if (isAxiosError(e)) toast.error(e.message ?? 'ลบข่าวสารไม่สำเร็จ')
-    else toast.error('ลบข่าวสารไม่สำเร็จ')
-  } finally {
-    resetDeleteConfirm()
-  }
+  toast.info('ยังไม่รองรับการลบข่าว (รอ backend เพิ่ม DELETE /news/:id)')
+  resetDeleteConfirm()
 }
 
-async function togglePublish(news: NewsItem) {
+async function togglePublishStatus(news: NewsItem) {
   const id = news.id
-  const next = !news.isPublished
   const prev = news.isPublished
-
-  // optimistic
+  const next = !prev
   news.isPublished = next
-
   try {
-    await publishNews(id, next)
+    const updated = await togglePublish(id, next)
+    Object.assign(news, updated)
     toast.success(next ? 'เผยแพร่ข่าวแล้ว' : 'ยกเลิกเผยแพร่แล้ว')
   } catch (e) {
     news.isPublished = prev
-    if (isAxiosError(e)) toast.error(e.message ?? 'เปลี่ยนสถานะไม่สำเร็จ')
-    else toast.error('เปลี่ยนสถานะไม่สำเร็จ')
+    const msg = isAxiosError(e)
+      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
+      : 'เปลี่ยนสถานะไม่สำเร็จ'
+    toast.error(msg)
   }
 }
 

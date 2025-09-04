@@ -63,9 +63,9 @@ apiService.interceptors.request.use(
     // ช่วยดีบักใน DEV
     if (import.meta.env?.DEV) {
       const method = (config.method ?? 'get').toUpperCase()
-      // eslint-disable-next-line no-console
+
       console.debug('[api] →', method, (config.baseURL ?? '') + (config.url ?? ''))
-      // eslint-disable-next-line no-console
+
       console.debug('[api] auth header:', headers.has('Authorization') ? 'present' : 'missing')
     }
 
@@ -78,7 +78,6 @@ apiService.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // eslint-disable-next-line no-console
       console.warn('[api] 401 Unauthorized - token invalid or expired.')
       // ถ้าอยากบังคับให้ออกจากระบบ ให้เปิดสองบรรทัดด้านล่าง
       // localStorage.removeItem('token')
