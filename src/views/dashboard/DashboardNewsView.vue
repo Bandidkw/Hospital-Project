@@ -56,7 +56,8 @@
                 type="text"
                 id="newsTitle"
                 v-model.trim="currentNews.title"
-                @input="validateField('title')"
+                @input="touched.title && validateField('title')"
+                @blur="touch('title')"
                 :class="inputClass('title')"
                 placeholder="เช่น ประกาศวันหยุดราชการ"
                 maxlength="120"
@@ -67,7 +68,9 @@
                 {{ currentNews.title.length }}/120
               </div>
             </div>
-            <p v-if="errors.title" class="mt-1 text-sm text-red-600">{{ errors.title }}</p>
+            <p v-if="touched.title && errors.title" class="mt-1 text-sm text-red-600">
+              {{ errors.title }}
+            </p>
           </div>
 
           <!-- Content -->
@@ -78,7 +81,8 @@
             <textarea
               id="newsContent"
               v-model.trim="currentNews.content"
-              @input="validateField('content')"
+              @input="touched.content && validateField('content')"
+              @blur="touch('content')"
               :class="textareaClass('content')"
               rows="6"
               placeholder="เนื้อหาข่าวโดยย่อ…"
@@ -87,7 +91,9 @@
               aria-required="true"
             ></textarea>
             <div class="flex justify-between mt-1">
-              <p v-if="errors.content" class="text-sm text-red-600">{{ errors.content }}</p>
+              <p v-if="touched.content && errors.content" class="text-sm text-red-600">
+                {{ errors.content }}
+              </p>
               <span class="text-xs text-gray-400">{{ currentNews.content.length }}/2000</span>
             </div>
           </div>
@@ -121,13 +127,15 @@
                 type="date"
                 id="newsDate"
                 v-model="currentNews.date"
-                @change="validateField('date')"
+                @change="touch('date')"
                 :class="inputClass('date')"
                 :min="minDate"
                 required
                 aria-required="true"
               />
-              <p v-if="errors.date" class="mt-1 text-sm text-red-600">{{ errors.date }}</p>
+              <p v-if="touched.date && errors.date" class="mt-1 text-sm text-red-600">
+                {{ errors.date }}
+              </p>
             </div>
 
             <div>
@@ -249,7 +257,6 @@
         </h3>
 
         <div class="flex items-center gap-2">
-          <!-- Search -->
           <div class="relative">
             <input
               type="search"
@@ -262,7 +269,6 @@
             ></i>
           </div>
 
-          <!-- Sort -->
           <select
             v-model="sortKey"
             class="border rounded-md text-sm py-1.5 px-2 focus:ring-blue-500 focus:border-blue-500"
@@ -272,7 +278,6 @@
             <option value="status">สถานะ</option>
           </select>
 
-          <!-- Toggle Asc/Desc -->
           <button
             class="p-2 border rounded-md hover:bg-gray-50"
             @click="sortAsc = !sortAsc"
@@ -283,7 +288,6 @@
         </div>
       </div>
 
-      <!-- Table -->
       <div class="overflow-x-auto rounded-lg border border-gray-200">
         <table class="min-w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-medium">
@@ -303,7 +307,6 @@
             >
               <td class="px-4 py-3 text-gray-500">{{ (page - 1) * pageSize + index + 1 }}</td>
 
-              <!-- Title with thumbnail -->
               <td class="px-4 py-3">
                 <div class="flex items-center gap-3 max-w-xs">
                   <img
@@ -325,12 +328,10 @@
                 </div>
               </td>
 
-              <!-- Date -->
               <td class="px-4 py-3 text-gray-600 whitespace-nowrap">
                 {{ prettyDate(news.date) }}
               </td>
 
-              <!-- Status -->
               <td class="px-4 py-3">
                 <span
                   class="px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap"
@@ -344,7 +345,6 @@
                 </span>
               </td>
 
-              <!-- Actions -->
               <td class="px-4 py-3 text-center">
                 <div class="flex justify-center gap-2">
                   <button
@@ -372,7 +372,6 @@
               </td>
             </tr>
 
-            <!-- Empty state -->
             <tr v-if="pagedSortedNews.length === 0">
               <td colspan="5" class="py-10 text-center text-gray-500">
                 <i class="fas fa-info-circle mr-2"></i> ไม่พบข่าวสาร
@@ -490,7 +489,6 @@ const currentNews = ref<NewsForm>({
   imageUrl: '',
   isPublished: false,
 })
-
 const imageFile = ref<File | null>(null)
 
 const editingNews = ref(false)
@@ -498,11 +496,16 @@ const saving = ref(false)
 const newsToDeleteId = ref<string | null>(null)
 const showConfirmModal = ref(false)
 
-/** ---------- Validation ---------- */
+/** ---------- Validation (with touched) ---------- */
 const errors = ref<Record<'title' | 'content' | 'date', string | null>>({
   title: null,
   content: null,
   date: null,
+})
+const touched = ref<Record<'title' | 'content' | 'date', boolean>>({
+  title: false,
+  content: false,
+  date: false,
 })
 
 function validateField(field: 'title' | 'content' | 'date') {
@@ -513,24 +516,28 @@ function validateField(field: 'title' | 'content' | 'date') {
       : v.title.length < 4
         ? 'หัวข้อควรยาวอย่างน้อย 4 ตัวอักษร'
         : null
-  }
-  if (field === 'content') {
+  } else if (field === 'content') {
     errors.value.content = !v.content.trim()
       ? 'กรุณากรอกเนื้อหา'
       : v.content.length < 10
         ? 'เนื้อหาควรยาวอย่างน้อย 10 ตัวอักษร'
         : null
-  }
-  if (field === 'date') {
+  } else if (field === 'date') {
     errors.value.date = !v.date ? 'กรุณาเลือกวันที่เผยแพร่' : null
   }
 }
+function touch(field: 'title' | 'content' | 'date') {
+  touched.value[field] = true
+  validateField(field)
+}
 
+// isValid ไม่ทำ side-effect
 const isValid = computed(() => {
-  validateField('title')
-  validateField('content')
-  validateField('date')
-  return !errors.value.title && !errors.value.content && !errors.value.date
+  const v = currentNews.value
+  const titleOk = v.title.trim().length >= 4
+  const contentOk = v.content.trim().length >= 10
+  const dateOk = !!v.date
+  return titleOk && contentOk && dateOk
 })
 
 /** ---------- Filters / Sort / Pagination (client-side) ---------- */
@@ -545,7 +552,6 @@ const filteredNews = computed(() => {
   const q = query.value.trim().toLowerCase()
   return q ? newsList.value.filter((n) => n.title.toLowerCase().includes(q)) : newsList.value
 })
-
 const sortedNews = computed(() => {
   const list = [...filteredNews.value]
   const dir = sortAsc.value ? 1 : -1
@@ -554,7 +560,6 @@ const sortedNews = computed(() => {
   else list.sort((a, b) => (Number(a.isPublished) - Number(b.isPublished)) * dir)
   return list
 })
-
 const pagedSortedNews = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return sortedNews.value.slice(start, start + pageSize.value)
@@ -571,7 +576,7 @@ function onFileChange(e: Event) {
   const file = input.files?.[0] ?? null
   imageFile.value = file
   if (file) {
-    currentNews.value.imageUrl = URL.createObjectURL(file) // preview
+    currentNews.value.imageUrl = URL.createObjectURL(file)
     previewImageOk.value = true
   }
 }
@@ -596,26 +601,17 @@ function stripHtml(input: string): string {
   div.innerHTML = input
   return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim()
 }
-
 function makeExcerpt(title: string, content: string, max = 200): string {
   const t = stripHtml(title)
   const c = stripHtml(content)
-  // รวม title + content เพื่อให้ได้บริบทมากขึ้น
   const base = (t ? `${t} — ` : '') + c
   const clean = base.trim()
-
-  if (!clean) return '' // ไม่มีอะไรให้สรุป
-
-  // ต้องยาวอย่างน้อย X ตัวอักษร (กันเคส “test”)
-  const MIN = 12
-  if (clean.length <= max) {
-    return clean.length < MIN ? t || c : clean
-  }
-
+  if (!clean) return ''
+  if (clean.length <= max) return clean
   const cut = clean.slice(0, max)
   const lastSpace = cut.lastIndexOf(' ')
   const clipped = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim()
-  return (clipped.length < MIN ? t || clipped : clipped) + '…'
+  return clipped + '…'
 }
 
 /** ---------- CRUD ---------- */
@@ -633,10 +629,8 @@ async function fetchNews() {
     loading.value = false
   }
 }
-
 onMounted(fetchNews)
 
-/** helper: NewsItem -> NewsForm */
 function toForm(n: NewsItem): NewsForm {
   return {
     id: n.id,
@@ -650,20 +644,25 @@ function toForm(n: NewsItem): NewsForm {
 }
 
 async function onSubmit() {
+  // mark touched และ validate ทั้งหมด
+  ;(['title', 'content', 'date'] as const).forEach((f) => {
+    touched.value[f] = true
+    validateField(f)
+  })
   if (!isValid.value || saving.value) return
+
   saving.value = true
   try {
-    // base fields (เติม excerpt อัตโนมัติถ้าเว้นว่าง)
     const base = {
       title: currentNews.value.title.trim(),
       content: currentNews.value.content.trim(),
       excerpt: (
         currentNews.value.excerpt?.trim() ||
         makeExcerpt(currentNews.value.title, currentNews.value.content)
-      ) // ✅ ใช้ title+content
-        .slice(0, 200),
+      ).slice(0, 200),
       date: currentNews.value.date,
     }
+    currentNews.value.excerpt = base.excerpt // อัปเดตกลับให้ผู้ใช้เห็น
 
     if (editingNews.value) {
       const id = String(currentNews.value.id)
@@ -703,6 +702,9 @@ function editNews(news: NewsItem) {
   currentNews.value = toForm(news)
   imageFile.value = null
   editingNews.value = true
+  // reset touched/errors เพื่อไม่ให้กรอบแดงติดมาจากสถานะก่อนหน้า
+  touched.value = { title: false, content: false, date: false }
+  errors.value = { title: null, content: null, date: null }
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -716,7 +718,6 @@ function confirmDeleteNews(id: string) {
 }
 
 async function deleteNews() {
-  // ยังไม่มี DELETE /news/:id ใน backend
   toast.info('ยังไม่รองรับการลบข่าว (รอ backend เพิ่ม DELETE /news/:id)')
   resetDeleteConfirm()
 }
@@ -756,6 +757,7 @@ function resetForm() {
   imageFile.value = null
   editingNews.value = false
   errors.value = { title: null, content: null, date: null }
+  touched.value = { title: false, content: false, date: false }
   previewImageOk.value = true
 }
 
@@ -764,14 +766,16 @@ function resetDeleteConfirm() {
   showConfirmModal.value = false
 }
 
-/** ---------- Utils ---------- */
+/** ---------- UI Utils ---------- */
 const inputBase =
   'mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500'
 function inputClass(field: 'title' | 'date') {
-  return `${inputBase} ${errors.value[field] ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
+  const hasError = touched.value[field] && !!errors.value[field]
+  return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
 }
 function textareaClass(field: 'content') {
-  return `${inputBase} ${errors.value[field] ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
+  const hasError = touched.value[field] && !!errors.value[field]
+  return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
 }
 function prettyDate(d: string) {
   if (!d) return '-'
@@ -789,7 +793,6 @@ const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
 </script>
 
 <style scoped>
-/* Small helpers */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
