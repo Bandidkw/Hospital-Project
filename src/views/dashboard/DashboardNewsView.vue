@@ -212,15 +212,19 @@
                 <img
                   v-if="previewImageOk && currentNews.imageUrl"
                   :src="currentNews.imageUrl"
-                  alt="รูปภาพประกอบข่าว"
+                  :alt="currentNews.title || 'รูปภาพประกอบข่าว'"
                   class="w-full h-full object-cover"
                   @error="onImgError"
                 />
-                <div v-else class="text-gray-400 text-sm flex flex-col items-center">
+                <div
+                  v-else
+                  class="w-full h-full text-gray-400 text-sm flex flex-col items-center justify-center"
+                >
                   <i class="far fa-image text-3xl mb-2"></i>
                   ไม่มีรูปภาพ
                 </div>
               </div>
+
               <div>
                 <div class="flex items-center justify-between">
                   <span class="text-xs text-gray-500">{{ prettyDate(currentNews.date) }}</span>
@@ -235,6 +239,7 @@
                     {{ currentNews.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
                   </span>
                 </div>
+
                 <h5 class="font-semibold mt-1 text-gray-800 line-clamp-2">
                   {{ currentNews.title || 'หัวข้อข่าว…' }}
                 </h5>
@@ -311,10 +316,10 @@
                 <div class="flex items-center gap-3 max-w-xs">
                   <img
                     v-if="news.imageUrl"
-                    :src="news.imageUrl"
+                    :src="absoluteImage(news.imageUrl)"
+                    :alt="news.title"
                     class="w-10 h-10 rounded object-cover border"
                     @error="onImgError"
-                    alt=""
                   />
                   <div
                     v-else
@@ -585,20 +590,20 @@ function onFileChange(e: Event) {
     previewImageOk.value = true
   }
 }
-function onImgError(e: Event) {
-  const el = e.target as HTMLImageElement
-  if (!el) return
-  const fallback =
-    'data:image/svg+xml;utf8,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-         <rect width="100%" height="100%" fill="#e5e7eb"/>
-         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-               font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
-       </svg>`,
-    )
-  if (el.src !== fallback) el.src = fallback
-}
+// function onImgError(e: Event) {
+//   const el = e.target as HTMLImageElement
+//   if (!el) return
+//   const fallback =
+//     'data:image/svg+xml;utf8,' +
+//     encodeURIComponent(
+//       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+//          <rect width="100%" height="100%" fill="#e5e7eb"/>
+//          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+//                font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
+//        </svg>`,
+//     )
+//   if (el.src !== fallback) el.src = fallback
+// }
 
 /** ---------- Excerpt Helpers ---------- */
 function stripHtml(input: string): string {
@@ -821,6 +826,31 @@ onUnmounted(() => {
     objectUrl.value = null
   }
 })
+
+function absoluteImage(u?: string | null): string {
+  if (!u) return ''
+  // กรณี backend ส่งเป็น URL เต็มอยู่แล้ว
+  if (/^https?:\/\//i.test(u)) return u
+
+  // ตัด /api/v1 ออกจาก VITE_API_BASE_URL เพื่อให้ได้ root จริงของไฟล์ /uploads
+  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+  const root = base.replace(/\/api(\/v\d+)?$/i, '') // ex: https://host → ไม่ติด /api/v1
+  return `${root}/${String(u).replace(/^\/+/, '')}`
+}
+
+function onImgError(e: Event) {
+  const el = e.target as HTMLImageElement
+  const fallback =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+         <rect width="100%" height="100%" fill="#e5e7eb"/>
+         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+               font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
+       </svg>`,
+    )
+  if (el.src !== fallback) el.src = fallback
+}
 </script>
 
 <style scoped>
