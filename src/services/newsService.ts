@@ -137,3 +137,19 @@ export async function togglePublish(id: IdLike, isPublished: boolean): Promise<N
 export async function deleteNews(id: IdLike): Promise<void> {
   await apiService.delete(`/news/${id}`)
 }
+
+// --- Public types ---
+export interface PublicNewsItem {
+  id: string
+  title: string
+  excerpt?: string
+  content?: string
+  date: string
+  imageUrl?: string | null
+  // อื่น ๆ ที่ backend อาจส่งมา เช่น createdAt/updatedAt ก็ไม่บังคับ
+}
+
+export async function getPublicNews(): Promise<PublicNewsItem[]> {
+  const res = await apiService.get<ApiSuccess<PublicNewsItem[]>>('/news/public')
+  return res.data.data
+}

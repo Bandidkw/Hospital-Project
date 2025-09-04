@@ -54,7 +54,12 @@ const router = createRouter({
       component: () => import('@/views/services/EmergencyView.vue'),
     },
 
-    { path: '/news', name: 'news', component: () => import('@/views/NewsView.vue') },
+    {
+      path: '/news',
+      name: 'public-news',
+      component: () => import('@/views/public/NewsView.vue'),
+      meta: { requiresAuth: false },
+    },
     { path: '/contact', name: 'contact', component: () => import('@/views/ContactView.vue') },
     {
       path: '/ita-documents-public',

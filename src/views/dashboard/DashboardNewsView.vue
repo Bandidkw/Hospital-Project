@@ -451,7 +451,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch, onUnmounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from '@/services/apiService'
 import {
@@ -491,6 +491,7 @@ const currentNews = ref<NewsForm>({
   isPublished: false,
 })
 const imageFile = ref<File | null>(null)
+const objectUrl = ref<string | null>(null) // ✅ กัน memory leak จาก URL.createObjectURL
 
 const editingNews = ref(false)
 const saving = ref(false)
@@ -532,7 +533,6 @@ function touch(field: 'title' | 'content' | 'date') {
   validateField(field)
 }
 
-// isValid ไม่ทำ side-effect
 const isValid = computed(() => {
   const v = currentNews.value
   const titleOk = v.title.trim().length >= 4
@@ -566,9 +566,7 @@ const pagedSortedNews = computed(() => {
   return sortedNews.value.slice(start, start + pageSize.value)
 })
 
-watch([page, pageSize], () => {
-  /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ที่นี่ */
-})
+watch([page, pageSize], () => {})
 
 /** ---------- Image & Preview Helpers ---------- */
 const previewImageOk = ref(true)
@@ -577,7 +575,13 @@ function onFileChange(e: Event) {
   const file = input.files?.[0] ?? null
   imageFile.value = file
   if (file) {
-    currentNews.value.imageUrl = URL.createObjectURL(file)
+    // revoke ของเดิมก่อน
+    if (objectUrl.value) {
+      URL.revokeObjectURL(objectUrl.value)
+      objectUrl.value = null
+    }
+    objectUrl.value = URL.createObjectURL(file)
+    currentNews.value.imageUrl = objectUrl.value
     previewImageOk.value = true
   }
 }
@@ -596,7 +600,7 @@ function onImgError(e: Event) {
   if (el.src !== fallback) el.src = fallback
 }
 
-/** ---------- Excerpt Helpers (auto generate when empty) ---------- */
+/** ---------- Excerpt Helpers ---------- */
 function stripHtml(input: string): string {
   const div = document.createElement('div')
   div.innerHTML = input
@@ -645,7 +649,6 @@ function toForm(n: NewsItem): NewsForm {
 }
 
 async function onSubmit() {
-  // mark touched และ validate ทั้งหมด
   ;(['title', 'content', 'date'] as const).forEach((f) => {
     touched.value[f] = true
     validateField(f)
@@ -663,7 +666,7 @@ async function onSubmit() {
       ).slice(0, 200),
       date: currentNews.value.date,
     }
-    currentNews.value.excerpt = base.excerpt // อัปเดตกลับให้ผู้ใช้เห็น
+    currentNews.value.excerpt = base.excerpt
 
     if (editingNews.value) {
       const id = String(currentNews.value.id)
@@ -703,7 +706,6 @@ function editNews(news: NewsItem) {
   currentNews.value = toForm(news)
   imageFile.value = null
   editingNews.value = true
-  // reset touched/errors เพื่อไม่ให้กรอบแดงติดมาจากสถานะก่อนหน้า
   touched.value = { title: false, content: false, date: false }
   errors.value = { title: null, content: null, date: null }
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -722,15 +724,13 @@ async function deleteNews() {
   if (!newsToDeleteId.value) return
   const id = newsToDeleteId.value
 
-  // optimistic: เอาออกจากหน้าจอก่อน แล้วค่อยเรียก API
   const snapshot = [...newsList.value]
   newsList.value = newsList.value.filter((n) => n.id !== id)
 
   try {
-    await apiDeleteNews(id)
+    await apiDeleteNews(id) // ✅ ใช้ชื่อ alias เดียวกัน
     toast.success('ลบข่าวสารสำเร็จ!')
   } catch (e) {
-    // rollback ถ้าล้มเหลว
     newsList.value = snapshot
     const msg = isAxiosError(e)
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
@@ -745,7 +745,7 @@ async function togglePublishStatus(news: NewsItem) {
   const id = news.id
   const prev = news.isPublished
   const next = !prev
-  news.isPublished = next // optimistic
+  news.isPublished = next
   try {
     const updated = await togglePublish(id, next)
     Object.assign(news, updated)
@@ -764,6 +764,11 @@ function cancelDelete() {
 }
 
 function resetForm() {
+  if (objectUrl.value) {
+    URL.revokeObjectURL(objectUrl.value) // ✅ ปิด URL เดิม
+    objectUrl.value = null
+  }
+
   currentNews.value = {
     id: '',
     title: '',
@@ -809,6 +814,13 @@ function prettyDate(d: string) {
   }
 }
 const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
+
+onUnmounted(() => {
+  if (objectUrl.value) {
+    URL.revokeObjectURL(objectUrl.value)
+    objectUrl.value = null
+  }
+})
 </script>
 
 <style scoped>
