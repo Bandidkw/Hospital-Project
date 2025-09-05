@@ -3,18 +3,42 @@
     <div class="container mx-auto text-center px-4">
       <h2 class="text-3xl font-bold text-gray-800 mb-10">ข่าวสารและกิจกรรมล่าสุด</h2>
 
-      <!-- เดิม: grid การ์ด 3 ใบแบบ static -->
-      <!-- ใหม่: ใช้ v-for กับ latestNews -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-0">
+      <!-- Error -->
+      <div
+        v-if="errorMsg"
+        class="mb-6 inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700"
+      >
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>{{ errorMsg }}</span>
+      </div>
+
+      <!-- Loading (optional simple skeleton) -->
+      <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-0">
+        <div
+          v-for="i in 3"
+          :key="i"
+          class="bg-white rounded-lg shadow-md overflow-hidden animate-pulse"
+        >
+          <div class="w-full aspect-video bg-gray-200"></div>
+          <div class="p-6 text-left">
+            <div class="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+            <div class="h-3 bg-gray-200 rounded w-full mb-2"></div>
+            <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-0">
         <div
           v-for="n in latestNews"
           :key="n.id"
           class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition text-left"
         >
-          <div class="w-full h-48 bg-gray-100 overflow-hidden">
+          <div class="aspect-video bg-gray-100 overflow-hidden">
             <img
               v-if="n.imageUrl"
-              :src="absoluteImage(n.imageUrl)"
+              :src="n.imageUrl"
               :alt="n.title"
               class="w-full h-full object-cover"
               @error="onImgError"
@@ -29,11 +53,11 @@
               {{ n.title }}
             </h3>
             <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-              {{ n.excerpt || n.content }}
+              {{ n.excerpt || n.content || '' }}
             </p>
             <RouterLink
               :to="{ name: 'public-news' }"
-              class="text-blue-500 hover:underline font-semibold"
+              class="text-blue-600 hover:underline font-semibold"
               @click="rememberScroll()"
             >
               อ่านเพิ่มเติม &rarr;
@@ -47,10 +71,12 @@
         </div>
       </div>
 
+      <!-- ดูทั้งหมด -->
       <div class="mt-12">
         <RouterLink
           :to="{ name: 'public-news' }"
-          class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold shadow hover:bg-blue-700 transition"
+          class="text-blue-600 hover:text-white hover:bg-blue-700 font-bold py-2 px-6 rounded-full border-2 border-blue-500 inline-block"
+          @click="rememberScroll()"
         >
           ดูข่าวสารทั้งหมด
         </RouterLink>
@@ -85,16 +111,8 @@ async function fetchNews() {
   }
 }
 
-// ใช้ชื่อ latestNews แทน latestThree หรือจะคงชื่อเดิมก็ได้
+// แสดงแค่ 3 รายการล่าสุด
 const latestNews = computed(() => items.value.slice(0, 3))
-
-function absoluteImage(u?: string | null): string {
-  if (!u) return ''
-  if (/^https?:\/\//i.test(u)) return u
-  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
-  const root = base.replace(/\/api(\/v\d+)?$/i, '') // ตัด /api/v1 ออก
-  return `${root}/${String(u).replace(/^\/+/, '')}`
-}
 
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
@@ -107,10 +125,38 @@ function onImgError(e: Event) {
                font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
        </svg>`,
     )
-  if (el.src !== fallback) el.src = fallback
+  if (el && el.src !== fallback) el.src = fallback
 }
 
 function rememberScroll() {
   sessionStorage.setItem('homeScrollY', String(window.scrollY || 0))
 }
 </script>
+
+<style scoped>
+/* util เล็ก ๆ */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.aspect-video {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+}
+.aspect-video > img,
+.aspect-video > div {
+  position: absolute;
+  inset: 0;
+}
+</style>

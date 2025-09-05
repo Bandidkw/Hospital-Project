@@ -60,7 +60,11 @@ function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null
 /** GET /news — ดึงทั้งหมด */
 export async function getAllNews(): Promise<NewsItem[]> {
   const res = await apiService.get<ApiSuccess<NewsItem[]>>('/news')
-  return res.data.data
+  const items = res.data.data ?? []
+  return items.map((n) => ({
+    ...n,
+    imageUrl: buildAssetUrl(n.imageUrl ?? ''),
+  }))
 }
 
 /** GET /news/:id — ดึงตาม id */
@@ -149,7 +153,20 @@ export interface PublicNewsItem {
   // อื่น ๆ ที่ backend อาจส่งมา เช่น createdAt/updatedAt ก็ไม่บังคับ
 }
 
+// ✅ แก้ getPublicNews ให้ map imageUrl เป็น URL เต็ม
 export async function getPublicNews(): Promise<PublicNewsItem[]> {
   const res = await apiService.get<ApiSuccess<PublicNewsItem[]>>('/news/public')
-  return res.data.data
+  const items = res.data.data ?? []
+  return items.map((n) => ({
+    ...n,
+    imageUrl: buildAssetUrl(n.imageUrl ?? ''),
+  }))
+}
+
+function buildAssetUrl(u?: string | null): string {
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+  const root = base.replace(/\/api(\/v\d+)?$/i, '') // ตัด /api, /api/v1 ออก
+  return `${root}/${String(u).replace(/^\/+/, '')}`
 }
