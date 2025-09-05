@@ -468,7 +468,6 @@ import {
   deleteNews as apiDeleteNews,
   type NewsItem as ServiceNewsItem,
 } from '@/services/newsService'
-
 type NewsItem = ServiceNewsItem
 
 // ฟอร์มฝั่งหน้า (ไม่บังคับ createdAt/updatedAt)

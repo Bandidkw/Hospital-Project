@@ -53,30 +53,24 @@ function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null
   if (value != null) fd.append(key, value)
 }
 
-/** ทำ URL รูปให้เป็น absolute จากค่า VITE_API_BASE_URL ที่ลงท้าย /api[/vN] */
+// ใช้ base แบบรวม /api/v1 เพราะ backend เสิร์ฟ uploads ใต้ /api/v1
 function buildAssetUrl(u?: string | null): string {
   if (!u) return ''
-  // ถ้าเป็น URL เต็มแล้ว ใช้เลย
   if (/^https?:\/\//i.test(u)) return u
 
-  // ใช้ base URL ตามจริง (รวม /api/v1) เพราะ backend เสิร์ฟ uploads ใต ้ /api/v1
   const fromEnv = (import.meta.env.VITE_API_BASE_URL || '').trim()
   const fromAxios = (apiService.defaults.baseURL || '').trim()
   let base = fromEnv || fromAxios
+  if (!base && typeof window !== 'undefined') base = window.location.origin
 
-  // กันกรณี base หาย (ตอน dev/prod) → fallback origin (อย่างน้อยไม่พัง)
-  if (!base && typeof window !== 'undefined') {
-    base = window.location.origin
-  }
+  const root = base.replace(/\/+$/, '') // ❗️อย่า strip /api/v1 ออก
 
-  // อย่าตัด /api/v1 ออก! เราเก็บไว้
-  const root = base.replace(/\/+$/, '')
-
-  // encode ชื่อไฟล์ภาษาไทย/ช่องว่าง (คงเครื่องหมาย /)
+  // กันชื่อไฟล์ภาษาไทย/ช่องว่าง — encode เฉพาะเมื่อยังไม่ได้ encode
   const cleaned = String(u).replace(/^\/+/, '')
-  const encoded = encodeURI(cleaned)
+  const alreadyEncoded = /%[0-9A-Fa-f]{2}/.test(cleaned)
+  const path = alreadyEncoded ? cleaned : encodeURI(cleaned)
 
-  return `${root}/${encoded}`
+  return `${root}/${path}`
 }
 
 /** map ให้ imageUrl เป็น absolute */
