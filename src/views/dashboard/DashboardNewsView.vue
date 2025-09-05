@@ -278,6 +278,7 @@
             v-model="sortKey"
             class="border rounded-md text-sm py-1.5 px-2 focus:ring-blue-500 focus:border-blue-500"
           >
+            <option value="updated">อัปเดตล่าสุด</option>
             <option value="date">วันที่</option>
             <option value="title">หัวข้อ</option>
             <option value="status">สถานะ</option>
@@ -484,11 +485,10 @@ type NewsForm = {
 const toast = useToast()
 
 /* ---------------- Helpers: sort by updatedAt desc ---------------- */
-function sortByUpdatedDesc<T extends { updatedAt: string }>(arr: T[]): T[] {
-  return [...arr].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-}
-function resort() {
-  newsList.value = sortByUpdatedDesc(newsList.value)
+function sortByUpdatedDesc<T extends { updatedAt?: string; createdAt?: string; date?: string }>(
+  arr: T[],
+): T[] {
+  return [...arr].sort((a, b) => getSortTime(b) - getSortTime(a))
 }
 
 /* ---------------- State ---------------- */
@@ -565,11 +565,16 @@ const filteredNews = computed(() => {
   return q ? newsList.value.filter((n) => n.title.toLowerCase().includes(q)) : newsList.value
 })
 
+function getSortTime(n: { updatedAt?: string; createdAt?: string; date?: string }) {
+  return new Date(n.updatedAt || n.createdAt || n.date || 0).getTime()
+}
+
 const sortedNews = computed(() => {
   const list = [...filteredNews.value]
   const dir = sortAsc.value ? 1 : -1
+
   if (sortKey.value === 'updated') {
-    list.sort((a, b) => (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * dir)
+    list.sort((a, b) => (getSortTime(a) - getSortTime(b)) * dir) // เริ่มต้น: อัปเดตล่าสุด
   } else if (sortKey.value === 'date') {
     list.sort((a, b) => (a.date > b.date ? 1 : -1) * dir)
   } else if (sortKey.value === 'title') {
@@ -635,21 +640,19 @@ function makeExcerpt(title: string, content: string, max = 200): string {
 }
 
 /* ---------------- CRUD ---------------- */
-async function fetchNews() {
-  loading.value = true
-  errorMsg.value = null
-  try {
-    const items = await getAllNews()
-    // ✅ เรียง “อัปเดตล่าสุดก่อน” ทันทีที่โหลด
-    newsList.value = sortByUpdatedDesc(items)
-  } catch (e) {
-    errorMsg.value = isAxiosError(e)
-      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
-      : 'ไม่สามารถดึงรายการข่าวได้'
-  } finally {
-    loading.value = false
-  }
+function resort() {
+  newsList.value = sortByUpdatedDesc(newsList.value)
 }
+
+async function fetchNews() {
+  // ...
+  const items = await getAllNews()
+  newsList.value = sortByUpdatedDesc(items) // ✅ โหลดมาปุ๊บ เรียงล่าสุดก่อน
+  // ...
+}
+
+// ใน onSubmit / togglePublishStatus / deleteNews หลังอัปเดต state เสร็จ
+resort()
 onMounted(fetchNews)
 
 function toForm(n: NewsItem): NewsForm {
@@ -694,7 +697,7 @@ async function onSubmit() {
       const idx = newsList.value.findIndex((n) => String(n.id) === id)
       if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
-      resort() // ✅ เลื่อนขึ้นบนเมื่อมีการอัปเดต
+      resort()
     } else {
       const created = await createNews({
         ...base,
@@ -705,7 +708,7 @@ async function onSubmit() {
       else newsList.value.unshift(created)
       page.value = 1
       toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
-      resort() // ✅ จัดเรียงใหม่ให้รายการใหม่อยู่บน
+      resort()
     }
 
     resetForm()
