@@ -468,9 +468,9 @@ import {
   deleteNews as apiDeleteNews,
   type NewsItem as ServiceNewsItem,
 } from '@/services/newsService'
-type NewsItem = ServiceNewsItem
 
-// ฟอร์มฝั่งหน้า (ไม่บังคับ createdAt/updatedAt)
+/* ---------- Types ---------- */
+type NewsItem = ServiceNewsItem
 type NewsForm = {
   id: string
   title: string
@@ -481,16 +481,10 @@ type NewsForm = {
   isPublished: boolean
 }
 
+/* ---------- Toast ---------- */
 const toast = useToast()
 
-/* ---------------- Helpers: sort by updatedAt desc ---------------- */
-function sortByUpdatedDesc<T extends { updatedAt?: string; createdAt?: string; date?: string }>(
-  arr: T[],
-): T[] {
-  return [...arr].sort((a, b) => getSortTime(b) - getSortTime(a))
-}
-
-/* ---------------- State ---------------- */
+/* ---------- State ---------- */
 const newsList = ref<NewsItem[]>([])
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
@@ -508,10 +502,11 @@ const imageFile = ref<File | null>(null)
 
 const editingNews = ref(false)
 const saving = ref(false)
+
 const newsToDeleteId = ref<string | null>(null)
 const showConfirmModal = ref(false)
 
-/* ---------------- Validation (touched) ---------------- */
+/* ---------- Validation (touched) ---------- */
 const errors = ref<Record<'title' | 'content' | 'date', string | null>>({
   title: null,
   content: null,
@@ -551,7 +546,7 @@ const isValid = computed(() => {
   return v.title.trim().length >= 4 && v.content.trim().length >= 10 && !!v.date
 })
 
-/* ---------------- Filters / Sort UI (ฝั่ง client) ---------------- */
+/* ---------- Filters / Sort (client) ---------- */
 const query = ref('')
 const sortKey = ref<'updated' | 'date' | 'title' | 'status'>('updated') // ค่าเริ่มต้น: อัปเดตล่าสุด
 const sortAsc = ref(false)
@@ -571,9 +566,8 @@ function getSortTime(n: { updatedAt?: string; createdAt?: string; date?: string 
 const sortedNews = computed(() => {
   const list = [...filteredNews.value]
   const dir = sortAsc.value ? 1 : -1
-
   if (sortKey.value === 'updated') {
-    list.sort((a, b) => (getSortTime(a) - getSortTime(b)) * dir) // เริ่มต้น: อัปเดตล่าสุด
+    list.sort((a, b) => (getSortTime(a) - getSortTime(b)) * dir)
   } else if (sortKey.value === 'date') {
     list.sort((a, b) => (a.date > b.date ? 1 : -1) * dir)
   } else if (sortKey.value === 'title') {
@@ -590,10 +584,10 @@ const pagedSortedNews = computed(() => {
 })
 
 watch([page, pageSize], () => {
-  /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ที่นี่ */
+  /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ตรงนี้ */
 })
 
-/* ---------------- Image helpers ---------------- */
+/* ---------- Image helpers ---------- */
 const previewImageOk = ref(true)
 function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
@@ -619,7 +613,13 @@ function onImgError(e: Event) {
   if (el.src !== fallback) el.src = fallback
 }
 
-/* ---------------- Excerpt helper ---------------- */
+// สำหรับเทมเพลต (หากยังอ้าง absoluteImage อยู่) — ตอนนี้ service คืน URL สมบูรณ์แล้ว จึงเป็น no-op
+function imgSrc(u?: string | null): string {
+  return u ?? ''
+}
+const absoluteImage = imgSrc
+
+/* ---------- Excerpt helpers ---------- */
 function stripHtml(input: string): string {
   const div = document.createElement('div')
   div.innerHTML = input
@@ -638,20 +638,31 @@ function makeExcerpt(title: string, content: string, max = 200): string {
   return clipped + '…'
 }
 
-/* ---------------- CRUD ---------------- */
+/* ---------- Sort utils ---------- */
+function sortByUpdatedDesc<T extends { updatedAt?: string; createdAt?: string; date?: string }>(
+  arr: T[],
+): T[] {
+  return [...arr].sort((a, b) => getSortTime(b) - getSortTime(a))
+}
 function resort() {
   newsList.value = sortByUpdatedDesc(newsList.value)
 }
 
+/* ---------- CRUD ---------- */
 async function fetchNews() {
-  // ...
-  const items = await getAllNews()
-  newsList.value = sortByUpdatedDesc(items) // ✅ โหลดมาปุ๊บ เรียงล่าสุดก่อน
-  // ...
+  loading.value = true
+  errorMsg.value = null
+  try {
+    const items = await getAllNews()
+    newsList.value = sortByUpdatedDesc(items) // โหลดแล้วเรียงล่าสุดก่อน
+  } catch (e) {
+    errorMsg.value = isAxiosError(e)
+      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
+      : 'ไม่สามารถดึงรายการข่าวได้'
+  } finally {
+    loading.value = false
+  }
 }
-
-// ใน onSubmit / togglePublishStatus / deleteNews หลังอัปเดต state เสร็จ
-resort()
 onMounted(fetchNews)
 
 function toForm(n: NewsItem): NewsForm {
@@ -734,9 +745,6 @@ function editNews(news: NewsItem) {
 function cancelEdit() {
   resetForm()
 }
-function absoluteImage(u?: string | null): string {
-  return u ?? ''
-}
 
 function confirmDeleteNews(id: string) {
   newsToDeleteId.value = id
@@ -753,7 +761,7 @@ async function deleteNews() {
   try {
     await apiDeleteNews(id)
     toast.success('ลบข่าวสารสำเร็จ!')
-    resort() // (เผื่อ updatedAt เปลี่ยนหลังลบ/ดึงใหม่ในอนาคต)
+    resort()
   } catch (e) {
     newsList.value = snapshot
     const msg = isAxiosError(e)
@@ -763,9 +771,6 @@ async function deleteNews() {
   } finally {
     resetDeleteConfirm()
   }
-}
-function cancelDelete() {
-  resetDeleteConfirm()
 }
 
 async function togglePublishStatus(news: NewsItem) {
@@ -777,7 +782,7 @@ async function togglePublishStatus(news: NewsItem) {
     const updated = await togglePublish(id, next)
     Object.assign(news, updated)
     toast.success(next ? 'เผยแพร่ข่าวแล้ว' : 'ยกเลิกเผยแพร่แล้ว')
-    resort() // ✅ หลังเปลี่ยนสถานะให้รายการขยับตาม updatedAt
+    resort()
   } catch (e) {
     news.isPublished = prev
     const msg = isAxiosError(e)
@@ -787,7 +792,7 @@ async function togglePublishStatus(news: NewsItem) {
   }
 }
 
-/* ---------------- Reset / Utils ---------------- */
+/* ---------- Reset / Utils ---------- */
 function resetForm() {
   currentNews.value = {
     id: '',
@@ -809,8 +814,12 @@ function resetDeleteConfirm() {
   newsToDeleteId.value = null
   showConfirmModal.value = false
 }
+// สำหรับปุ่มยกเลิกใน modal
+function cancelDelete() {
+  resetDeleteConfirm()
+}
 
-/* ---------------- UI Utils ---------------- */
+/* ---------- UI helpers ---------- */
 const inputBase =
   'mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500'
 function inputClass(field: 'title' | 'date') {
