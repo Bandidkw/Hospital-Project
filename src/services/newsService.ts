@@ -47,10 +47,39 @@ export interface UpdateNewsPayload {
 /** --------------------------------
  * Helpers
  * -------------------------------- */
+
+/** append ลง FormData เฉพาะกรณีค่ามีจริง */
 function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null): void {
-  if (value != null) {
-    fd.append(key, value)
+  if (value != null) fd.append(key, value)
+}
+
+/** ทำ URL รูปให้เป็น absolute จากค่า VITE_API_BASE_URL ที่ลงท้าย /api[/vN] */
+function buildAssetUrl(u?: string | null): string {
+  if (!u) return ''
+  // ถ้าเป็น URL เต็มอยู่แล้ว ก็ใช้เลย
+  if (/^https?:\/\//i.test(u)) return u
+
+  // 1) base priority: ENV > axios baseURL > window.origin
+  const fromEnv = (import.meta.env.VITE_API_BASE_URL || '').trim()
+  const fromAxios = (apiService.defaults.baseURL || '').trim()
+  let base = fromEnv || fromAxios
+  if (!base && typeof window !== 'undefined') {
+    base = window.location.origin
   }
+
+  // 2) ตัด /api หรือ /api/v{n} ที่ท้าย base ให้เหลือ root
+  const root = base.replace(/\/+$/, '').replace(/\/api(\/v\d+)?$/i, '')
+
+  // 3) encode พาธ (รองรับชื่อไฟล์ไทย/ช่องว่าง) แต่คงเครื่องหมาย /
+  const cleaned = String(u).replace(/^\/+/, '')
+  const encoded = encodeURI(cleaned)
+
+  return `${root}/${encoded}`
+}
+
+/** map ให้ imageUrl เป็น absolute */
+function mapImage<T extends { imageUrl?: string | null }>(obj: T): T {
+  return { ...obj, imageUrl: buildAssetUrl(obj.imageUrl ?? '') }
 }
 
 /** --------------------------------
@@ -61,31 +90,26 @@ function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null
 export async function getAllNews(): Promise<NewsItem[]> {
   const res = await apiService.get<ApiSuccess<NewsItem[]>>('/news')
   const items = res.data.data ?? []
-  return items.map((n) => ({
-    ...n,
-    imageUrl: buildAssetUrl(n.imageUrl ?? ''),
-  }))
+  return items.map(mapImage)
 }
 
 /** GET /news/:id — ดึงตาม id */
 export async function getNewsById(id: IdLike): Promise<NewsItem> {
   const res = await apiService.get<ApiSuccess<NewsItem>>(`/news/${id}`)
-  return res.data.data
+  return mapImage(res.data.data)
 }
 
 /** POST /news — สร้างข่าวใหม่ (multipart/form-data) */
 export async function createNews(payload: CreateNewsFormPayload): Promise<NewsItem> {
   const fd = new FormData()
-  // ฟิลด์ที่ backend บังคับ → append ตรง ๆ
   fd.append('title', payload.title)
   fd.append('content', payload.content)
-  fd.append('excerpt', payload.excerpt ?? '') // การันตีไม่เป็น undefined
+  fd.append('excerpt', payload.excerpt ?? '')
   fd.append('date', payload.date)
-  // ฟิลด์ optional → ใช้ helper
   appendIfDefined(fd, 'image', payload.image ?? null)
 
   const res = await apiService.post<ApiSuccess<NewsItem>>('/news', fd)
-  return res.data.data
+  return mapImage(res.data.data)
 }
 
 /** PUT /news/:id — แก้ไขข่าว
@@ -100,34 +124,26 @@ export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promis
     const fd = new FormData()
     appendIfDefined(fd, 'title', payload.title)
     appendIfDefined(fd, 'content', payload.content)
-
-    // excerpt เป็น required ทาง backend → ส่งเสมอ (fallback เป็น '')
-    fd.append('excerpt', payload.excerpt ?? '')
-
+    fd.append('excerpt', payload.excerpt ?? '') // excerpt required ฝั่ง backend
     appendIfDefined(fd, 'date', payload.date)
-
     if (payload.isPublished !== undefined) {
       fd.append('isPublished', String(payload.isPublished))
     }
-
-    // มีไฟล์แน่นอนในทางเดินนี้
     fd.append('image', payload.image as File)
 
     const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, fd)
-    return res.data.data
+    return mapImage(res.data.data)
   }
 
   // ── JSON ──
-  // ตัด image ออก แล้วการันตี excerpt ไม่เป็น undefined
   const body: Omit<UpdateNewsPayload, 'image'> & { excerpt: string } = {
     ...payload,
     excerpt: payload.excerpt ?? '',
   }
-  // ลบ field image ออกให้ชัดเจน (กัน backend reject)
   delete (body as unknown as { image?: unknown }).image
 
   const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, body)
-  return res.data.data
+  return mapImage(res.data.data)
 }
 
 /** PATCH /news/:id/toggle-publish — สลับสถานะเผยแพร่ */
@@ -135,9 +151,10 @@ export async function togglePublish(id: IdLike, isPublished: boolean): Promise<N
   const res = await apiService.patch<ApiSuccess<NewsItem>>(`/news/${id}/toggle-publish`, {
     isPublished,
   })
-  return res.data.data
+  return mapImage(res.data.data)
 }
 
+/** DELETE /news/:id */
 export async function deleteNews(id: IdLike): Promise<void> {
   await apiService.delete(`/news/${id}`)
 }
@@ -150,23 +167,11 @@ export interface PublicNewsItem {
   content?: string
   date: string
   imageUrl?: string | null
-  // อื่น ๆ ที่ backend อาจส่งมา เช่น createdAt/updatedAt ก็ไม่บังคับ
 }
 
-// ✅ แก้ getPublicNews ให้ map imageUrl เป็น URL เต็ม
+/** GET /news/public — รายการสำหรับหน้าเว็บสาธารณะ */
 export async function getPublicNews(): Promise<PublicNewsItem[]> {
   const res = await apiService.get<ApiSuccess<PublicNewsItem[]>>('/news/public')
   const items = res.data.data ?? []
-  return items.map((n) => ({
-    ...n,
-    imageUrl: buildAssetUrl(n.imageUrl ?? ''),
-  }))
-}
-
-function buildAssetUrl(u?: string | null): string {
-  if (!u) return ''
-  if (/^https?:\/\//i.test(u)) return u
-  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
-  const root = base.replace(/\/api(\/v\d+)?$/i, '') // ตัด /api, /api/v1 ออก
-  return `${root}/${String(u).replace(/^\/+/, '')}`
+  return items.map(mapImage)
 }
