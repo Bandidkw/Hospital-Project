@@ -56,21 +56,23 @@ function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null
 /** ทำ URL รูปให้เป็น absolute จากค่า VITE_API_BASE_URL ที่ลงท้าย /api[/vN] */
 function buildAssetUrl(u?: string | null): string {
   if (!u) return ''
-  // ถ้าเป็น URL เต็มอยู่แล้ว ก็ใช้เลย
+  // ถ้าเป็น URL เต็มแล้ว ใช้เลย
   if (/^https?:\/\//i.test(u)) return u
 
-  // 1) base priority: ENV > axios baseURL > window.origin
+  // ใช้ base URL ตามจริง (รวม /api/v1) เพราะ backend เสิร์ฟ uploads ใต ้ /api/v1
   const fromEnv = (import.meta.env.VITE_API_BASE_URL || '').trim()
   const fromAxios = (apiService.defaults.baseURL || '').trim()
   let base = fromEnv || fromAxios
+
+  // กันกรณี base หาย (ตอน dev/prod) → fallback origin (อย่างน้อยไม่พัง)
   if (!base && typeof window !== 'undefined') {
     base = window.location.origin
   }
 
-  // 2) ตัด /api หรือ /api/v{n} ที่ท้าย base ให้เหลือ root
-  const root = base.replace(/\/+$/, '').replace(/\/api(\/v\d+)?$/i, '')
+  // อย่าตัด /api/v1 ออก! เราเก็บไว้
+  const root = base.replace(/\/+$/, '')
 
-  // 3) encode พาธ (รองรับชื่อไฟล์ไทย/ช่องว่าง) แต่คงเครื่องหมาย /
+  // encode ชื่อไฟล์ภาษาไทย/ช่องว่าง (คงเครื่องหมาย /)
   const cleaned = String(u).replace(/^\/+/, '')
   const encoded = encodeURI(cleaned)
 
