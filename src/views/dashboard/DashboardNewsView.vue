@@ -456,7 +456,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, watch, onUnmounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from '@/services/apiService'
 import {
@@ -469,6 +469,8 @@ import {
 } from '@/services/newsService'
 
 type NewsItem = ServiceNewsItem
+
+// ฟอร์มฝั่งหน้า (ไม่บังคับ createdAt/updatedAt)
 type NewsForm = {
   id: string
   title: string
@@ -479,9 +481,17 @@ type NewsForm = {
   isPublished: boolean
 }
 
-/** ---------- State ---------- */
 const toast = useToast()
 
+/* ---------------- Helpers: sort by updatedAt desc ---------------- */
+function sortByUpdatedDesc<T extends { updatedAt: string }>(arr: T[]): T[] {
+  return [...arr].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+}
+function resort() {
+  newsList.value = sortByUpdatedDesc(newsList.value)
+}
+
+/* ---------------- State ---------------- */
 const newsList = ref<NewsItem[]>([])
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
@@ -496,14 +506,13 @@ const currentNews = ref<NewsForm>({
   isPublished: false,
 })
 const imageFile = ref<File | null>(null)
-const objectUrl = ref<string | null>(null) // ✅ กัน memory leak จาก URL.createObjectURL
 
 const editingNews = ref(false)
 const saving = ref(false)
 const newsToDeleteId = ref<string | null>(null)
 const showConfirmModal = ref(false)
 
-/** ---------- Validation (with touched) ---------- */
+/* ---------------- Validation (touched) ---------------- */
 const errors = ref<Record<'title' | 'content' | 'date', string | null>>({
   title: null,
   content: null,
@@ -540,15 +549,12 @@ function touch(field: 'title' | 'content' | 'date') {
 
 const isValid = computed(() => {
   const v = currentNews.value
-  const titleOk = v.title.trim().length >= 4
-  const contentOk = v.content.trim().length >= 10
-  const dateOk = !!v.date
-  return titleOk && contentOk && dateOk
+  return v.title.trim().length >= 4 && v.content.trim().length >= 10 && !!v.date
 })
 
-/** ---------- Filters / Sort / Pagination (client-side) ---------- */
+/* ---------------- Filters / Sort UI (ฝั่ง client) ---------------- */
 const query = ref('')
-const sortKey = ref<'date' | 'title' | 'status'>('date')
+const sortKey = ref<'updated' | 'date' | 'title' | 'status'>('updated') // ค่าเริ่มต้น: อัปเดตล่าสุด
 const sortAsc = ref(false)
 
 const page = ref(1)
@@ -558,54 +564,58 @@ const filteredNews = computed(() => {
   const q = query.value.trim().toLowerCase()
   return q ? newsList.value.filter((n) => n.title.toLowerCase().includes(q)) : newsList.value
 })
+
 const sortedNews = computed(() => {
   const list = [...filteredNews.value]
   const dir = sortAsc.value ? 1 : -1
-  if (sortKey.value === 'date') list.sort((a, b) => (a.date > b.date ? 1 : -1) * dir)
-  else if (sortKey.value === 'title') list.sort((a, b) => a.title.localeCompare(b.title) * dir)
-  else list.sort((a, b) => (Number(a.isPublished) - Number(b.isPublished)) * dir)
+  if (sortKey.value === 'updated') {
+    list.sort((a, b) => (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) * dir)
+  } else if (sortKey.value === 'date') {
+    list.sort((a, b) => (a.date > b.date ? 1 : -1) * dir)
+  } else if (sortKey.value === 'title') {
+    list.sort((a, b) => a.title.localeCompare(b.title) * dir)
+  } else {
+    list.sort((a, b) => (Number(a.isPublished) - Number(b.isPublished)) * dir)
+  }
   return list
 })
+
 const pagedSortedNews = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return sortedNews.value.slice(start, start + pageSize.value)
 })
 
-watch([page, pageSize], () => {})
+watch([page, pageSize], () => {
+  /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ที่นี่ */
+})
 
-/** ---------- Image & Preview Helpers ---------- */
+/* ---------------- Image helpers ---------------- */
 const previewImageOk = ref(true)
 function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0] ?? null
   imageFile.value = file
   if (file) {
-    // revoke ของเดิมก่อน
-    if (objectUrl.value) {
-      URL.revokeObjectURL(objectUrl.value)
-      objectUrl.value = null
-    }
-    objectUrl.value = URL.createObjectURL(file)
-    currentNews.value.imageUrl = objectUrl.value
+    currentNews.value.imageUrl = URL.createObjectURL(file)
     previewImageOk.value = true
   }
 }
-// function onImgError(e: Event) {
-//   const el = e.target as HTMLImageElement
-//   if (!el) return
-//   const fallback =
-//     'data:image/svg+xml;utf8,' +
-//     encodeURIComponent(
-//       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-//          <rect width="100%" height="100%" fill="#e5e7eb"/>
-//          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-//                font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
-//        </svg>`,
-//     )
-//   if (el.src !== fallback) el.src = fallback
-// }
+function onImgError(e: Event) {
+  const el = e.target as HTMLImageElement
+  if (!el) return
+  const fallback =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+         <rect width="100%" height="100%" fill="#e5e7eb"/>
+         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+               font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
+       </svg>`,
+    )
+  if (el.src !== fallback) el.src = fallback
+}
 
-/** ---------- Excerpt Helpers ---------- */
+/* ---------------- Excerpt helper ---------------- */
 function stripHtml(input: string): string {
   const div = document.createElement('div')
   div.innerHTML = input
@@ -624,17 +634,18 @@ function makeExcerpt(title: string, content: string, max = 200): string {
   return clipped + '…'
 }
 
-/** ---------- CRUD ---------- */
+/* ---------------- CRUD ---------------- */
 async function fetchNews() {
   loading.value = true
   errorMsg.value = null
   try {
-    newsList.value = await getAllNews()
+    const items = await getAllNews()
+    // ✅ เรียง “อัปเดตล่าสุดก่อน” ทันทีที่โหลด
+    newsList.value = sortByUpdatedDesc(items)
   } catch (e) {
-    const msg = isAxiosError(e)
+    errorMsg.value = isAxiosError(e)
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
       : 'ไม่สามารถดึงรายการข่าวได้'
-    errorMsg.value = msg
   } finally {
     loading.value = false
   }
@@ -683,6 +694,7 @@ async function onSubmit() {
       const idx = newsList.value.findIndex((n) => String(n.id) === id)
       if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
+      resort() // ✅ เลื่อนขึ้นบนเมื่อมีการอัปเดต
     } else {
       const created = await createNews({
         ...base,
@@ -693,11 +705,12 @@ async function onSubmit() {
       else newsList.value.unshift(created)
       page.value = 1
       toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
+      resort() // ✅ จัดเรียงใหม่ให้รายการใหม่อยู่บน
     }
 
     resetForm()
     imageFile.value = null
-  } catch (e: unknown) {
+  } catch (e) {
     const msg = isAxiosError(e)
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
       : 'บันทึกข่าวสารไม่สำเร็จ'
@@ -719,6 +732,9 @@ function editNews(news: NewsItem) {
 function cancelEdit() {
   resetForm()
 }
+function absoluteImage(u?: string | null): string {
+  return u ?? ''
+}
 
 function confirmDeleteNews(id: string) {
   newsToDeleteId.value = id
@@ -733,8 +749,9 @@ async function deleteNews() {
   newsList.value = newsList.value.filter((n) => n.id !== id)
 
   try {
-    await apiDeleteNews(id) // ✅ ใช้ชื่อ alias เดียวกัน
+    await apiDeleteNews(id)
     toast.success('ลบข่าวสารสำเร็จ!')
+    resort() // (เผื่อ updatedAt เปลี่ยนหลังลบ/ดึงใหม่ในอนาคต)
   } catch (e) {
     newsList.value = snapshot
     const msg = isAxiosError(e)
@@ -745,16 +762,20 @@ async function deleteNews() {
     resetDeleteConfirm()
   }
 }
+function cancelDelete() {
+  resetDeleteConfirm()
+}
 
 async function togglePublishStatus(news: NewsItem) {
   const id = news.id
   const prev = news.isPublished
   const next = !prev
-  news.isPublished = next
+  news.isPublished = next // optimistic
   try {
     const updated = await togglePublish(id, next)
     Object.assign(news, updated)
     toast.success(next ? 'เผยแพร่ข่าวแล้ว' : 'ยกเลิกเผยแพร่แล้ว')
+    resort() // ✅ หลังเปลี่ยนสถานะให้รายการขยับตาม updatedAt
   } catch (e) {
     news.isPublished = prev
     const msg = isAxiosError(e)
@@ -764,16 +785,8 @@ async function togglePublishStatus(news: NewsItem) {
   }
 }
 
-function cancelDelete() {
-  resetDeleteConfirm()
-}
-
+/* ---------------- Reset / Utils ---------------- */
 function resetForm() {
-  if (objectUrl.value) {
-    URL.revokeObjectURL(objectUrl.value) // ✅ ปิด URL เดิม
-    objectUrl.value = null
-  }
-
   currentNews.value = {
     id: '',
     title: '',
@@ -795,7 +808,7 @@ function resetDeleteConfirm() {
   showConfirmModal.value = false
 }
 
-/** ---------- UI Utils ---------- */
+/* ---------------- UI Utils ---------------- */
 const inputBase =
   'mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500'
 function inputClass(field: 'title' | 'date') {
@@ -819,38 +832,6 @@ function prettyDate(d: string) {
   }
 }
 const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
-
-onUnmounted(() => {
-  if (objectUrl.value) {
-    URL.revokeObjectURL(objectUrl.value)
-    objectUrl.value = null
-  }
-})
-
-function absoluteImage(u?: string | null): string {
-  if (!u) return ''
-  // กรณี backend ส่งเป็น URL เต็มอยู่แล้ว
-  if (/^https?:\/\//i.test(u)) return u
-
-  // ตัด /api/v1 ออกจาก VITE_API_BASE_URL เพื่อให้ได้ root จริงของไฟล์ /uploads
-  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
-  const root = base.replace(/\/api(\/v\d+)?$/i, '') // ex: https://host → ไม่ติด /api/v1
-  return `${root}/${String(u).replace(/^\/+/, '')}`
-}
-
-function onImgError(e: Event) {
-  const el = e.target as HTMLImageElement
-  const fallback =
-    'data:image/svg+xml;utf8,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-         <rect width="100%" height="100%" fill="#e5e7eb"/>
-         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-               font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
-       </svg>`,
-    )
-  if (el.src !== fallback) el.src = fallback
-}
 </script>
 
 <style scoped>
