@@ -210,12 +210,13 @@
                 class="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
               >
                 <img
-                  v-if="previewImageOk && currentNews.imageUrl"
-                  :src="currentNews.imageUrl"
+                  v-if="currentNews.imageUrl"
+                  :src="imgSrc(currentNews.imageUrl)"
                   :alt="currentNews.title || 'รูปภาพประกอบข่าว'"
                   class="w-full h-full object-cover"
-                  @error="onImgError"
+                  @error="onImgErrorSwap"
                 />
+
                 <div
                   v-else
                   class="w-full h-full text-gray-400 text-sm flex flex-col items-center justify-center"
@@ -459,7 +460,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { isAxiosError } from '@/services/apiService'
+import apiService, { isAxiosError } from '@/services/apiService'
 import {
   getAllNews,
   createNews,
@@ -615,8 +616,46 @@ function onImgError(e: Event) {
 
 // สำหรับเทมเพลต (หากยังอ้าง absoluteImage อยู่) — ตอนนี้ service คืน URL สมบูรณ์แล้ว จึงเป็น no-op
 function imgSrc(u?: string | null): string {
-  return u ?? ''
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+  const base = String(
+    apiService.defaults.baseURL || import.meta.env.VITE_API_BASE_URL || '',
+  ).replace(/\/+$/, '')
+  const path = String(u).replace(/^\/+/, '')
+  return `${base}/${path}`
 }
+
+function onImgErrorSwap(e: Event) {
+  const img = e.target as HTMLImageElement
+  if (!img || img.dataset.fallbackTried === '1') {
+    // ใช้ placeholder รอบสุดท้าย
+    const fallback =
+      'data:image/svg+xml;utf8,' +
+      encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+           <rect width="100%" height="100%" fill="#e5e7eb"/>
+           <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+                 font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
+         </svg>`,
+      )
+    if (img && img.src !== fallback) img.src = fallback
+    return
+  }
+
+  try {
+    const url = new URL(img.src)
+    // toggle ระหว่าง /api[/vX]/ กับ root
+    const toggledPath = url.pathname.match(/^\/api\/v\d+\/uploads\//)
+      ? url.pathname.replace(/^\/api\/v\d+\//, '/')
+      : url.pathname.replace(/^\/+/, '/api/v1/') // ปรับเป็น /api/v1 ถ้าเดิมไม่มี
+    url.pathname = toggledPath
+    img.dataset.fallbackTried = '1'
+    img.src = url.toString()
+  } catch {
+    img.dataset.fallbackTried = '1'
+  }
+}
+
 const absoluteImage = imgSrc
 
 /* ---------- Excerpt helpers ---------- */
