@@ -1,8 +1,10 @@
 <template>
-  <main class="max-w-6xl mx-auto px-4 py-8">
+  <main class="max-w-6xl mx-auto px-4 py-10">
     <!-- Header -->
-    <header class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+    <header class="mb-8 text-center md:text-left">
+      <h1
+        class="text-3xl md:text-4xl font-extrabold text-gray-900 flex items-center justify-center md:justify-start gap-3"
+      >
         <i class="fas fa-bullhorn text-blue-600"></i>
         ข่าวสารและประกาศ
       </h1>
@@ -10,28 +12,30 @@
     </header>
 
     <!-- Controls -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+      <!-- Search -->
       <div class="relative w-full sm:max-w-xs">
         <input
           type="search"
           v-model.trim="query"
           placeholder="ค้นหาหัวข้อข่าว..."
-          class="w-full pl-9 pr-3 py-2 rounded-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+          class="w-full pl-10 pr-3 py-2 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
         />
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
       </div>
 
+      <!-- Sort -->
       <div class="flex items-center gap-2">
         <label class="text-sm text-gray-600">เรียงตาม</label>
         <select
           v-model="sortKey"
-          class="border rounded-md text-sm py-2 px-2 focus:ring-blue-500 focus:border-blue-500"
+          class="border rounded-md text-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="date">วันที่</option>
           <option value="title">หัวข้อ</option>
         </select>
         <button
-          class="p-2 border rounded-md hover:bg-gray-50"
+          class="p-2 border rounded-md hover:bg-gray-100 transition"
           @click="sortAsc = !sortAsc"
           :title="sortAsc ? 'เรียง น้อย→มาก' : 'เรียง มาก→น้อย'"
         >
@@ -43,7 +47,8 @@
     <!-- Error -->
     <div
       v-if="errorMsg"
-      class="mb-6 rounded-md border border-red-200 bg-red-50 p-3 text-red-700 flex items-center justify-between"
+      class="mb-8 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 flex items-center justify-between"
+      role="alert"
     >
       <div class="flex items-center gap-2">
         <i class="fas fa-exclamation-triangle"></i>
@@ -51,18 +56,23 @@
       </div>
       <button
         @click="fetchNews"
-        class="px-3 py-1 rounded-md border border-red-300 hover:bg-white text-sm"
+        class="px-4 py-1.5 rounded-md border border-red-300 hover:bg-white text-sm font-medium"
       >
         ลองใหม่
       </button>
     </div>
 
     <!-- Grid -->
-    <section>
+    <section :aria-busy="loading ? 'true' : 'false'">
       <!-- Loading skeleton -->
       <div v-if="loading" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="i in 6" :key="i" class="rounded-lg border overflow-hidden">
-          <div class="animate-pulse h-40 bg-gray-200"></div>
+        <div
+          v-for="i in 6"
+          :key="i"
+          class="rounded-xl border overflow-hidden bg-white shadow-sm"
+          aria-hidden="true"
+        >
+          <div class="animate-pulse h-56 bg-gray-200"></div>
           <div class="p-4 space-y-2">
             <div class="h-4 bg-gray-200 rounded w-3/4"></div>
             <div class="h-3 bg-gray-200 rounded w-full"></div>
@@ -76,29 +86,52 @@
         <article
           v-for="n in pagedSortedNews"
           :key="n.id"
-          class="group rounded-lg border overflow-hidden bg-white hover:shadow-md transition"
+          class="group rounded-2xl border overflow-hidden bg-white shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
-          <div class="relative h-44 bg-gray-100 overflow-hidden">
+          <!-- Image -->
+          <div class="relative h-56 md:h-64 bg-gray-100 overflow-hidden">
             <img
               v-if="n.imageUrl"
               :src="absoluteImage(n.imageUrl)"
-              alt=""
-              class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform"
+              :alt="n.title"
+              class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
               @error="onImgError"
             />
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
               <i class="far fa-image text-3xl"></i>
             </div>
+
+            <!-- gradient bottom -->
+            <div
+              class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent"
+            ></div>
+
+            <!-- date badge -->
+            <div class="absolute left-3 bottom-3">
+              <span
+                class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-white/90 text-gray-800 backdrop-blur"
+              >
+                <i class="far fa-calendar"></i>{{ prettyDate(n.date) }}
+              </span>
+            </div>
           </div>
 
-          <div class="p-4">
-            <time class="text-xs text-gray-500">{{ prettyDate(n.date) }}</time>
-            <h2 class="mt-1 font-semibold text-gray-900 line-clamp-2">{{ n.title }}</h2>
-            <p class="text-sm text-gray-600 mt-1 line-clamp-3">{{ n.excerpt || n.content }}</p>
+          <!-- Content -->
+          <div class="p-5">
+            <h2
+              class="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors"
+              :title="n.title"
+            >
+              {{ n.title }}
+            </h2>
+            <p class="text-sm text-gray-600 mt-2 line-clamp-3">{{ n.excerpt || n.content }}</p>
 
-            <div class="flex items-center justify-between mt-3">
-              <button class="text-blue-600 text-sm hover:underline" @click="openQuickView(n)">
-                อ่านต่อ
+            <div class="mt-4 flex items-center justify-between">
+              <button
+                class="text-blue-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
+                @click="openQuickView(n)"
+              >
+                อ่านต่อ <i class="fas fa-arrow-right text-[11px]"></i>
               </button>
             </div>
           </div>
@@ -107,16 +140,17 @@
         <!-- Empty -->
         <div
           v-if="!pagedSortedNews.length && !loading"
-          class="col-span-full text-center text-gray-500 py-12"
+          class="col-span-full text-center py-20 text-gray-400"
         >
-          <i class="fas fa-info-circle mr-2"></i> ไม่พบข่าวสาร
+          <i class="fas fa-info-circle text-2xl mb-2"></i>
+          <p>ไม่พบข่าวสาร</p>
         </div>
       </div>
     </section>
 
     <!-- Pagination -->
     <div
-      class="flex items-center justify-between mt-8 text-sm text-gray-600"
+      class="flex items-center justify-between mt-10 text-sm text-gray-600"
       v-if="sortedNews.length"
     >
       <p>
@@ -125,15 +159,15 @@
       </p>
       <div class="flex items-center gap-2">
         <button
-          class="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50"
+          class="px-3 py-1.5 rounded-full border hover:bg-gray-100 disabled:opacity-50"
           :disabled="page <= 1"
           @click="page--"
         >
           ก่อนหน้า
         </button>
-        <span>หน้า {{ page }}</span>
+        <span class="font-medium">หน้า {{ page }}</span>
         <button
-          class="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50"
+          class="px-3 py-1.5 rounded-full border hover:bg-gray-100 disabled:opacity-50"
           :disabled="page * pageSize >= sortedNews.length"
           @click="page++"
         >
@@ -145,37 +179,136 @@
     <!-- Quick View Modal -->
     <div
       v-if="quickView"
-      class="fixed inset-0 bg-black/40 backdrop-blur-[1px] z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
+      aria-label="รายละเอียดข่าว"
+      @keydown.esc="quickView = null"
     >
-      <div class="bg-white max-w-2xl w-full rounded-lg overflow-hidden shadow-xl">
-        <div class="relative h-56 bg-gray-100">
-          <img
-            v-if="quickView.imageUrl"
-            :src="absoluteImage(quickView.imageUrl)"
-            class="w-full h-full object-cover"
-            @error="onImgError"
-          />
-          <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-            <i class="far fa-image text-3xl"></i>
+      <div
+        class="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5"
+      >
+        <!-- Top hero + actions -->
+        <div class="relative">
+          <div class="relative h-[42vh] md:h-[55vh] bg-gray-100">
+            <img
+              v-if="quickView.imageUrl"
+              :src="absoluteImage(quickView.imageUrl)"
+              :alt="quickView.title"
+              class="absolute inset-0 w-full h-full object-cover"
+              @error="onImgError"
+            />
+            <div
+              v-else
+              class="absolute inset-0 flex items-center justify-center text-gray-400"
+              aria-hidden="true"
+            >
+              <i class="far fa-image text-4xl"></i>
+            </div>
+
+            <!-- gradient overlay -->
+            <div
+              class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/65 to-transparent"
+            ></div>
           </div>
-          <button
-            class="absolute top-3 right-3 bg-white/90 hover:bg-white border rounded-full w-9 h-9 flex items-center justify-center"
-            @click="quickView = null"
-            aria-label="ปิดหน้าต่าง"
-          >
-            <i class="fas fa-times"></i>
-          </button>
+
+          <!-- actions -->
+          <div class="absolute top-4 right-4 flex gap-2">
+            <button
+              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow"
+              @click="shareNews(quickView)"
+              title="แชร์ข่าวนี้"
+            >
+              <i class="fas fa-share-alt text-gray-700"></i>
+            </button>
+            <button
+              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow"
+              @click="copyLink(quickView)"
+              :title="copied ? 'คัดลอกแล้ว!' : 'คัดลอกลิงก์'"
+            >
+              <i
+                :class="copied ? 'fas fa-check text-emerald-600' : 'fas fa-link text-gray-700'"
+              ></i>
+            </button>
+            <button
+              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow"
+              @click="quickView = null"
+              aria-label="ปิดหน้าต่าง"
+              title="ปิด"
+            >
+              <i class="fas fa-times text-gray-700"></i>
+            </button>
+          </div>
+
+          <!-- title band -->
+          <div class="absolute inset-x-0 -bottom-3 px-4 sm:px-6">
+            <div
+              class="mx-auto max-w-5xl rounded-xl bg-white/95 backdrop-blur px-4 sm:px-5 py-3 shadow ring-1 ring-black/5"
+            >
+              <div class="flex items-center gap-3 text-[13px] text-gray-600">
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-gray-700"
+                >
+                  <i class="far fa-calendar"></i>
+                  {{ prettyDate(quickView.date) }}
+                </span>
+              </div>
+              <h2
+                class="mt-2 text-xl md:text-2xl font-extrabold tracking-tight text-gray-900 leading-snug"
+              >
+                {{ quickView.title }}
+              </h2>
+            </div>
+          </div>
         </div>
-        <div class="p-5">
-          <time class="text-xs text-gray-500">{{
-            quickView ? prettyDate(quickView.date) : ''
-          }}</time>
-          <h3 class="text-xl font-semibold text-gray-900 mt-1">{{ quickView?.title }}</h3>
-          <p class="text-gray-700 mt-3 leading-relaxed whitespace-pre-line">
-            {{ quickView?.content || quickView?.excerpt }}
-          </p>
+
+        <!-- content -->
+        <div class="px-4 sm:px-6 pt-6 pb-7">
+          <div class="grid md:grid-cols-5 gap-6">
+            <!-- meta -->
+            <aside class="md:col-span-2 order-2 md:order-1">
+              <div class="rounded-lg border bg-gray-50 p-4 space-y-3">
+                <div class="text-xs uppercase tracking-wide text-gray-500">การกระทำด่วน</div>
+
+                <div class="flex gap-2">
+                  <button
+                    class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md border hover:bg-gray-100"
+                    @click="copyLink(quickView)"
+                  >
+                    <i
+                      :class="
+                        copied ? 'fas fa-check text-emerald-600' : 'fas fa-link text-gray-700'
+                      "
+                    ></i>
+                    {{ copied ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกลิงก์' }}
+                  </button>
+                  <RouterLink
+                    :to="{ name: 'public-news' }"
+                    class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50"
+                    @click="quickView = null"
+                  >
+                    <i class="fas fa-list"></i>
+                    ดูทั้งหมด
+                  </RouterLink>
+                </div>
+              </div>
+            </aside>
+
+            <!-- article -->
+            <article class="md:col-span-3 order-1 md:order-2">
+              <div class="prose prose-sm sm:prose md:prose-lg max-w-none text-gray-800">
+                <p
+                  v-for="(p, i) in normalizeParagraphs(
+                    quickView.content || quickView.excerpt || '',
+                  )"
+                  :key="i"
+                  class="leading-relaxed"
+                >
+                  {{ p }}
+                </p>
+              </div>
+            </article>
+          </div>
         </div>
       </div>
     </div>
@@ -183,7 +316,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { isAxiosError } from '@/services/apiService'
 import { getPublicNews, type PublicNewsItem } from '@/services/newsService'
 
@@ -200,6 +333,7 @@ const page = ref(1)
 const pageSize = ref(9)
 
 const quickView = ref<PublicNewsItem | null>(null)
+const copied = ref(false)
 
 /** ---------- Utils ---------- */
 function prettyDate(d: string) {
@@ -233,11 +367,55 @@ function onImgError(e: Event) {
                font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
        </svg>`,
     )
-  if (el.src !== fallback) el.src = fallback
+  if (el && el.src !== fallback) el.src = fallback
 }
 
-function openQuickView(n: PublicNewsItem) {
-  quickView.value = n
+// แยกย่อหน้าแบบง่าย ๆ
+function normalizeParagraphs(text: string): string[] {
+  const clean = String(text ?? '')
+    .replace(/\r/g, '')
+    .trim()
+  if (!clean) return []
+  return clean
+    .split(/\n{2,}|\n-\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+// ลิงก์ถาวร (ถ้ามีหน้า detail แยก ค่อยเปลี่ยนเป็น /news/:id)
+function buildNewsPermalink(n: { id: string }) {
+  return `${window.location.origin}/news#${n.id}`
+}
+
+async function copyLink(n: { id: string; title?: string }) {
+  try {
+    await navigator.clipboard.writeText(buildNewsPermalink(n))
+    copied.value = true
+    setTimeout(() => (copied.value = false), 1500)
+  } catch {
+    copied.value = false
+  }
+}
+
+async function shareNews(n: { id: string; title?: string }) {
+  const url = buildNewsPermalink(n)
+  const title = n.title || 'ข่าวสาร'
+  const text = `แนะนำให้อ่าน: ${title}`
+
+  if ('share' in navigator) {
+    try {
+      // บราวเซอร์ที่รองรับ Web Share API
+      await (
+        navigator as Navigator & {
+          share: (data: { title?: string; text?: string; url?: string }) => Promise<void>
+        }
+      ).share({ title, text, url })
+      return
+    } catch {
+      // ผู้ใช้ยกเลิก → ตกไปคัดลอกลิงก์
+    }
+  }
+  await copyLink(n)
 }
 
 /** ---------- Derived ---------- */
@@ -246,17 +424,29 @@ const filtered = computed(() => {
   return q ? items.value.filter((n) => n.title.toLowerCase().includes(q)) : items.value
 })
 
+function getSortTime(n: { date: string; updatedAt?: string; createdAt?: string }) {
+  return new Date(n.updatedAt || n.createdAt || n.date).getTime()
+}
+
 const sortedNews = computed(() => {
   const list = [...filtered.value]
   const dir = sortAsc.value ? 1 : -1
-  if (sortKey.value === 'date') list.sort((a, b) => (a.date > b.date ? 1 : -1) * dir)
-  else list.sort((a, b) => a.title.localeCompare(b.title) * dir)
+  if (sortKey.value === 'date') {
+    list.sort((a, b) => (getSortTime(a) - getSortTime(b)) * dir)
+  } else {
+    list.sort((a, b) => a.title.localeCompare(b.title) * dir)
+  }
   return list
 })
 
 const pagedSortedNews = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return sortedNews.value.slice(start, start + pageSize.value)
+})
+
+/** ---------- UX: reset page when filter/sort changes ---------- */
+watch([query, sortKey, sortAsc], () => {
+  page.value = 1
 })
 
 /** ---------- Fetch ---------- */
@@ -276,10 +466,16 @@ async function fetchNews() {
   }
 }
 
+function openQuickView(n: PublicNewsItem) {
+  quickView.value = n
+  copied.value = false
+}
+
 onMounted(fetchNews)
 </script>
 
 <style scoped>
+/* line-clamp helpers */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -293,5 +489,18 @@ onMounted(fetchNews)
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s ease-out;
 }
 </style>

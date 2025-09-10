@@ -1,25 +1,28 @@
 <template>
   <section class="py-16 bg-gray-50">
-    <div class="container mx-auto text-center px-4">
-      <h2 class="text-3xl font-bold text-gray-800 mb-10">ข่าวสารและกิจกรรมล่าสุด</h2>
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800 tracking-tight mb-10">
+        ข่าวสารและกิจกรรมล่าสุด
+      </h2>
 
       <!-- Error -->
       <div
         v-if="errorMsg"
-        class="mb-6 inline-flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700"
+        class="mb-6 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-red-700"
+        role="alert"
       >
         <i class="fas fa-exclamation-triangle"></i>
         <span>{{ errorMsg }}</span>
       </div>
 
-      <!-- Loading (optional simple skeleton) -->
-      <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-0">
+      <!-- Loading skeleton -->
+      <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         <div
           v-for="i in 3"
           :key="i"
-          class="bg-white rounded-lg shadow-md overflow-hidden animate-pulse"
+          class="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse"
         >
-          <div class="w-full aspect-video bg-gray-200"></div>
+          <div class="w-full h-56 md:h-60 lg:h-64 bg-gray-200"></div>
           <div class="p-6 text-left">
             <div class="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
             <div class="h-3 bg-gray-200 rounded w-full mb-2"></div>
@@ -28,42 +31,54 @@
         </div>
       </div>
 
-      <!-- Cards -->
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4 md:px-0">
-        <div
+      <!-- Cards (ไม่มีปุ่มอ่านเพิ่มเติมต่อการ์ด) -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <article
           v-for="n in latestNews"
           :key="n.id"
-          class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition text-left"
+          class="group bg-white rounded-2xl shadow-sm overflow-hidden text-left ring-1 ring-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
-          <div class="aspect-video bg-gray-100 overflow-hidden">
+          <!-- ภาพสูงขึ้น -->
+          <div class="relative w-full h-56 md:h-60 lg:h-64 bg-gray-100">
             <img
               v-if="n.imageUrl"
               :src="n.imageUrl"
               :alt="n.title"
-              class="w-full h-full object-cover"
+              class="absolute inset-0 w-full h-full object-cover"
               @error="onImgError"
             />
-            <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
+            <div
+              v-else
+              class="absolute inset-0 flex items-center justify-center text-gray-400"
+              aria-hidden="true"
+            >
               <i class="far fa-image text-3xl"></i>
+            </div>
+
+            <!-- date badge บนรูป -->
+            <div class="absolute left-3 bottom-3">
+              <span
+                class="inline-flex items-center gap-1 text-xs md:text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/90 text-gray-800 backdrop-blur"
+              >
+                <i class="far fa-calendar"></i>
+                {{ formatDate(n.date) }}
+              </span>
             </div>
           </div>
 
+          <!-- เนื้อหา (ไม่มีลิงก์อ่านเพิ่มเติม) -->
           <div class="p-6">
-            <h3 class="text-xl font-semibold text-gray-800 mb-2 line-clamp-2">
+            <h3
+              class="text-lg md:text-xl font-semibold text-gray-900 leading-snug line-clamp-2"
+              :title="n.title"
+            >
               {{ n.title }}
             </h3>
-            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+            <p class="mt-2 text-gray-600 text-sm line-clamp-3">
               {{ n.excerpt || n.content || '' }}
             </p>
-            <RouterLink
-              :to="{ name: 'public-news' }"
-              class="text-blue-600 hover:underline font-semibold"
-              @click="rememberScroll()"
-            >
-              อ่านเพิ่มเติม &rarr;
-            </RouterLink>
           </div>
-        </div>
+        </article>
 
         <!-- Empty state -->
         <div v-if="!latestNews.length" class="col-span-full text-gray-500 py-10">
@@ -71,14 +86,15 @@
         </div>
       </div>
 
-      <!-- ดูทั้งหมด -->
+      <!-- ปุ่มดูทั้งหมด (พาไปหน้ารวมข่าว) -->
       <div class="mt-12">
         <RouterLink
           :to="{ name: 'public-news' }"
-          class="text-blue-600 hover:text-white hover:bg-blue-700 font-bold py-2 px-6 rounded-full border-2 border-blue-500 inline-block"
+          class="inline-flex items-center gap-2 text-blue-600 hover:text-white hover:bg-blue-700 font-bold py-2.5 px-6 rounded-full border-2 border-blue-500 transition-colors"
           @click="rememberScroll()"
         >
           ดูข่าวสารทั้งหมด
+          <i class="fas fa-newspaper text-[13px]"></i>
         </RouterLink>
       </div>
     </div>
@@ -100,7 +116,7 @@ async function fetchNews() {
   errorMsg.value = null
   try {
     const data = await getPublicNews()
-    // เรียงใหม่สุดก่อน
+    // เรียงใหม่สุดก่อน (ตาม date)
     items.value = (data ?? []).sort((a, b) => (a.date > b.date ? -1 : 1))
   } catch (e) {
     errorMsg.value = isAxiosError(e)
@@ -131,10 +147,23 @@ function onImgError(e: Event) {
 function rememberScroll() {
   sessionStorage.setItem('homeScrollY', String(window.scrollY || 0))
 }
+
+// วันที่อ่านง่าย
+function formatDate(d: string) {
+  try {
+    return new Date(d).toLocaleDateString('th-TH', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  } catch {
+    return d
+  }
+}
 </script>
 
 <style scoped>
-/* util เล็ก ๆ */
+/* line-clamp helpers */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -148,15 +177,5 @@ function rememberScroll() {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-.aspect-video {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;
-}
-.aspect-video > img,
-.aspect-video > div {
-  position: absolute;
-  inset: 0;
 }
 </style>
