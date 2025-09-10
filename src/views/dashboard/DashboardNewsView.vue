@@ -737,26 +737,58 @@ async function onSubmit() {
     currentNews.value.excerpt = base.excerpt
 
     if (editingNews.value) {
+      // ---- แก้ไข ----
       const id = String(currentNews.value.id)
-      const updated = await updateNews(id, {
+      const wantPublished = currentNews.value.isPublished
+
+      // ✅ ส่งเฉพาะฟิลด์ข้อมูลหลัก (ไม่ส่ง isPublished เพราะ backend ใช้ toggle แยก)
+      let updated = await updateNews(id, {
         ...base,
-        isPublished: currentNews.value.isPublished,
         image: imageFile.value ?? null,
       })
+
+      // ถ้าสถานะที่ต้องการไม่ตรงกับที่ backend คืนมา → toggle ให้ตรง
+      if (updated.isPublished !== wantPublished) {
+        try {
+          const toggled = await togglePublish(id, wantPublished)
+          updated = { ...updated, ...toggled }
+        } catch {
+          toast.error('บันทึกแล้ว แต่เปลี่ยนสถานะเผยแพร่ไม่สำเร็จ')
+        }
+      }
+
       const idx = newsList.value.findIndex((n) => String(n.id) === id)
       if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
       resort()
     } else {
+      // ---- สร้างใหม่ ----
       const created = await createNews({
         ...base,
         image: imageFile.value ?? null,
       })
+
+      // ถ้าผู้ใช้เปิดสวิตช์ "เผยแพร่แล้ว" → เรียก toggle ทันทีหลังสร้าง
+      if (currentNews.value.isPublished) {
+        try {
+          const published = await togglePublish(created.id, true)
+          Object.assign(created, {
+            isPublished: published.isPublished,
+            updatedAt: published.updatedAt ?? created.updatedAt,
+          })
+          toast.success('เผยแพร่ข่าวแล้ว')
+        } catch {
+          toast.error('สร้างสำเร็จ แต่เผยแพร่ไม่สำเร็จ')
+        }
+      } else {
+        toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
+      }
+
       const existIdx = newsList.value.findIndex((n) => String(n.id) === String(created.id))
       if (existIdx >= 0) newsList.value[existIdx] = { ...newsList.value[existIdx], ...created }
       else newsList.value.unshift(created)
+
       page.value = 1
-      toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
       resort()
     }
 
@@ -813,21 +845,17 @@ async function deleteNews() {
 }
 
 async function togglePublishStatus(news: NewsItem) {
-  const id = news.id
   const prev = news.isPublished
   const next = !prev
-  news.isPublished = next // optimistic
+  news.isPublished = next // optimistic update
+
   try {
-    const updated = await togglePublish(id, next)
+    const updated = await togglePublish(news.id, next)
     Object.assign(news, updated)
     toast.success(next ? 'เผยแพร่ข่าวแล้ว' : 'ยกเลิกเผยแพร่แล้ว')
-    resort()
-  } catch (e) {
-    news.isPublished = prev
-    const msg = isAxiosError(e)
-      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
-      : 'เปลี่ยนสถานะไม่สำเร็จ'
-    toast.error(msg)
+  } catch (e: unknown) {
+    console.error(e)
+    toast.error('เกิดข้อผิดพลาด')
   }
 }
 

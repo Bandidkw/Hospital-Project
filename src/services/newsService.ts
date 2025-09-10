@@ -147,7 +147,7 @@ export async function togglePublish(id: IdLike, isPublished: boolean): Promise<N
   const res = await apiService.patch<ApiSuccess<NewsItem>>(`/news/${id}/toggle-publish`, {
     isPublished,
   })
-  return mapImage(res.data.data)
+  return res.data.data
 }
 
 /** DELETE /news/:id */
