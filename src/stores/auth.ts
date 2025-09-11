@@ -62,6 +62,7 @@ export const useAuthStore = defineStore('auth', () => {
         username: usernameInput,
         password: passwordInput,
       })
+
       const authToken = response.data.data.token
 
       // ตรวจสอบว่า authToken เป็น String และมีค่า
@@ -72,17 +73,34 @@ export const useAuthStore = defineStore('auth', () => {
         // ตั้งค่า Authorization Header สำหรับ API Service เพื่อใช้ในการเรียก API ถัดไป
         apiService.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
 
-        // เรียก fetchUserProfile ทันทีเพื่อดึงข้อมูลผู้ใช้ (ซึ่งจะตั้งค่า user.value และ isAuthenticated.value)
-        const profileFetched = await fetchUserProfile()
-        if (profileFetched) {
-          // console.log('เข้าสู่ระบบสำเร็จและดึงข้อมูลโปรไฟล์แล้ว:', user.value)
+        // ตั้งค่า user จากข้อมูลที่ได้จาก login response แทนการเรียก fetchUserProfile
+        const loginData = response.data.data
+        if (loginData.user) {
+          const roleIdFromBackend = parseInt(loginData.user.role || loginData.role, 10)
+          const userRole = ROLE_MAPPING[roleIdFromBackend] || 'user'
+
+          user.value = {
+            id: loginData.user.id || loginData.userId,
+            username: loginData.user.username || loginData.username,
+            fullName: loginData.user.name || loginData.user.fullName || loginData.username,
+            email: loginData.user.email,
+            roleId: roleIdFromBackend,
+            role: userRole,
+            vitrify: loginData.user.vitrify || false,
+          }
+
+          sessionStorage.setItem('user', JSON.stringify(user.value))
           return true
         } else {
-          // หากดึงโปรไฟล์ไม่สำเร็จ ให้ถือว่าล็อกอินไม่สมบูรณ์
-          loginError.value =
-            profileError.value || 'เข้าสู่ระบบสำเร็จแต่ไม่สามารถดึงข้อมูลโปรไฟล์ได้'
-          logout() // ทำการ logout เพื่อล้างสถานะ
-          return false
+          // หากไม่มีข้อมูล user ใน response ให้ลองเรียก fetchUserProfile
+          const profileFetched = await fetchUserProfile()
+          if (profileFetched) {
+            return true
+          } else {
+            loginError.value = 'เข้าสู่ระบบสำเร็จแต่ไม่สามารถดึงข้อมูลโปรไฟล์ได้'
+            logout()
+            return false
+          }
         }
       } else {
         loginError.value =
@@ -179,7 +197,6 @@ export const useAuthStore = defineStore('auth', () => {
         }
         // isAuthenticated.value = true;
         sessionStorage.setItem('user', JSON.stringify(user.value)) // เก็บข้อมูลผู้ใช้ใน sessionStorage
-        console.log('ดึงข้อมูลโปรไฟล์ผู้ใช้สำเร็จ:', user.value)
         return true
       } else {
         profileError.value = 'ไม่สามารถดึงข้อมูลโปรไฟล์ได้: ข้อมูลไม่สมบูรณ์'
@@ -187,6 +204,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (error: unknown) {
       console.error('การดึงข้อมูลโปรไฟล์ผู้ใช้ล้มเหลว:', error)
+
       // ตรวจสอบว่าเป็น Axios Error และมีสถานะ 401 หรือไม่
       if (isAxiosError(error) && error.response && error.response.status === 401) {
         logout() // Logout อัตโนมัติเมื่อ Token หมดอายุ
@@ -215,7 +233,6 @@ export const useAuthStore = defineStore('auth', () => {
     sessionStorage.removeItem('token')
     // ล้าง Authorization Header เมื่อออกจากระบบ
     delete apiService.defaults.headers.common['Authorization']
-    console.log('ออกจากระบบแล้ว - ล้าง sessionStorage.')
     router.push('/')
   }
 

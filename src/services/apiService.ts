@@ -17,7 +17,7 @@ const apiService: AxiosInstance = axios.create({
 
 /** ---------------- helpers (ภายในไฟล์เท่านั้น) ---------------- */
 function pickTokenFromStorage(): string | null {
-  const raw = localStorage.getItem('token')
+  const raw = sessionStorage.getItem('token')
   if (!raw) return null
 
   // กรณีบางโปรเจ็กต์เผลอเก็บเป็น JSON เช่น {"accessToken":"..."} หรือ {"token":"..."}
@@ -63,9 +63,7 @@ apiService.interceptors.request.use(
     // ช่วยดีบักใน DEV
     if (import.meta.env?.DEV) {
       const method = (config.method ?? 'get').toUpperCase()
-
       console.debug('[api] →', method, (config.baseURL ?? '') + (config.url ?? ''))
-
       console.debug('[api] auth header:', headers.has('Authorization') ? 'present' : 'missing')
     }
 
