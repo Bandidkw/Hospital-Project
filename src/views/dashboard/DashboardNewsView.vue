@@ -98,7 +98,7 @@
             </div>
           </div>
 
-          <!-- Excerpt (optional, จะถูกเติมอัตโนมัติถ้าเว้นว่าง) -->
+          <!-- Excerpt (optional) -->
           <div>
             <label for="newsExcerpt" class="block text-sm font-medium text-gray-700">
               คำโปรย (ถ้าเว้นว่าง ระบบจะสร้างให้อัตโนมัติ)
@@ -189,7 +189,6 @@
               <i class="fas fa-save mr-2"></i>
               {{ editingNews ? 'บันทึกการแก้ไข' : 'เพิ่มข่าวสาร' }}
             </button>
-
             <button
               v-if="editingNews"
               type="button"
@@ -210,17 +209,13 @@
                 class="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
               >
                 <img
-                  v-if="currentNews.imageUrl"
-                  :src="imgSrc(currentNews.imageUrl)"
-                  :alt="currentNews.title || 'รูปภาพประกอบข่าว'"
-                  class="w-full h-full object-cover"
-                  @error="onImgErrorSwap"
+                  v-if="previewSrc"
+                  :src="previewSrc"
+                  :alt="currentNews.title || 'รูปภาพพรีวิวข่าว'"
+                  class="w-full h-48 object-cover"
+                  @error="onImgError"
                 />
-
-                <div
-                  v-else
-                  class="w-full h-full text-gray-400 text-sm flex flex-col items-center justify-center"
-                >
+                <div v-else class="text-gray-400 text-sm flex flex-col items-center">
                   <i class="far fa-image text-3xl mb-2"></i>
                   ไม่มีรูปภาพ
                 </div>
@@ -335,9 +330,7 @@
                 </div>
               </td>
 
-              <td class="px-4 py-3 text-gray-600 whitespace-nowrap">
-                {{ prettyDate(news.date) }}
-              </td>
+              <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ prettyDate(news.date) }}</td>
 
               <td class="px-4 py-3">
                 <span
@@ -362,12 +355,13 @@
                     <i class="fas fa-bullhorn"></i>
                   </button>
                   <button
-                    @click="editNews(news)"
+                    @click="openEditModal(news)"
                     class="p-2 rounded-md hover:bg-amber-50 text-amber-600"
                     title="แก้ไข"
                   >
                     <i class="fas fa-edit"></i>
                   </button>
+
                   <button
                     @click="confirmDeleteNews(news.id)"
                     class="p-2 rounded-md hover:bg-red-50 text-red-600"
@@ -454,13 +448,286 @@
         class="animate-spin rounded-full h-10 w-10 border-4 border-gray-300 border-t-blue-500"
       ></div>
     </div>
+
+    <!-- Edit Modal -->
+    <div
+      v-if="showEditModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="editNewsTitle"
+      @keydown.esc="closeEditModal"
+      @click.self="closeEditModal"
+    >
+      <div
+        class="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 animate-[fadeIn_.18s_ease-out]"
+      >
+        <!-- Sticky Header -->
+        <header class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b px-6 py-4">
+          <div class="flex items-center justify-between">
+            <div class="min-w-0">
+              <h3 id="editNewsTitle" class="text-xl font-bold text-gray-900 truncate">
+                แก้ไขข่าวสาร
+              </h3>
+              <p class="text-xs text-gray-500 mt-0.5">ปรับรายละเอียดแล้วกด “บันทึกการแก้ไข”</p>
+            </div>
+            <button
+              class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              @click="closeEditModal"
+              aria-label="ปิดหน้าต่างแก้ไข"
+            >
+              <i class="fas fa-times text-gray-700"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- Body -->
+        <div class="max-h-[75vh] overflow-y-auto px-6 py-6">
+          <form @submit.prevent="submitEdit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- LEFT: Fields -->
+            <div class="lg:col-span-2 space-y-5">
+              <!-- Title -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >หัวข้อข่าวสาร <span class="text-red-500">*</span></label
+                >
+                <div class="mt-1 relative">
+                  <input
+                    type="text"
+                    v-model.trim="editForm.title"
+                    required
+                    maxlength="120"
+                    autocomplete="off"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-14 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="เช่น ประกาศวันหยุดราชการ"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                    {{ (editForm.title ?? '').length }}/120
+                  </span>
+                </div>
+              </div>
+
+              <!-- Content -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >เนื้อหาข่าวสาร <span class="text-red-500">*</span></label
+                >
+                <textarea
+                  v-model.trim="editForm.content"
+                  rows="7"
+                  required
+                  maxlength="2000"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="เนื้อหาข่าวโดยย่อ…"
+                ></textarea>
+                <div class="flex justify-between mt-1">
+                  <span class="text-xs text-gray-500">โปรดเขียนให้กระชับและอ่านง่าย</span>
+                  <span class="text-xs text-gray-400"
+                    >{{ (editForm.content ?? '').length }}/2000</span
+                  >
+                </div>
+              </div>
+
+              <!-- Excerpt -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >คำโปรย (ถ้าเว้นว่าง ระบบจะสร้างให้อัตโนมัติ)</label
+                >
+                <div class="mt-1 relative">
+                  <input
+                    type="text"
+                    v-model.trim="editForm.excerpt"
+                    maxlength="200"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-14 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="ข้อความสั้น ๆ สรุปข่าว"
+                  />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                    {{ (editForm.excerpt ?? '').length }}/200
+                  </span>
+                </div>
+              </div>
+
+              <!-- Date + Publish -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700"
+                    >วันที่เผยแพร่ <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="date"
+                    v-model="editForm.date"
+                    :min="minDate"
+                    required
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >สถานะการเผยแพร่</label
+                  >
+                  <button
+                    type="button"
+                    class="inline-flex items-center px-3 py-2 rounded-md border transition select-none"
+                    :class="
+                      editForm.isPublished
+                        ? 'bg-green-50 border-green-300 text-green-800'
+                        : 'bg-gray-50 border-gray-300 text-gray-700'
+                    "
+                    role="switch"
+                    :aria-checked="editForm.isPublished"
+                    @click="editForm.isPublished = !editForm.isPublished"
+                  >
+                    <i
+                      class="fas mr-2"
+                      :class="editForm.isPublished ? 'fa-toggle-on' : 'fa-toggle-off'"
+                    ></i>
+                    {{ editForm.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Image Upload (drag area + input) -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">รูปภาพประกอบ</label>
+                <div
+                  class="rounded-lg border border-dashed p-4 bg-gray-50 hover:bg-gray-100 transition text-center"
+                >
+                  <p class="text-sm text-gray-600">
+                    ลากรูปมาวางที่นี่ หรือ
+                    <label class="text-blue-600 font-medium cursor-pointer hover:underline">
+                      เลือกไฟล์
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="sr-only"
+                        @change="onEditFileChange"
+                      />
+                    </label>
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">
+                    รองรับไฟล์ภาพทั่วไป ขนาดเหมาะสม 1200×630px
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT: Live Preview -->
+            <aside>
+              <div class="bg-gray-50 border rounded-lg p-4 sticky top-4">
+                <h4 class="font-semibold text-gray-800 mb-3">พรีวิว</h4>
+
+                <div
+                  class="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
+                >
+                  <img
+                    v-if="editPreviewSrc"
+                    :src="editPreviewSrc"
+                    :alt="editForm.title || 'รูปภาพพรีวิวข่าว'"
+                    class="w-full h-48 object-cover"
+                    @error="onImgError"
+                  />
+                  <div v-else class="text-gray-400 text-sm flex flex-col items-center">
+                    <i class="far fa-image text-3xl mb-2"></i>
+                    ไม่มีรูปภาพ
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-500">{{ prettyDate(editForm.date) }}</span>
+                    <span
+                      class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
+                      :class="
+                        editForm.isPublished
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-200 text-gray-700'
+                      "
+                    >
+                      {{ editForm.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
+                    </span>
+                  </div>
+                  <h5 class="font-semibold mt-1 text-gray-800 line-clamp-2">
+                    {{ editForm.title || 'หัวข้อข่าว…' }}
+                  </h5>
+                  <p class="text-gray-600 text-sm mt-1 line-clamp-3">
+                    {{ editForm.content || 'พิมพ์เนื้อหาข่าวสั้น ๆ เพื่อพรีวิวได้ทันที…' }}
+                  </p>
+                </div>
+              </div>
+            </aside>
+          </form>
+        </div>
+
+        <!-- Sticky Footer -->
+        <footer class="sticky bottom-0 bg-white/95 backdrop-blur border-t px-6 py-4">
+          <div class="flex items-center justify-end gap-3">
+            <button
+              type="button"
+              @click="closeEditModal"
+              class="px-5 py-2 rounded-md border bg-white hover:bg-gray-50"
+            >
+              ยกเลิก
+            </button>
+            <button
+              type="button"
+              class="px-5 py-2 rounded-md border bg-white hover:bg-gray-50"
+              @click="
+                /* เคลียร์เฉพาะรูปในโมดาล */ ((editPreviewUrl = null),
+                (editImageFile = null),
+                (editForm.imageUrl = ''))
+              "
+              title="ล้างรูปที่เลือกในโมดาล"
+            >
+              ล้างรูป
+            </button>
+            <button
+              type="button"
+              class="px-5 py-2 rounded-md border bg-white hover:bg-gray-50"
+              @click="
+                /* รีเซ็ตค่ากลับตามต้นฉบับที่โหลดเข้ามา */ openEditModal({
+                  ...editForm,
+                  ...newsList.find((n) => n.id === editForm.id)!,
+                })
+              "
+              title="ย้อนกลับเป็นข้อมูลที่โหลดมา"
+            >
+              รีเซ็ตฟอร์ม
+            </button>
+            <button
+              type="submit"
+              form="__noop"
+              class="hidden"
+              aria-hidden="true"
+              tabindex="-1"
+            ></button>
+            <button
+              @click="submitEdit"
+              class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
+              :disabled="savingEdit"
+            >
+              <span v-if="savingEdit" class="inline-flex items-center gap-2">
+                <span
+                  class="h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full inline-block animate-spin"
+                ></span>
+                กำลังบันทึก…
+              </span>
+              <span v-else> <i class="fas fa-save mr-2"></i> บันทึกการแก้ไข </span>
+            </button>
+          </div>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, watch } from 'vue'
+/* =========================================================================
+ * Imports
+ * ========================================================================= */
+import { ref, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import apiService, { isAxiosError } from '@/services/apiService'
+import { isAxiosError } from '@/services/apiService'
 import {
   getAllNews,
   createNews,
@@ -470,7 +737,9 @@ import {
   type NewsItem as ServiceNewsItem,
 } from '@/services/newsService'
 
-/* ---------- Types ---------- */
+/* =========================================================================
+ * Types
+ * ========================================================================= */
 type NewsItem = ServiceNewsItem
 type NewsForm = {
   id: string
@@ -482,14 +751,71 @@ type NewsForm = {
   isPublished: boolean
 }
 
-/* ---------- Toast ---------- */
+/* =========================================================================
+ * Constants / Utils (generic)
+ * ========================================================================= */
 const toast = useToast()
+const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
 
-/* ---------- State ---------- */
+function stripHtml(input: string): string {
+  const div = document.createElement('div')
+  div.innerHTML = input
+  return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim()
+}
+
+function makeExcerpt(title: string, content: string, max = 200): string {
+  const t = stripHtml(title)
+  const c = stripHtml(content)
+  const base = (t ? `${t} — ` : '') + c
+  const clean = base.trim()
+  if (!clean) return ''
+  if (clean.length <= max) return clean
+  const cut = clean.slice(0, max)
+  const lastSpace = cut.lastIndexOf(' ')
+  const clipped = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim()
+  return clipped + '…'
+}
+
+function prettyDate(d: string) {
+  if (!d) return '-'
+  try {
+    return new Date(d).toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return d
+  }
+}
+
+/** แปลง path เป็น URL เต็ม (รองรับกรณี backend คืน /uploads/...) */
+function absoluteImage(u?: string | null): string {
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+  const root = base.replace(/\/api(\/v\d+)?$/i, '')
+  return `${root}/${String(u).replace(/^\/+/, '')}`
+}
+
+/** เวลาใช้สำหรับ sort (updatedAt > createdAt > date) */
+function getSortTime(n: { updatedAt?: string; createdAt?: string; date?: string }) {
+  return new Date(n.updatedAt || n.createdAt || n.date || 0).getTime()
+}
+function sortByUpdatedDesc<T extends { updatedAt?: string; createdAt?: string; date?: string }>(
+  arr: T[],
+) {
+  return [...arr].sort((a, b) => getSortTime(b) - getSortTime(a))
+}
+
+/* =========================================================================
+ * Reactive State (page)
+ * ========================================================================= */
 const newsList = ref<NewsItem[]>([])
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 
+/** ฟอร์ม “เพิ่มข่าวใหม่” (หน้าเพจหลัก) */
 const currentNews = ref<NewsForm>({
   id: '',
   title: '',
@@ -499,15 +825,20 @@ const currentNews = ref<NewsForm>({
   imageUrl: '',
   isPublished: false,
 })
-const imageFile = ref<File | null>(null)
+const imageFile = ref<File | null>(null) // สำหรับสร้างใหม่
+const previewUrl = ref<string | null>(null) // object URL สำหรับพรีวิวไฟล์
+let lastObjectUrl: string | null = null
 
-const editingNews = ref(false)
+/** สถานะอื่น ๆ */
+const editingNews = ref(false) // คงไว้เพื่อ compatibility (ตอนนี้ใช้ Modal สำหรับแก้ไขแล้ว)
 const saving = ref(false)
 
 const newsToDeleteId = ref<string | null>(null)
 const showConfirmModal = ref(false)
 
-/* ---------- Validation (touched) ---------- */
+/* =========================================================================
+ * Validation (create form)
+ * ========================================================================= */
 const errors = ref<Record<'title' | 'content' | 'date', string | null>>({
   title: null,
   content: null,
@@ -547,9 +878,11 @@ const isValid = computed(() => {
   return v.title.trim().length >= 4 && v.content.trim().length >= 10 && !!v.date
 })
 
-/* ---------- Filters / Sort (client) ---------- */
+/* =========================================================================
+ * Filters / Sort / Pagination (client)
+ * ========================================================================= */
 const query = ref('')
-const sortKey = ref<'updated' | 'date' | 'title' | 'status'>('updated') // ค่าเริ่มต้น: อัปเดตล่าสุด
+const sortKey = ref<'updated' | 'date' | 'title' | 'status'>('updated')
 const sortAsc = ref(false)
 
 const page = ref(1)
@@ -559,10 +892,6 @@ const filteredNews = computed(() => {
   const q = query.value.trim().toLowerCase()
   return q ? newsList.value.filter((n) => n.title.toLowerCase().includes(q)) : newsList.value
 })
-
-function getSortTime(n: { updatedAt?: string; createdAt?: string; date?: string }) {
-  return new Date(n.updatedAt || n.createdAt || n.date || 0).getTime()
-}
 
 const sortedNews = computed(() => {
   const list = [...filteredNews.value]
@@ -585,20 +914,12 @@ const pagedSortedNews = computed(() => {
 })
 
 watch([page, pageSize], () => {
-  /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ตรงนี้ */
+  /* ถ้าจะทำ server-side pagination ให้เรียก fetchNews() ได้ที่นี่ */
 })
 
-/* ---------- Image helpers ---------- */
-const previewImageOk = ref(true)
-function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0] ?? null
-  imageFile.value = file
-  if (file) {
-    currentNews.value.imageUrl = URL.createObjectURL(file)
-    previewImageOk.value = true
-  }
-}
+/* =========================================================================
+ * Image / Preview helpers (create form)
+ * ========================================================================= */
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
   if (!el) return
@@ -614,86 +935,41 @@ function onImgError(e: Event) {
   if (el.src !== fallback) el.src = fallback
 }
 
-// สำหรับเทมเพลต (หากยังอ้าง absoluteImage อยู่) — ตอนนี้ service คืน URL สมบูรณ์แล้ว จึงเป็น no-op
-function imgSrc(u?: string | null): string {
-  if (!u) return ''
-  if (/^https?:\/\//i.test(u)) return u
-  const base = String(
-    apiService.defaults.baseURL || import.meta.env.VITE_API_BASE_URL || '',
-  ).replace(/\/+$/, '')
-  const path = String(u).replace(/^\/+/, '')
-  return `${base}/${path}`
-}
+const previewSrc = computed(() => {
+  if (previewUrl.value) return previewUrl.value // รูปจากไฟล์ใหม่
+  return currentNews.value.imageUrl ? absoluteImage(currentNews.value.imageUrl) : '' // รูปเดิมตอนแก้ไข
+})
 
-function onImgErrorSwap(e: Event) {
-  const img = e.target as HTMLImageElement
-  if (!img || img.dataset.fallbackTried === '1') {
-    // ใช้ placeholder รอบสุดท้าย
-    const fallback =
-      'data:image/svg+xml;utf8,' +
-      encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-           <rect width="100%" height="100%" fill="#e5e7eb"/>
-           <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-                 font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
-         </svg>`,
-      )
-    if (img && img.src !== fallback) img.src = fallback
-    return
+function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  imageFile.value = file
+
+  if (lastObjectUrl) {
+    URL.revokeObjectURL(lastObjectUrl)
+    lastObjectUrl = null
   }
 
-  try {
-    const url = new URL(img.src)
-    // toggle ระหว่าง /api[/vX]/ กับ root
-    const toggledPath = url.pathname.match(/^\/api\/v\d+\/uploads\//)
-      ? url.pathname.replace(/^\/api\/v\d+\//, '/')
-      : url.pathname.replace(/^\/+/, '/api/v1/') // ปรับเป็น /api/v1 ถ้าเดิมไม่มี
-    url.pathname = toggledPath
-    img.dataset.fallbackTried = '1'
-    img.src = url.toString()
-  } catch {
-    img.dataset.fallbackTried = '1'
+  if (file) {
+    const url = URL.createObjectURL(file)
+    previewUrl.value = url
+    lastObjectUrl = url
+    // กันสับสน: ให้พรีวิวจากไฟล์แทนรูปเดิม
+    currentNews.value.imageUrl = ''
+  } else {
+    previewUrl.value = null
   }
 }
 
-const absoluteImage = imgSrc
-
-/* ---------- Excerpt helpers ---------- */
-function stripHtml(input: string): string {
-  const div = document.createElement('div')
-  div.innerHTML = input
-  return (div.textContent || div.innerText || '').replace(/\s+/g, ' ').trim()
-}
-function makeExcerpt(title: string, content: string, max = 200): string {
-  const t = stripHtml(title)
-  const c = stripHtml(content)
-  const base = (t ? `${t} — ` : '') + c
-  const clean = base.trim()
-  if (!clean) return ''
-  if (clean.length <= max) return clean
-  const cut = clean.slice(0, max)
-  const lastSpace = cut.lastIndexOf(' ')
-  const clipped = (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim()
-  return clipped + '…'
-}
-
-/* ---------- Sort utils ---------- */
-function sortByUpdatedDesc<T extends { updatedAt?: string; createdAt?: string; date?: string }>(
-  arr: T[],
-): T[] {
-  return [...arr].sort((a, b) => getSortTime(b) - getSortTime(a))
-}
-function resort() {
-  newsList.value = sortByUpdatedDesc(newsList.value)
-}
-
-/* ---------- CRUD ---------- */
+/* =========================================================================
+ * CRUD (fetch / create / update via main form)
+ * ========================================================================= */
 async function fetchNews() {
   loading.value = true
   errorMsg.value = null
   try {
     const items = await getAllNews()
-    newsList.value = sortByUpdatedDesc(items) // โหลดแล้วเรียงล่าสุดก่อน
+    newsList.value = sortByUpdatedDesc(items)
   } catch (e) {
     errorMsg.value = isAxiosError(e)
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
@@ -741,13 +1017,13 @@ async function onSubmit() {
       const id = String(currentNews.value.id)
       const wantPublished = currentNews.value.isPublished
 
-      // ✅ ส่งเฉพาะฟิลด์ข้อมูลหลัก (ไม่ส่ง isPublished เพราะ backend ใช้ toggle แยก)
+      // ไม่ส่ง isPublished ใน update (backend ใช้ toggle แยก)
       let updated = await updateNews(id, {
         ...base,
         image: imageFile.value ?? null,
       })
 
-      // ถ้าสถานะที่ต้องการไม่ตรงกับที่ backend คืนมา → toggle ให้ตรง
+      // ถ้าสถานะยังไม่ตรง → toggle ให้ตรง
       if (updated.isPublished !== wantPublished) {
         try {
           const toggled = await togglePublish(id, wantPublished)
@@ -760,7 +1036,7 @@ async function onSubmit() {
       const idx = newsList.value.findIndex((n) => String(n.id) === id)
       if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
       toast.success('แก้ไขข่าวสารสำเร็จ!')
-      resort()
+      newsList.value = sortByUpdatedDesc(newsList.value)
     } else {
       // ---- สร้างใหม่ ----
       const created = await createNews({
@@ -768,10 +1044,11 @@ async function onSubmit() {
         image: imageFile.value ?? null,
       })
 
-      // ถ้าผู้ใช้เปิดสวิตช์ "เผยแพร่แล้ว" → เรียก toggle ทันทีหลังสร้าง
+      // ถ้าติ๊กสวิตช์ “เผยแพร่แล้ว” → toggle ต่อ
       if (currentNews.value.isPublished) {
         try {
           const published = await togglePublish(created.id, true)
+          // togglePublish() คืน NewsItem → มี updatedAt ชัดเจน
           Object.assign(created, {
             isPublished: published.isPublished,
             updatedAt: published.updatedAt ?? created.updatedAt,
@@ -789,7 +1066,7 @@ async function onSubmit() {
       else newsList.value.unshift(created)
 
       page.value = 1
-      resort()
+      newsList.value = sortByUpdatedDesc(newsList.value)
     }
 
     resetForm()
@@ -805,19 +1082,133 @@ async function onSubmit() {
   }
 }
 
-function editNews(news: NewsItem) {
-  currentNews.value = toForm(news)
-  imageFile.value = null
-  editingNews.value = true
-  touched.value = { title: false, content: false, date: false }
-  errors.value = { title: null, content: null, date: null }
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+/* =========================================================================
+ * Edit Modal (state + logic)
+ * ========================================================================= */
+const showEditModal = ref(false)
+const savingEdit = ref(false)
+const editForm = ref<NewsForm>({
+  id: '',
+  title: '',
+  content: '',
+  excerpt: '',
+  date: new Date().toISOString().split('T')[0],
+  imageUrl: '',
+  isPublished: false,
+})
+const editImageFile = ref<File | null>(null)
+const editPreviewUrl = ref<string | null>(null)
+let editLastObjectUrl: string | null = null
+
+const editPreviewSrc = computed(() => {
+  if (editPreviewUrl.value) return editPreviewUrl.value
+  return editForm.value.imageUrl ? absoluteImage(editForm.value.imageUrl) : ''
+})
+
+function openEditModal(n: NewsItem) {
+  // รีเซ็ต preview ไฟล์เก่า
+  if (editLastObjectUrl) {
+    URL.revokeObjectURL(editLastObjectUrl)
+    editLastObjectUrl = null
+  }
+  editPreviewUrl.value = null
+  editImageFile.value = null
+
+  editForm.value = toForm(n)
+  showEditModal.value = true
 }
 
+function closeEditModal() {
+  showEditModal.value = false
+  if (editLastObjectUrl) {
+    URL.revokeObjectURL(editLastObjectUrl)
+    editLastObjectUrl = null
+  }
+  editPreviewUrl.value = null
+  editImageFile.value = null
+}
+
+/** ปุ่มยกเลิก (ใช้ทั้งในฟอร์มหลัก/หรือกรณีเปิดโมดอลแล้วไม่บันทึก) */
 function cancelEdit() {
+  if (showEditModal.value) {
+    closeEditModal()
+  }
   resetForm()
 }
 
+function onEditFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  editImageFile.value = file
+
+  if (editLastObjectUrl) {
+    URL.revokeObjectURL(editLastObjectUrl)
+    editLastObjectUrl = null
+  }
+  if (file) {
+    const url = URL.createObjectURL(file)
+    editPreviewUrl.value = url
+    editLastObjectUrl = url
+    // ไม่ให้สับสนกับรูปเก่า
+    editForm.value.imageUrl = ''
+  } else {
+    editPreviewUrl.value = null
+  }
+}
+
+async function submitEdit() {
+  if (savingEdit.value) return
+  const v = editForm.value
+  if (!v.title.trim() || !v.content.trim() || !v.date) {
+    toast.error('กรุณากรอกหัวข้อ เนื้อหา และวันที่ให้ครบ')
+    return
+  }
+
+  savingEdit.value = true
+  try {
+    const base = {
+      title: v.title.trim(),
+      content: v.content.trim(),
+      excerpt: (v.excerpt?.trim() || makeExcerpt(v.title, v.content)).slice(0, 200),
+      date: v.date,
+    }
+
+    // 1) อัปเดตเนื้อหา/รูป
+    let updated = await updateNews(v.id, {
+      ...base,
+      image: editImageFile.value ?? null,
+    })
+
+    // 2) sync สถานะเผยแพร่ตามสวิตช์
+    if (updated.isPublished !== v.isPublished) {
+      try {
+        const toggled = await togglePublish(v.id, v.isPublished)
+        updated = { ...updated, ...toggled }
+      } catch {
+        toast.error('บันทึกแล้ว แต่เปลี่ยนสถานะเผยแพร่ไม่สำเร็จ')
+      }
+    }
+
+    // 3) อัปเดตในตาราง
+    const idx = newsList.value.findIndex((n) => String(n.id) === String(v.id))
+    if (idx !== -1) newsList.value[idx] = { ...newsList.value[idx], ...updated }
+
+    toast.success('บันทึกการแก้ไขเรียบร้อย')
+    newsList.value = sortByUpdatedDesc(newsList.value)
+    closeEditModal()
+  } catch (err) {
+    const msg = isAxiosError(err)
+      ? ((err.response?.data as { message?: string } | undefined)?.message ?? err.message)
+      : 'บันทึกการแก้ไขไม่สำเร็จ'
+    toast.error(msg)
+  } finally {
+    savingEdit.value = false
+  }
+}
+
+/* =========================================================================
+ * Delete / Toggle Publish
+ * ========================================================================= */
 function confirmDeleteNews(id: string) {
   newsToDeleteId.value = id
   showConfirmModal.value = true
@@ -833,7 +1224,7 @@ async function deleteNews() {
   try {
     await apiDeleteNews(id)
     toast.success('ลบข่าวสารสำเร็จ!')
-    resort()
+    newsList.value = sortByUpdatedDesc(newsList.value)
   } catch (e) {
     newsList.value = snapshot
     const msg = isAxiosError(e)
@@ -848,19 +1239,29 @@ async function deleteNews() {
 async function togglePublishStatus(news: NewsItem) {
   const prev = news.isPublished
   const next = !prev
-  news.isPublished = next
+  news.isPublished = next // optimistic
   try {
     const updated = await togglePublish(news.id, next)
     Object.assign(news, updated)
     toast.success(next ? 'เผยแพร่ข่าวแล้ว' : 'ยกเลิกเผยแพร่แล้ว')
-  } catch (e: unknown) {
-    console.error(e)
-    toast.error('เกิดข้อผิดพลาด')
+    newsList.value = sortByUpdatedDesc(newsList.value)
+  } catch {
+    news.isPublished = prev // rollback
+    toast.error('เกิดข้อผิดพลาดในการเปลี่ยนสถานะ')
   }
 }
 
-/* ---------- Reset / Utils ---------- */
+/* =========================================================================
+ * Resets / UI helpers
+ * ========================================================================= */
 function resetForm() {
+  // ล้าง object URL พรีวิวของฟอร์มสร้าง
+  if (lastObjectUrl) {
+    URL.revokeObjectURL(lastObjectUrl)
+    lastObjectUrl = null
+  }
+  previewUrl.value = null
+
   currentNews.value = {
     id: '',
     title: '',
@@ -874,19 +1275,17 @@ function resetForm() {
   editingNews.value = false
   errors.value = { title: null, content: null, date: null }
   touched.value = { title: false, content: false, date: false }
-  previewImageOk.value = true
 }
 
 function resetDeleteConfirm() {
   newsToDeleteId.value = null
   showConfirmModal.value = false
 }
-// สำหรับปุ่มยกเลิกใน modal
 function cancelDelete() {
   resetDeleteConfirm()
 }
 
-/* ---------- UI helpers ---------- */
+/** classes ฟอร์มสร้าง */
 const inputBase =
   'mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500'
 function inputClass(field: 'title' | 'date') {
@@ -897,19 +1296,6 @@ function textareaClass(field: 'content') {
   const hasError = touched.value[field] && !!errors.value[field]
   return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
 }
-function prettyDate(d: string) {
-  if (!d) return '-'
-  try {
-    return new Date(d).toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  } catch {
-    return d
-  }
-}
-const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
 </script>
 
 <style scoped>
