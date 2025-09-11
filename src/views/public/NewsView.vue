@@ -206,7 +206,6 @@
               <i class="far fa-image text-4xl"></i>
             </div>
 
-            <!-- gradient overlay -->
             <div
               class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/65 to-transparent"
             ></div>
@@ -320,22 +319,26 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { isAxiosError } from '@/services/apiService'
 import { getPublicNews, type PublicNewsItem } from '@/services/newsService'
 
-/** ---------- State ---------- */
+/* ---------- Types: เผื่อ backend ส่งฟิลด์เสริม ---------- */
+type PublicNewsEx = PublicNewsItem & {
+  isPublished?: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+/* ---------- State ---------- */
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
-const items = ref<PublicNewsItem[]>([])
-
+const itemsAll = ref<PublicNewsEx[]>([]) // รับทุกสถานะจาก backend แล้วค่อยกรอง
 const query = ref('')
 const sortKey = ref<'date' | 'title'>('date')
 const sortAsc = ref(false)
-
 const page = ref(1)
 const pageSize = ref(9)
-
-const quickView = ref<PublicNewsItem | null>(null)
+const quickView = ref<PublicNewsEx | null>(null)
 const copied = ref(false)
 
-/** ---------- Utils ---------- */
+/* ---------- Utils ---------- */
 function prettyDate(d: string) {
   try {
     return new Date(d).toLocaleDateString('th-TH', {
@@ -347,15 +350,13 @@ function prettyDate(d: string) {
     return d
   }
 }
-
 function absoluteImage(u?: string | null): string {
   if (!u) return ''
   if (/^https?:\/\//i.test(u)) return u
   const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
-  const root = base.replace(/\/api(\/v\d+)?$/i, '') // ตัด /api/v1 ออก → ใช้ /uploads
+  const root = base.replace(/\/api(\/v\d+)?$/i, '')
   return `${root}/${String(u).replace(/^\/+/, '')}`
 }
-
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
   const fallback =
@@ -369,8 +370,6 @@ function onImgError(e: Event) {
     )
   if (el && el.src !== fallback) el.src = fallback
 }
-
-// แยกย่อหน้าแบบง่าย ๆ
 function normalizeParagraphs(text: string): string[] {
   const clean = String(text ?? '')
     .replace(/\r/g, '')
@@ -381,12 +380,9 @@ function normalizeParagraphs(text: string): string[] {
     .map((s) => s.trim())
     .filter(Boolean)
 }
-
-// ลิงก์ถาวร (ถ้ามีหน้า detail แยก ค่อยเปลี่ยนเป็น /news/:id)
 function buildNewsPermalink(n: { id: string }) {
   return `${window.location.origin}/news#${n.id}`
 }
-
 async function copyLink(n: { id: string; title?: string }) {
   try {
     await navigator.clipboard.writeText(buildNewsPermalink(n))
@@ -396,7 +392,6 @@ async function copyLink(n: { id: string; title?: string }) {
     copied.value = false
   }
 }
-
 async function shareNews(n: { id: string; title?: string }) {
   const url = buildNewsPermalink(n)
   const title = n.title || 'ข่าวสาร'
@@ -404,7 +399,6 @@ async function shareNews(n: { id: string; title?: string }) {
 
   if ('share' in navigator) {
     try {
-      // บราวเซอร์ที่รองรับ Web Share API
       await (
         navigator as Navigator & {
           share: (data: { title?: string; text?: string; url?: string }) => Promise<void>
@@ -412,30 +406,31 @@ async function shareNews(n: { id: string; title?: string }) {
       ).share({ title, text, url })
       return
     } catch {
-      // ผู้ใช้ยกเลิก → ตกไปคัดลอกลิงก์
+      /* noop */
     }
   }
   await copyLink(n)
 }
-
-/** ---------- Derived ---------- */
-const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase()
-  return q ? items.value.filter((n) => n.title.toLowerCase().includes(q)) : items.value
-})
-
 function getSortTime(n: { date: string; updatedAt?: string; createdAt?: string }) {
   return new Date(n.updatedAt || n.createdAt || n.date).getTime()
 }
 
+/* ---------- Derived: กรองเฉพาะข่าว “เผยแพร่” ---------- */
+const itemsPublished = computed(
+  () => itemsAll.value.filter((n) => n.isPublished !== false), // ถ้าไม่ส่ง isPublished มา → ถือว่าเผยแพร่
+)
+
+const filtered = computed(() => {
+  const q = query.value.trim().toLowerCase()
+  const src = itemsPublished.value
+  return q ? src.filter((n) => n.title.toLowerCase().includes(q)) : src
+})
+
 const sortedNews = computed(() => {
   const list = [...filtered.value]
   const dir = sortAsc.value ? 1 : -1
-  if (sortKey.value === 'date') {
-    list.sort((a, b) => (getSortTime(a) - getSortTime(b)) * dir)
-  } else {
-    list.sort((a, b) => a.title.localeCompare(b.title) * dir)
-  }
+  if (sortKey.value === 'date') list.sort((a, b) => (getSortTime(a) - getSortTime(b)) * dir)
+  else list.sort((a, b) => a.title.localeCompare(b.title) * dir)
   return list
 })
 
@@ -444,21 +439,22 @@ const pagedSortedNews = computed(() => {
   return sortedNews.value.slice(start, start + pageSize.value)
 })
 
-/** ---------- UX: reset page when filter/sort changes ---------- */
+/* ---------- UX: reset page เมื่อ filter/sort เปลี่ยน ---------- */
 watch([query, sortKey, sortAsc], () => {
   page.value = 1
 })
 
-/** ---------- Fetch ---------- */
+/* ---------- Fetch ---------- */
 async function fetchNews() {
   loading.value = true
   errorMsg.value = null
   try {
-    items.value = await getPublicNews()
+    const data = await getPublicNews()
+    itemsAll.value = (data ?? []) as PublicNewsEx[]
     page.value = 1
-  } catch (e) {
-    const msg = isAxiosError(e)
-      ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
+  } catch (err) {
+    const msg = isAxiosError(err)
+      ? ((err.response?.data as { message?: string } | undefined)?.message ?? err.message)
       : 'ไม่สามารถโหลดข่าวสารได้'
     errorMsg.value = msg
   } finally {
@@ -466,7 +462,8 @@ async function fetchNews() {
   }
 }
 
-function openQuickView(n: PublicNewsItem) {
+/* ---------- Events ---------- */
+function openQuickView(n: PublicNewsEx) {
   quickView.value = n
   copied.value = false
 }
@@ -489,18 +486,5 @@ onMounted(fetchNews)
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.animate-fadeIn {
-  animation: fadeIn 0.25s ease-out;
 }
 </style>
