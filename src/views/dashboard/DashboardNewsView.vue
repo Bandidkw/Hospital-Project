@@ -799,6 +799,7 @@ async function onSubmit() {
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
       : 'บันทึกข่าวสารไม่สำเร็จ'
     toast.error(msg)
+    console.log(msg)
   } finally {
     saving.value = false
   }
@@ -847,8 +848,7 @@ async function deleteNews() {
 async function togglePublishStatus(news: NewsItem) {
   const prev = news.isPublished
   const next = !prev
-  news.isPublished = next // optimistic update
-
+  news.isPublished = next
   try {
     const updated = await togglePublish(news.id, next)
     Object.assign(news, updated)
