@@ -27,12 +27,12 @@
       <p class="text-lg md:text-xl mb-8 animate-fade-in-up delay-200">
         {{ currentSubtitle }}
       </p>
-      <RouterLink
+      <!-- <RouterLink
         to="/services"
         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 animate-fade-in-up delay-400"
       >
         ดูบริการของเรา
-      </RouterLink>
+      </RouterLink> -->
     </div>
 
     <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { RouterLink } from 'vue-router'
+// import { RouterLink } from 'vue-router'
 
 // Import your background images directly
 // Ensure these paths and filenames match your actual files in src/assets/Home/
