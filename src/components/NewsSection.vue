@@ -106,7 +106,9 @@ import { ref, onMounted, computed } from 'vue'
 import { getPublicNews, type PublicNewsItem } from '@/services/newsService'
 import { isAxiosError } from '@/services/apiService'
 
-const items = ref<PublicNewsItem[]>([])
+type PublicNewsWithStatus = PublicNewsItem & { isPublished?: boolean }
+
+const items = ref<PublicNewsWithStatus[]>([])
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 
@@ -115,9 +117,10 @@ async function fetchNews() {
   loading.value = true
   errorMsg.value = null
   try {
-    const data = await getPublicNews()
-    // เรียงใหม่สุดก่อน (ตาม date)
-    items.value = (data ?? []).sort((a, b) => (a.date > b.date ? -1 : 1))
+    const data = (await getPublicNews()) as PublicNewsWithStatus[]
+    const published = (data ?? []).filter((n) => n.isPublished === true)
+
+    items.value = published.sort((a, b) => (a.date > b.date ? -1 : 1))
   } catch (e) {
     errorMsg.value = isAxiosError(e)
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
@@ -127,7 +130,6 @@ async function fetchNews() {
   }
 }
 
-// แสดงแค่ 3 รายการล่าสุด
 const latestNews = computed(() => items.value.slice(0, 3))
 
 function onImgError(e: Event) {
@@ -148,7 +150,6 @@ function rememberScroll() {
   sessionStorage.setItem('homeScrollY', String(window.scrollY || 0))
 }
 
-// วันที่อ่านง่าย
 function formatDate(d: string) {
   try {
     return new Date(d).toLocaleDateString('th-TH', {
@@ -163,7 +164,6 @@ function formatDate(d: string) {
 </script>
 
 <style scoped>
-/* line-clamp helpers */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
