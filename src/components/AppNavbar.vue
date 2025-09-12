@@ -22,6 +22,7 @@
           <span>หน้าแรก</span>
         </RouterLink>
 
+        <!-- =========== ข้อมูลโรงพยาบาล (เดิม) =========== -->
         <div class="relative h-full flex items-center">
           <button
             @click="toggleDropdown('about')"
@@ -67,6 +68,7 @@
           </div>
         </div>
 
+        <!-- =========== บริการ (เดิม) =========== -->
         <div class="relative h-full flex items-center">
           <button
             @click="toggleDropdown('services')"
@@ -112,13 +114,71 @@
           </div>
         </div>
 
-        <RouterLink
-          to="/news"
-          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300"
-        >
-          <i class="fas fa-newspaper"></i>
-          <span>ข่าวสาร</span>
-        </RouterLink>
+        <!-- =========== ข่าวสาร (แปลงเป็น Dropdown) =========== -->
+        <div class="relative h-full flex items-center">
+          <button
+            @click="toggleDropdown('news')"
+            class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300 cursor-pointer focus:outline-none"
+            :aria-expanded="isDropdownOpen.news"
+          >
+            <i class="fas fa-newspaper"></i>
+            <span>ข่าวสาร</span>
+            <i
+              :class="{
+                'fas fa-chevron-down': !isDropdownOpen.news,
+                'fas fa-chevron-up': isDropdownOpen.news,
+              }"
+              class="text-xs ml-1 transition-transform duration-300"
+            ></i>
+          </button>
+          <div
+            v-if="isDropdownOpen.news"
+            class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-56 z-50 top-full left-0"
+            @click.stop
+          >
+            <RouterLink
+              :to="{ name: 'public-news' }"
+              class="block px-4 py-2 hover:bg-gray-100"
+              @click="closeAllDropdowns()"
+            >
+              <i class="far fa-paste"></i><span> ข่าวทั้งหมด </span>
+            </RouterLink>
+            <RouterLink
+              :to="{ name: 'public-news', query: { category: 'activity' } }"
+              class="block px-4 py-2 hover:bg-gray-100"
+              @click="closeAllDropdowns()"
+            >
+              <i class="far fa-paste"></i><span> กิจกรรมของโรงพยาบาล</span>
+            </RouterLink>
+            <RouterLink
+              :to="{ name: 'public-news', query: { category: 'procurement' } }"
+              class="block px-4 py-2 hover:bg-gray-100"
+              @click="closeAllDropdowns()"
+              ><i class="far fa-paste"></i><span> ประกวดจัดซื้อ/จัดจ้าง </span>
+            </RouterLink>
+            <RouterLink
+              :to="{ name: 'public-news', query: { category: 'recruitment' } }"
+              class="block px-4 py-2 hover:bg-gray-100"
+              @click="closeAllDropdowns()"
+            >
+              <i class="far fa-paste"></i><span> ข่าวรับสมัคร</span>
+            </RouterLink>
+            <RouterLink
+              :to="{ name: 'public-news', query: { category: 'forms' } }"
+              class="block px-4 py-2 hover:bg-gray-100"
+              @click="closeAllDropdowns()"
+              ><i class="far fa-paste"></i><span> แบบฟอร์มขอรับบริการ รพ.</span>
+            </RouterLink>
+            <RouterLink
+              :to="{ name: 'public-news', query: { category: 'staff' } }"
+              class="block px-4 py-2 hover:bg-gray-100"
+              @click="closeAllDropdowns()"
+              ><i class="far fa-paste"></i><span> ข่าวสำหรับบุคลากร รพ.</span>
+            </RouterLink>
+          </div>
+        </div>
+
+        <!-- ITA / ติดต่อเรา (เดิม) -->
         <RouterLink
           to="/ita-documents-public"
           class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300"
@@ -133,64 +193,8 @@
           <i class="fas fa-id-card"></i>
           <span>ติดต่อเรา</span>
         </RouterLink>
-        <!-- ***** เมนู 'บริการอื่นๆ' พร้อม Dropdown (สำหรับ Desktop) - ย้ายมาที่นี่แล้ว ***** -->
-        <!-- <div class="relative h-full flex items-center">
-          <button
-            @click="toggleDropdown('otherServices')"
-            class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300 cursor-pointer focus:outline-none"
-            :aria-expanded="isDropdownOpen.otherServices"
-          >
-            <i class="fas fa-ellipsis-h"></i>
-            <span>บริการอื่นๆ</span>
-            <i
-              :class="{
-                'fas fa-chevron-down': !isDropdownOpen.otherServices,
-                'fas fa-chevron-up': isDropdownOpen.otherServices,
-              }"
-              class="text-xs ml-1 transition-transform duration-300"
-            ></i>
-          </button>
-          <div
-            v-if="isDropdownOpen.otherServices"
-            class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
-            @click.stop
-          >
-            <RouterLink
-              to="/some-internal-page"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-info-circle"></i><span>หน้าข้อมูลภายใน</span>
-            </RouterLink>
-            <a
-              href="https://11123.gtwoffice.com/login"
-              target="_blank"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-              เจ้าหน้าที่
-            >
-              <i class="fas fa-link"></i><span>บริการเสริม 1</span>
-            </a>
-            <a
-              href="http://10.0.0.5/portal/pm25.php"
-              target="_blank"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-link"></i><span>บริการเสริม 2</span>
-            </a>
-            <a
-              href="https://ihimslink.cmhis.org/login"
-              target="_blank"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-link"></i><span>บริการเสริม 3</span>
-            </a>
-          </div>
-        </div> -->
-        <!-- ***** สิ้นสุดเมนู 'บริการอื่นๆ' ***** -->
 
+        <!-- =========== เจ้าหน้าที่ (เดิม) =========== -->
         <div class="relative h-full flex items-center">
           <button
             @click="toggleDropdown('staff')"
@@ -279,6 +283,7 @@
         <i class="fas fa-home"></i> <span>หน้าแรก</span>
       </RouterLink>
 
+      <!-- ข้อมูลโรงพยาบาล (เดิม) -->
       <div
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
         @click="toggleDropdown('about')"
@@ -323,6 +328,7 @@
         </RouterLink>
       </div>
 
+      <!-- บริการ (เดิม) -->
       <div
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
         @click="toggleDropdown('services')"
@@ -360,18 +366,72 @@
         </RouterLink>
       </div>
 
-      <RouterLink
-        to="/news"
-        class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2"
+      <!-- ===== ข่าวสาร (Mobile: Accordion) ===== -->
+      <div
+        class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
+        @click="toggleDropdown('news')"
       >
         <i class="fas fa-newspaper"></i> <span>ข่าวสาร</span>
-      </RouterLink>
+        <i
+          :class="{
+            'fas fa-chevron-down': !isDropdownOpen.news,
+            'fas fa-chevron-up': isDropdownOpen.news,
+          }"
+          class="text-xs ml-auto transition-transform duration-300"
+        ></i>
+      </div>
+      <div v-if="isDropdownOpen.news" class="bg-gray-100 pl-6">
+        <RouterLink
+          :to="{ name: 'public-news' }"
+          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
+          @click="closeAllDropdowns()"
+        >
+          <i class="fas fa-stethoscope"></i><span>ข่าวทั้งหมด</span>
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'public-news', query: { category: 'activity' } }"
+          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
+          @click="closeAllDropdowns()"
+        >
+          กิจกรรม
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'public-news', query: { category: 'procurement' } }"
+          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
+          @click="closeAllDropdowns()"
+        >
+          จัดซื้อ/จัดจ้าง
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'public-news', query: { category: 'recruitment' } }"
+          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
+          @click="closeAllDropdowns()"
+        >
+          รับสมัคร
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'public-news', query: { category: 'forms' } }"
+          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
+          @click="closeAllDropdowns()"
+        >
+          แบบฟอร์ม
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'public-news', query: { category: 'staff' } }"
+          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
+          @click="closeAllDropdowns()"
+        >
+          บุคลากร
+        </RouterLink>
+      </div>
+
       <RouterLink
         to="/ita-documents-public"
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2"
       >
         <i class="fas fa-award"></i> <span>ITA</span>
       </RouterLink>
+
       <RouterLink
         to="/contact"
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2"
@@ -379,47 +439,7 @@
         <i class="fas fa-id-card"></i> <span>ติดต่อเรา</span>
       </RouterLink>
 
-      <!-- ***** เมนู 'บริการอื่นๆ' พร้อม Dropdown (สำหรับ Mobile) - ย้ายมาที่นี่แล้ว ***** -->
-      <!-- <div
-        class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
-        @click="toggleDropdown('otherServices')"
-      >
-        <i class="fas fa-ellipsis-h"></i> <span>บริการอื่นๆ</span>
-        <i
-          :class="{
-            'fas fa-chevron-down': !isDropdownOpen.otherServices,
-            'fas fa-chevron-up': isDropdownOpen.otherServices,
-          }"
-          class="text-xs ml-auto transition-transform duration-300"
-        ></i>
-      </div> -->
-      <!-- <div v-if="isDropdownOpen.otherServices" class="bg-gray-100 pl-6">
-        <a
-          href="https://example.com/other-service-1"
-          target="_blank"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-link"></i><span>บริการเสริม 1 (Mobile)</span>
-        </a>
-        <a
-          href="https://example.com/other-service-2"
-          target="_blank"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-link"></i><span>บริการเสริม 2 (Mobile)</span>
-        </a>
-        <RouterLink
-          to="/some-internal-page"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-info-circle"></i><span>หน้าข้อมูลภายใน (Mobile)</span>
-        </RouterLink>
-      </div> -->
-      <!-- ***** สิ้นสุดเมนู 'บริการอื่นๆ' (Mobile) ***** -->
-
+      <!-- เจ้าหน้าที่ (เดิม) -->
       <div
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
         @click="toggleDropdown('staff')"
@@ -500,17 +520,17 @@ const isDropdownOpen = ref({
   about: false,
   services: false,
   staff: false,
-  otherServices: false, // เพิ่มเข้ามาสำหรับเมนูใหม่
+  news: false, // ✅ เพิ่ม state สำหรับเมนูข่าวสาร
+  otherServices: false,
 })
 const isLoginModalOpen = ref(false)
 
 const route = useRoute()
-// const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToast()
 
-const toggleDropdown = (menu: 'about' | 'services' | 'staff' | 'otherServices') => {
-  // เพิ่ม 'otherServices'
+// ✅ เพิ่ม 'news' เข้าไปใน union ด้วย
+const toggleDropdown = (menu: 'about' | 'services' | 'staff' | 'news' | 'otherServices') => {
   for (const key in isDropdownOpen.value) {
     if (key !== menu) {
       isDropdownOpen.value[key as keyof typeof isDropdownOpen.value] = false

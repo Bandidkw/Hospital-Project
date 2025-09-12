@@ -5,6 +5,21 @@
         ข่าวสารและกิจกรรมล่าสุด
       </h2>
 
+      <!-- Category dropdown -->
+      <div class="mb-8 flex justify-center">
+        <label class="sr-only" for="newsCategory">หมวดข่าว</label>
+        <select
+          id="newsCategory"
+          v-model="selectedCategory"
+          class="rounded-md border px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+        >
+          <option value="all">ทั้งหมด</option>
+          <option v-for="opt in categoryOptions" :key="opt.value" :value="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
       <!-- Error -->
       <div
         v-if="errorMsg"
@@ -31,31 +46,26 @@
         </div>
       </div>
 
-      <!-- Cards (ไม่มีปุ่มอ่านเพิ่มเติมต่อการ์ด) -->
+      <!-- Cards -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         <article
           v-for="n in latestNews"
           :key="n.id"
           class="group bg-white rounded-2xl shadow-sm overflow-hidden text-left ring-1 ring-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
-          <!-- ภาพสูงขึ้น -->
           <div class="relative w-full h-56 md:h-60 lg:h-64 bg-gray-100">
             <img
               v-if="n.imageUrl"
-              :src="n.imageUrl"
+              :src="absoluteImage(n.imageUrl)"
               :alt="n.title"
               class="absolute inset-0 w-full h-full object-cover"
               @error="onImgError"
             />
-            <div
-              v-else
-              class="absolute inset-0 flex items-center justify-center text-gray-400"
-              aria-hidden="true"
-            >
+            <div v-else class="absolute inset-0 flex items-center justify-center text-gray-400">
               <i class="far fa-image text-3xl"></i>
             </div>
 
-            <!-- date badge บนรูป -->
+            <!-- date badge -->
             <div class="absolute left-3 bottom-3">
               <span
                 class="inline-flex items-center gap-1 text-xs md:text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/90 text-gray-800 backdrop-blur"
@@ -66,7 +76,6 @@
             </div>
           </div>
 
-          <!-- เนื้อหา (ไม่มีลิงก์อ่านเพิ่มเติม) -->
           <div class="p-6">
             <h3
               class="text-lg md:text-xl font-semibold text-gray-900 leading-snug line-clamp-2"
@@ -86,10 +95,14 @@
         </div>
       </div>
 
-      <!-- ปุ่มดูทั้งหมด (พาไปหน้ารวมข่าว) -->
+      <!-- Button -->
       <div class="mt-12">
         <RouterLink
-          :to="{ name: 'public-news' }"
+          :to="
+            selectedCategory === 'all'
+              ? { name: 'public-news' }
+              : { name: 'public-news', query: { category: selectedCategory } }
+          "
           class="inline-flex items-center gap-2 text-blue-600 hover:text-white hover:bg-blue-700 font-bold py-2.5 px-6 rounded-full border-2 border-blue-500 transition-colors"
           @click="rememberScroll()"
         >
@@ -102,25 +115,100 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { getPublicNews, type PublicNewsItem } from '@/services/newsService'
 import { isAxiosError } from '@/services/apiService'
 
-type PublicNewsWithStatus = PublicNewsItem & { isPublished?: boolean }
+type CategoryKey = 'general' | 'activity' | 'procurement' | 'recruitment' | 'forms' | 'staff'
+type Selected = CategoryKey | 'all'
 
-const items = ref<PublicNewsWithStatus[]>([])
+type ApiPublicNews = PublicNewsItem & {
+  excerpt?: string | null
+  isPublished?: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+type NewsWithCategory = Omit<ApiPublicNews, 'excerpt'> & {
+  excerpt?: string
+  category: CategoryKey
+}
+
+const HIDE_DRAFTS = true
+const STORAGE_KEY = 'newsCategory'
+
+const CATEGORY_LABELS: Record<CategoryKey, string> = {
+  general: 'ข่าวทั่วไป',
+  activity: 'กิจกรรม',
+  procurement: 'จัดซื้อ/จัดจ้าง',
+  recruitment: 'รับสมัคร',
+  forms: 'แบบฟอร์ม',
+  staff: 'บุคลากร',
+}
+
+function categoryFromTitle(title: string): CategoryKey {
+  const t = title.toLowerCase()
+  if (t.includes('กิจกรรม')) return 'activity'
+  if (
+    t.includes('ประกวดราคา') ||
+    t.includes('จัดซื้อ') ||
+    t.includes('จัดจ้าง') ||
+    t.includes('ราคากลาง')
+  )
+    return 'procurement'
+  if (t.includes('รับสมัคร') || t.includes('สรรหา')) return 'recruitment'
+  if (t.includes('แบบฟอร์ม') || t.includes('ฟอร์ม')) return 'forms'
+  if (t.includes('บุคลากร') || t.includes('เจ้าหน้าที่') || t.includes('พนักงาน')) return 'staff'
+  return 'general'
+}
+
+function absoluteImage(u?: string | null): string {
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+  const root = base.replace(/\/api(\/v\d+)?$/i, '')
+  return `${root}/${String(u).replace(/^\/+/, '')}`
+}
+function getSortTime(n: { updatedAt?: string; createdAt?: string; date: string }) {
+  return new Date(n.updatedAt || n.createdAt || n.date).getTime()
+}
+function normalizeExcerpt(excerpt?: string | null, fallback?: string): string {
+  const base = (excerpt ?? fallback ?? '').trim()
+  return base.length <= 200 ? base : base.slice(0, 200).trim() + '…'
+}
+
+/* ---------- State ---------- */
+const items = ref<NewsWithCategory[]>([])
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 
+const selectedCategory = ref<Selected>((sessionStorage.getItem(STORAGE_KEY) as Selected) || 'all')
+
+watch(selectedCategory, (v) => sessionStorage.setItem(STORAGE_KEY, v))
+
+const categoryOptions = computed(() =>
+  (Object.keys(CATEGORY_LABELS) as CategoryKey[]).map((k) => ({
+    value: k,
+    label: CATEGORY_LABELS[k],
+  })),
+)
+
+/* ---------- Fetch ---------- */
 onMounted(fetchNews)
 async function fetchNews() {
   loading.value = true
   errorMsg.value = null
   try {
-    const data = (await getPublicNews()) as PublicNewsWithStatus[]
-    const published = (data ?? []).filter((n) => n.isPublished === true)
+    const data = await getPublicNews()
+    const raw = (Array.isArray(data) ? data : []) as ApiPublicNews[]
 
-    items.value = published.sort((a, b) => (a.date > b.date ? -1 : 1))
+    const mapped: NewsWithCategory[] = raw.map((n) => ({
+      ...n,
+      excerpt: normalizeExcerpt(n.excerpt, n.content),
+      category: categoryFromTitle(n.title),
+    }))
+
+    const publishedOnly = HIDE_DRAFTS ? mapped.filter((n) => n.isPublished !== false) : mapped
+    items.value = publishedOnly.sort((a, b) => getSortTime(b) - getSortTime(a))
   } catch (e) {
     errorMsg.value = isAxiosError(e)
       ? ((e.response?.data as { message?: string } | undefined)?.message ?? e.message)
@@ -130,8 +218,16 @@ async function fetchNews() {
   }
 }
 
-const latestNews = computed(() => items.value.slice(0, 3))
+/* ---------- Derived ---------- */
+const filteredByCategory = computed(() =>
+  selectedCategory.value === 'all'
+    ? items.value
+    : items.value.filter((n) => n.category === selectedCategory.value),
+)
 
+const latestNews = computed(() => filteredByCategory.value.slice(0, 3))
+
+/* ---------- UI helpers ---------- */
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
   const fallback =
@@ -145,11 +241,9 @@ function onImgError(e: Event) {
     )
   if (el && el.src !== fallback) el.src = fallback
 }
-
 function rememberScroll() {
   sessionStorage.setItem('homeScrollY', String(window.scrollY || 0))
 }
-
 function formatDate(d: string) {
   try {
     return new Date(d).toLocaleDateString('th-TH', {
