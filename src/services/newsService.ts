@@ -11,7 +11,8 @@ export interface NewsItem {
   title: string
   content: string
   excerpt?: string
-  date: string // YYYY-MM-DD
+  category?: string
+  date: string
   imageUrl?: string | null
   isPublished: boolean
   createdAt: string
@@ -27,7 +28,6 @@ export interface ApiSuccess<T> {
 export interface CreateNewsFormPayload {
   title: string
   content: string
-  /** backend บังคับ → ต้องส่งเสมอ (ฝั่ง caller ควรจัดให้ไม่ว่าง; ถ้าไม่กรอกให้สร้างจาก content แล้วส่งมา) */
   excerpt: string
   date: string // YYYY-MM-DD
   image?: File | null
@@ -37,7 +37,6 @@ export interface CreateNewsFormPayload {
 export interface UpdateNewsPayload {
   title?: string
   content?: string
-  /** backend บังคับ → ถึงจะ optional แต่เราจะเติม fallback เป็น '' ให้เสมอ */
   excerpt?: string
   date?: string
   isPublished?: boolean
@@ -109,8 +108,6 @@ export async function createNews(payload: CreateNewsFormPayload): Promise<NewsIt
 }
 
 /** PUT /news/:id — แก้ไขข่าว
- *  - ถ้ามี image ใหม่ → ส่ง multipart
- *  - ถ้าไม่มี image → ส่ง JSON (ตัด field image ออก และการันตี excerpt)
  */
 export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promise<NewsItem> {
   const hasFile = !!payload.image
