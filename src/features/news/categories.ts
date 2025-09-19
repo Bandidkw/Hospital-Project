@@ -60,8 +60,12 @@ export function inferCategory(n: MinimalNews): CategoryKey {
   return 'general'
 }
 
-export function attachCategory<T extends MinimalNews>(items: T[]) {
-  return items.map((i) => ({ ...i, category: inferCategory(i) as CategoryKey }))
+// ในไฟล์ categories.ts
+export function attachCategory<T extends MinimalNews & { category?: string }>(items: T[]) {
+  return items.map((i) => ({
+    ...i,
+    category: (i.category as CategoryKey) || inferCategory(i),
+  }))
 }
 
 export function getSortTime(n: { updatedAt?: string; createdAt?: string; date?: string }) {
