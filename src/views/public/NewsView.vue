@@ -1,19 +1,19 @@
 <template>
   <main class="max-w-6xl mx-auto px-4 py-10">
-    <!-- Header -->
     <header class="mb-8 text-center md:text-left">
       <h1
         class="text-3xl md:text-4xl font-extrabold text-gray-900 flex items-center justify-center md:justify-start gap-3"
       >
         <i class="fas fa-bullhorn text-blue-600"></i>
-        ข่าวสารและประกาศ
+        <span>ข่าวสารและประกาศ</span>
+        <span v-if="activeCategoryLabel" class="text-2xl text-blue-600 font-medium">
+          - {{ activeCategoryLabel }}
+        </span>
       </h1>
       <p class="text-gray-600 mt-1">อัปเดตข่าวสารล่าสุดของโรงพยาบาล</p>
     </header>
 
-    <!-- Controls -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
-      <!-- Search -->
       <div class="relative w-full sm:max-w-xs">
         <input
           type="search"
@@ -23,8 +23,6 @@
         />
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
       </div>
-
-      <!-- Sort -->
       <div class="flex items-center gap-2">
         <label class="text-sm text-gray-600">เรียงตาม</label>
         <select
@@ -44,7 +42,6 @@
       </div>
     </div>
 
-    <!-- Error -->
     <div
       v-if="errorMsg"
       class="mb-8 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 flex items-center justify-between"
@@ -62,9 +59,7 @@
       </button>
     </div>
 
-    <!-- Grid -->
     <section :aria-busy="loading ? 'true' : 'false'">
-      <!-- Loading skeleton -->
       <div v-if="loading" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div
           v-for="i in 6"
@@ -81,14 +76,12 @@
         </div>
       </div>
 
-      <!-- Cards -->
       <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <article
           v-for="n in pagedSortedNews"
           :key="n.id"
           class="group rounded-2xl border overflow-hidden bg-white shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
-          <!-- Image -->
           <div class="relative h-56 md:h-64 bg-gray-100 overflow-hidden">
             <img
               v-if="n.imageUrl"
@@ -100,13 +93,9 @@
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
               <i class="far fa-image text-3xl"></i>
             </div>
-
-            <!-- gradient bottom -->
             <div
               class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent"
             ></div>
-
-            <!-- date badge -->
             <div class="absolute left-3 bottom-3">
               <span
                 class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-white/90 text-gray-800 backdrop-blur"
@@ -115,8 +104,6 @@
               </span>
             </div>
           </div>
-
-          <!-- Content -->
           <div class="p-5">
             <h2
               class="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors"
@@ -125,7 +112,6 @@
               {{ n.title }}
             </h2>
             <p class="text-sm text-gray-600 mt-2 line-clamp-3">{{ n.excerpt || n.content }}</p>
-
             <div class="mt-4 flex items-center justify-between">
               <button
                 class="text-blue-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
@@ -136,22 +122,19 @@
             </div>
           </div>
         </article>
-
-        <!-- Empty -->
         <div
           v-if="!pagedSortedNews.length && !loading"
           class="col-span-full text-center py-20 text-gray-400"
         >
           <i class="fas fa-info-circle text-2xl mb-2"></i>
-          <p>ไม่พบข่าวสาร</p>
+          <p>ไม่พบข่าวสารที่ตรงกับเงื่อนไข</p>
         </div>
       </div>
     </section>
 
-    <!-- Pagination -->
     <div
       class="flex items-center justify-between mt-10 text-sm text-gray-600"
-      v-if="sortedNews.length"
+      v-if="sortedNews.length > pageSize"
     >
       <p>
         แสดง {{ (page - 1) * pageSize + 1 }} –
@@ -176,7 +159,6 @@
       </div>
     </div>
 
-    <!-- Quick View Modal -->
     <div
       v-if="quickView"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
@@ -188,7 +170,6 @@
       <div
         class="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5"
       >
-        <!-- Top hero + actions -->
         <div class="relative">
           <div class="relative h-[42vh] md:h-[55vh] bg-gray-100">
             <img
@@ -205,13 +186,10 @@
             >
               <i class="far fa-image text-4xl"></i>
             </div>
-
             <div
               class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/65 to-transparent"
             ></div>
           </div>
-
-          <!-- actions -->
           <div class="absolute top-4 right-4 flex gap-2">
             <button
               class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow"
@@ -238,8 +216,6 @@
               <i class="fas fa-times text-gray-700"></i>
             </button>
           </div>
-
-          <!-- title band -->
           <div class="absolute inset-x-0 -bottom-3 px-4 sm:px-6">
             <div
               class="mx-auto max-w-5xl rounded-xl bg-white/95 backdrop-blur px-4 sm:px-5 py-3 shadow ring-1 ring-black/5"
@@ -260,15 +236,11 @@
             </div>
           </div>
         </div>
-
-        <!-- content -->
-        <div class="px-4 sm:px-6 pt-6 pb-7">
+        <div class="px-4 sm:px-6 pt-6 pb-7 max-h-[30vh] overflow-y-auto">
           <div class="grid md:grid-cols-5 gap-6">
-            <!-- meta -->
             <aside class="md:col-span-2 order-2 md:order-1">
               <div class="rounded-lg border bg-gray-50 p-4 space-y-3">
                 <div class="text-xs uppercase tracking-wide text-gray-500">การกระทำด่วน</div>
-
                 <div class="flex gap-2">
                   <button
                     class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md border hover:bg-gray-100"
@@ -282,7 +254,7 @@
                     {{ copied ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกลิงก์' }}
                   </button>
                   <RouterLink
-                    :to="{ name: 'public-news' }"
+                    :to="{ name: 'news' }"
                     class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50"
                     @click="quickView = null"
                   >
@@ -292,8 +264,6 @@
                 </div>
               </div>
             </aside>
-
-            <!-- article -->
             <article class="md:col-span-3 order-1 md:order-2">
               <div class="prose prose-sm sm:prose md:prose-lg max-w-none text-gray-800">
                 <p
@@ -316,20 +286,24 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, RouterLink } from 'vue-router'
 import { isAxiosError } from '@/services/apiService'
 import { getPublicNews, type PublicNewsItem } from '@/services/newsService'
+import { attachCategory, CATEGORY_LIST } from '@/features/news/categories'
 
-/* ---------- Types: เผื่อ backend ส่งฟิลด์เสริม ---------- */
+/* ---------- Types ---------- */
 type PublicNewsEx = PublicNewsItem & {
   isPublished?: boolean
   createdAt?: string
   updatedAt?: string
+  category?: string
 }
 
 /* ---------- State ---------- */
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
-const itemsAll = ref<PublicNewsEx[]>([]) // รับทุกสถานะจาก backend แล้วค่อยกรอง
+const itemsAll = ref<PublicNewsEx[]>([])
+const route = useRoute()
 const query = ref('')
 const sortKey = ref<'date' | 'title'>('date')
 const sortAsc = ref(false)
@@ -339,6 +313,10 @@ const quickView = ref<PublicNewsEx | null>(null)
 const copied = ref(false)
 
 /* ---------- Utils ---------- */
+const categoryLabels = computed(() =>
+  Object.fromEntries(CATEGORY_LIST.map(({ key, label }) => [key, label])),
+)
+
 function prettyDate(d: string) {
   try {
     return new Date(d).toLocaleDateString('th-TH', {
@@ -362,11 +340,7 @@ function onImgError(e: Event) {
   const fallback =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-         <rect width="100%" height="100%" fill="#e5e7eb"/>
-         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-               font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
-       </svg>`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text></svg>`,
     )
   if (el && el.src !== fallback) el.src = fallback
 }
@@ -381,7 +355,7 @@ function normalizeParagraphs(text: string): string[] {
     .filter(Boolean)
 }
 function buildNewsPermalink(n: { id: string }) {
-  return `${window.location.origin}/news#${n.id}`
+  return `${window.location.origin}/news/${n.id}`
 }
 async function copyLink(n: { id: string; title?: string }) {
   try {
@@ -396,14 +370,13 @@ async function shareNews(n: { id: string; title?: string }) {
   const url = buildNewsPermalink(n)
   const title = n.title || 'ข่าวสาร'
   const text = `แนะนำให้อ่าน: ${title}`
-
   if ('share' in navigator) {
     try {
-      await (
-        navigator as Navigator & {
-          share: (data: { title?: string; text?: string; url?: string }) => Promise<void>
-        }
-      ).share({ title, text, url })
+      await (navigator as Navigator & { share: (data?: ShareData) => Promise<void> }).share({
+        title,
+        text,
+        url,
+      })
       return
     } catch {
       /* noop */
@@ -415,15 +388,27 @@ function getSortTime(n: { date: string; updatedAt?: string; createdAt?: string }
   return new Date(n.updatedAt || n.createdAt || n.date).getTime()
 }
 
-/* ---------- Derived: กรองเฉพาะข่าว “เผยแพร่” ---------- */
-const itemsPublished = computed(
-  () => itemsAll.value.filter((n) => n.isPublished !== false), // ถ้าไม่ส่ง isPublished มา → ถือว่าเผยแพร่
-)
+/* ---------- Derived State ---------- */
+const activeCategoryLabel = computed(() => {
+  const categoryKey = route.query.category as string
+  if (!categoryKey) return ''
+  return categoryLabels.value[categoryKey] || categoryKey
+})
+
+const itemsPublished = computed(() => itemsAll.value.filter((n) => n.isPublished !== false))
 
 const filtered = computed(() => {
+  const category = route.query.category as string | undefined
   const q = query.value.trim().toLowerCase()
-  const src = itemsPublished.value
-  return q ? src.filter((n) => n.title.toLowerCase().includes(q)) : src
+  let result = itemsPublished.value
+
+  if (category) {
+    result = result.filter((news) => news.category === category)
+  }
+  if (q) {
+    result = result.filter((n) => n.title.toLowerCase().includes(q))
+  }
+  return result
 })
 
 const sortedNews = computed(() => {
@@ -439,19 +424,18 @@ const pagedSortedNews = computed(() => {
   return sortedNews.value.slice(start, start + pageSize.value)
 })
 
-/* ---------- UX: reset page เมื่อ filter/sort เปลี่ยน ---------- */
-watch([query, sortKey, sortAsc], () => {
+/* ---------- Watchers ---------- */
+watch([query, sortKey, sortAsc, () => route.query.category], () => {
   page.value = 1
 })
 
-/* ---------- Fetch ---------- */
+/* ---------- Data Fetching ---------- */
 async function fetchNews() {
   loading.value = true
   errorMsg.value = null
   try {
     const data = await getPublicNews()
-    itemsAll.value = (data ?? []) as PublicNewsEx[]
-    page.value = 1
+    itemsAll.value = attachCategory((data ?? []) as PublicNewsEx[])
   } catch (err) {
     const msg = isAxiosError(err)
       ? ((err.response?.data as { message?: string } | undefined)?.message ?? err.message)
@@ -462,13 +446,15 @@ async function fetchNews() {
   }
 }
 
-/* ---------- Events ---------- */
+/* ---------- Event Handlers ---------- */
 function openQuickView(n: PublicNewsEx) {
   quickView.value = n
   copied.value = false
 }
 
-onMounted(fetchNews)
+onMounted(() => {
+  fetchNews()
+})
 </script>
 
 <style scoped>

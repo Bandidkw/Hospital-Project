@@ -1140,6 +1140,7 @@ async function submitEdit() {
       ...base,
       image: editImageFile.value ?? null,
     })
+    console.log('ข้อมูลที่ได้จาก API หลังอัปเดต:', updated)
 
     if (updated.isPublished !== v.isPublished) {
       try {
