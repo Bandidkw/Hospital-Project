@@ -5,7 +5,6 @@
         ข่าวสารและกิจกรรมล่าสุด
       </h2>
 
-      <!-- Category dropdown -->
       <div class="mb-8 flex justify-center">
         <label class="sr-only" for="newsCategory">หมวดข่าว</label>
         <select
@@ -20,7 +19,6 @@
         </select>
       </div>
 
-      <!-- Error -->
       <div
         v-if="errorMsg"
         class="mb-6 inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50/80 px-3 py-2 text-red-700"
@@ -30,7 +28,6 @@
         <span>{{ errorMsg }}</span>
       </div>
 
-      <!-- Loading skeleton -->
       <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         <div
           v-for="i in 3"
@@ -46,7 +43,6 @@
         </div>
       </div>
 
-      <!-- Cards -->
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         <article
           v-for="n in latestNews"
@@ -65,7 +61,6 @@
               <i class="far fa-image text-3xl"></i>
             </div>
 
-            <!-- date badge -->
             <div class="absolute left-3 bottom-3">
               <span
                 class="inline-flex items-center gap-1 text-xs md:text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/90 text-gray-800 backdrop-blur"
@@ -89,19 +84,17 @@
           </div>
         </article>
 
-        <!-- Empty state -->
         <div v-if="!latestNews.length" class="col-span-full text-gray-500 py-10">
           <i class="fas fa-info-circle mr-2"></i> ยังไม่มีข่าวสาร
         </div>
       </div>
 
-      <!-- Button -->
       <div class="mt-12">
         <RouterLink
           :to="
             selectedCategory === 'all'
-              ? { name: 'public-news' }
-              : { name: 'public-news', query: { category: selectedCategory } }
+              ? { name: 'news' }
+              : { name: 'news', query: { category: selectedCategory } }
           "
           class="inline-flex items-center gap-2 text-blue-600 hover:text-white hover:bg-blue-700 font-bold py-2.5 px-6 rounded-full border-2 border-blue-500 transition-colors"
           @click="rememberScroll()"
@@ -116,6 +109,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { RouterLink } from 'vue-router'
 import { getPublicNews, type PublicNewsItem } from '@/services/newsService'
 import { isAxiosError } from '@/services/apiService'
 
@@ -127,6 +121,7 @@ type ApiPublicNews = PublicNewsItem & {
   isPublished?: boolean
   createdAt?: string
   updatedAt?: string
+  category?: string
 }
 type NewsWithCategory = Omit<ApiPublicNews, 'excerpt'> & {
   excerpt?: string
@@ -134,7 +129,7 @@ type NewsWithCategory = Omit<ApiPublicNews, 'excerpt'> & {
 }
 
 const HIDE_DRAFTS = true
-const STORAGE_KEY = 'newsCategory'
+const STORAGE_KEY = 'homeNewsCategory'
 
 const CATEGORY_LABELS: Record<CategoryKey, string> = {
   general: 'ข่าวทั่วไป',
@@ -186,10 +181,12 @@ const selectedCategory = ref<Selected>((sessionStorage.getItem(STORAGE_KEY) as S
 watch(selectedCategory, (v) => sessionStorage.setItem(STORAGE_KEY, v))
 
 const categoryOptions = computed(() =>
-  (Object.keys(CATEGORY_LABELS) as CategoryKey[]).map((k) => ({
-    value: k,
-    label: CATEGORY_LABELS[k],
-  })),
+  (Object.keys(CATEGORY_LABELS) as CategoryKey[])
+    .filter((key) => key !== 'general')
+    .map((k) => ({
+      value: k,
+      label: CATEGORY_LABELS[k],
+    })),
 )
 
 /* ---------- Fetch ---------- */
@@ -204,7 +201,7 @@ async function fetchNews() {
     const mapped: NewsWithCategory[] = raw.map((n) => ({
       ...n,
       excerpt: normalizeExcerpt(n.excerpt, n.content),
-      category: categoryFromTitle(n.title),
+      category: n.category ? (n.category as CategoryKey) : categoryFromTitle(n.title),
     }))
 
     const publishedOnly = HIDE_DRAFTS ? mapped.filter((n) => n.isPublished !== false) : mapped
@@ -233,11 +230,7 @@ function onImgError(e: Event) {
   const fallback =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
-         <rect width="100%" height="100%" fill="#e5e7eb"/>
-         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-               font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text>
-       </svg>`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text></svg>`,
     )
   if (el && el.src !== fallback) el.src = fallback
 }
