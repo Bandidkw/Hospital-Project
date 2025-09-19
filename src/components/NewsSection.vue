@@ -93,8 +93,8 @@
         <RouterLink
           :to="
             selectedCategory === 'all'
-              ? { name: 'news' }
-              : { name: 'news', query: { category: selectedCategory } }
+              ? { name: 'public-news' } // <-- แก้จาก 'news' เป็น 'public-news'
+              : { name: 'public-news', query: { category: selectedCategory } } // <-- แก้ตรงนี้ด้วย
           "
           class="inline-flex items-center gap-2 text-blue-600 hover:text-white hover:bg-blue-700 font-bold py-2.5 px-6 rounded-full border-2 border-blue-500 transition-colors"
           @click="rememberScroll()"
