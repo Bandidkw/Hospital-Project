@@ -136,14 +136,22 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     try {
-      // ✨ เรียกใช้ Service โดยส่งไปแค่ newProfileData ตัวเดียว
-      const updatedUserData = await apiUpdateUserProfile(newProfileData)
+      // ✨ 1. สร้าง Payload ให้ตรงกับที่ Backend ต้องการ
+      const payload = {
+        name: newProfileData.fullName, // Map `fullName` ไปที่ `name`
+        username: user.value.username, // ดึง username จาก state ปัจจุบัน
+      }
 
-      if (updatedUserData && updatedUserData.fullName) {
-        user.value.fullName = updatedUserData.fullName
+      // ✨ 2. เรียกใช้ Service ด้วย payload ใหม่
+      const updatedUserData = await apiUpdateUserProfile(payload)
+
+      // ✨ 3. อัปเดต state จากข้อมูลที่ได้กลับมา (Backend อาจจะคืน `name` ไม่ใช่ `fullName`)
+      if (updatedUserData) {
+        user.value.fullName = updatedUserData.name || updatedUserData.fullName
         sessionStorage.setItem('user', JSON.stringify(user.value))
       }
 
+      console.log('อัปเดตโปรไฟล์สำเร็จ:', user.value)
       return true
     } catch (error) {
       console.error('เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์:', error)
