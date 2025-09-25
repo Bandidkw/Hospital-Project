@@ -1,232 +1,84 @@
 <template>
   <nav class="bg-white py-4 text-my-custom-gray shadow-lg relative z-50">
     <div class="container mx-auto flex justify-between items-center h-16 px-4">
-      <div class="flex items-center h-full">
-        <router-link to="/"
-          ><img src="/src/assets/MTH-Logo/logo.png" alt="Hospital Logo" class="h-24 w-24 p-3 m-0"
-        /></router-link>
-        <div>
-          <router-link to="/">
-            <h1 class="text-xl font-bold text-my-custom-green">โรงพยาบาลแม่แตง</h1>
-            <p class="text-sm text-my-custom-green">Maetaeng Hospital</p>
-          </router-link>
+      <router-link to="/" class="flex items-center space-x-3 shrink-0">
+        <img src="/src/assets/MTH-Logo/logo.png" alt="Hospital Logo" class="h-14 w-14" />
+        <div class="hidden lg:block">
+          <h1 class="text-xl font-bold text-my-custom-green">โรงพยาบาลแม่แตง</h1>
+          <p class="text-sm text-my-custom-green">Maetaeng Hospital</p>
         </div>
-      </div>
+      </router-link>
 
       <div class="hidden md:flex h-full items-center">
         <RouterLink
           to="/"
-          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300"
+          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition"
         >
           <i class="fas fa-home"></i>
-          <span>หน้าแรก</span>
+          <span class="md:text-sm lg:text-base">หน้าแรก</span>
         </RouterLink>
 
-        <!-- =========== ข้อมูลโรงพยาบาล (เดิม) =========== -->
-        <div class="relative h-full flex items-center">
+        <div v-for="menu in menuItems" :key="menu.key" class="relative h-full flex items-center">
           <button
-            @click="toggleDropdown('about')"
-            class="flex items-center space-x-2 px-4 py-2 hover:text-blue-600 transition duration-300 cursor-pointer focus:outline-none"
-            :aria-expanded="isDropdownOpen.about"
+            @click="toggleDropdown(menu.key)"
+            class="flex items-center space-x-2 px-4 py-2 hover:text-blue-600 transition"
+            :aria-expanded="isDropdownOpen[menu.key]"
           >
-            <i class="fas fa-hospital"></i>
-            <span>ข้อมูลโรงพยาบาล</span>
+            <i :class="menu.icon"></i>
+            <span class="md:text-sm lg:text-base">{{ menu.title }}</span>
             <i
-              :class="{
-                'fas fa-chevron-down': !isDropdownOpen.about,
-                'fas fa-chevron-up': isDropdownOpen.about,
-              }"
-              class="text-xs ml-1 transition-transform duration-300"
+              class="fas text-xs ml-1 transition-transform duration-300"
+              :class="isDropdownOpen[menu.key] ? 'fa-chevron-up' : 'fa-chevron-down'"
             ></i>
           </button>
           <div
-            v-if="isDropdownOpen.about"
-            class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
-            @click.stop
-          >
-            <RouterLink
-              to="/history"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-history"></i><span>ประวัติโรงพยาบาล</span>
-            </RouterLink>
-            <RouterLink
-              to="/vision"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-eye"></i><span>วิสัยทัศน์/พันธกิจ</span>
-            </RouterLink>
-            <RouterLink
-              to="/personnel"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-users"></i><span>บุคลากร</span>
-            </RouterLink>
-          </div>
-        </div>
-
-        <!-- =========== บริการ (เดิม) =========== -->
-        <div class="relative h-full flex items-center">
-          <button
-            @click="toggleDropdown('services')"
-            class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300 cursor-pointer focus:outline-none"
-            :aria-expanded="isDropdownOpen.services"
-          >
-            <i class="fas fa-concierge-bell"></i>
-            <span>บริการ</span>
-            <i
-              :class="{
-                'fas fa-chevron-down': !isDropdownOpen.services,
-                'fas fa-chevron-up': isDropdownOpen.services,
-              }"
-              class="text-xs ml-1 transition-transform duration-300"
-            ></i>
-          </button>
-          <div
-            v-if="isDropdownOpen.services"
-            class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
-            @click.stop
-          >
-            <RouterLink
-              to="/outpatient"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-stethoscope"></i><span>คลินิกผู้ป่วยนอก</span>
-            </RouterLink>
-            <RouterLink
-              to="/inpatient"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-bed"></i><span>ผู้ป่วยใน</span>
-            </RouterLink>
-            <RouterLink
-              to="/emergency"
-              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
-              @click="closeAllDropdowns()"
-            >
-              <i class="fas fa-ambulance"></i><span>ห้องฉุกเฉิน</span>
-            </RouterLink>
-          </div>
-        </div>
-
-        <!-- =========== ข่าวสาร (แปลงเป็น Dropdown) =========== -->
-        <div class="relative h-full flex items-center">
-          <button
-            @click="toggleDropdown('news')"
-            class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300 cursor-pointer focus:outline-none"
-            :aria-expanded="isDropdownOpen.news"
-          >
-            <i class="fas fa-newspaper"></i>
-            <span>ข่าวสาร</span>
-            <i
-              :class="{
-                'fas fa-chevron-down': !isDropdownOpen.news,
-                'fas fa-chevron-up': isDropdownOpen.news,
-              }"
-              class="text-xs ml-1 transition-transform duration-300"
-            ></i>
-          </button>
-          <div
-            v-if="isDropdownOpen.news"
+            v-if="isDropdownOpen[menu.key]"
             class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-56 z-50 top-full left-0"
             @click.stop
           >
             <RouterLink
-              :to="{ name: 'public-news' }"
-              class="block px-4 py-2 hover:bg-gray-100"
+              v-for="item in menu.items"
+              :key="item.label"
+              :to="item.to"
+              class="block px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"
               @click="closeAllDropdowns()"
             >
-              <i class="far fa-paste"></i><span> ข่าวทั้งหมด </span>
-            </RouterLink>
-            <RouterLink
-              :to="{ name: 'public-news', query: { category: 'activity' } }"
-              class="block px-4 py-2 hover:bg-gray-100"
-              @click="closeAllDropdowns()"
-            >
-              <i class="far fa-paste"></i><span> กิจกรรมของโรงพยาบาล</span>
-            </RouterLink>
-            <RouterLink
-              :to="{ name: 'public-news', query: { category: 'procurement' } }"
-              class="block px-4 py-2 hover:bg-gray-100"
-              @click="closeAllDropdowns()"
-              ><i class="far fa-paste"></i><span> ประกวดจัดซื้อ/จัดจ้าง </span>
-            </RouterLink>
-            <RouterLink
-              :to="{ name: 'public-news', query: { category: 'recruitment' } }"
-              class="block px-4 py-2 hover:bg-gray-100"
-              @click="closeAllDropdowns()"
-            >
-              <i class="far fa-paste"></i><span> ข่าวรับสมัคร</span>
-            </RouterLink>
-            <RouterLink
-              :to="{ name: 'public-news', query: { category: 'forms' } }"
-              class="block px-4 py-2 hover:bg-gray-100"
-              @click="closeAllDropdowns()"
-              ><i class="far fa-paste"></i><span> แบบฟอร์มขอรับบริการ รพ.</span>
-            </RouterLink>
-            <RouterLink
-              :to="{ name: 'public-news', query: { category: 'staff' } }"
-              class="block px-4 py-2 hover:bg-gray-100"
-              @click="closeAllDropdowns()"
-              ><i class="far fa-paste"></i><span> ข่าวสำหรับบุคลากร รพ.</span>
+              <i :class="item.icon"></i>
+              <span>{{ item.label }}</span>
             </RouterLink>
           </div>
         </div>
 
-        <!-- ITA / ติดต่อเรา (เดิม) -->
         <RouterLink
           to="/ita-documents-public"
-          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300"
+          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition"
         >
           <i class="fas fa-award"></i>
-          <span>ITA</span>
-        </RouterLink>
-        <RouterLink
-          to="/contact"
-          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300"
-        >
-          <i class="fas fa-id-card"></i>
-          <span>ติดต่อเรา</span>
+          <span class="md:text-sm lg:text-base">ITA</span>
         </RouterLink>
 
-        <!-- =========== เจ้าหน้าที่ (เดิม) =========== -->
         <div class="relative h-full flex items-center">
           <button
             @click="toggleDropdown('staff')"
-            class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition duration-300 cursor-pointer focus:outline-none"
+            class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition cursor-pointer focus:outline-none"
             :aria-expanded="isDropdownOpen.staff"
           >
             <i class="fas fa-user-circle"></i>
-            <span>เจ้าหน้าที่</span>
+            <span class="md:text-sm lg:text-base">เจ้าหน้าที่</span>
             <i
-              :class="{
-                'fas fa-chevron-down': !isDropdownOpen.staff,
-                'fas fa-chevron-up': isDropdownOpen.staff,
-              }"
-              class="text-xs ml-1 transition-transform duration-300"
+              class="fas text-xs ml-1 transition-transform duration-300"
+              :class="isDropdownOpen.staff ? 'fa-chevron-up' : 'fa-chevron-down'"
             ></i>
           </button>
           <div
             v-if="isDropdownOpen.staff"
-            class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-48 z-50 top-full left-0"
+            class="absolute bg-white text-my-custom-gray rounded-md shadow-lg py-2 mt-2 w-60 z-50 top-full right-0"
             @click.stop
           >
             <template v-if="authStore.isAuthenticated">
               <div class="block px-4 py-2 text-my-custom-gray font-semibold">
                 <i class="fas fa-user"></i> สวัสดี, {{ authStore.user?.username || 'ผู้ใช้งาน' }}
               </div>
-              <a
-                href="#"
-                class="block px-4 py-2 text-my-custom-gray hover:bg-red-100 flex items-center space-x-2"
-                @click.prevent="handleLogout"
-              >
-                <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
-              </a>
               <hr class="my-1 border-gray-200" />
               <RouterLink
                 to="/dashboard"
@@ -244,6 +96,13 @@
                 <i class="fas fa-external-link-alt"></i><span>ระบบ Back Office</span>
               </a>
               <hr class="my-1 border-gray-200" />
+              <a
+                href="#"
+                class="block px-4 py-2 text-my-custom-gray hover:bg-red-100 flex items-center space-x-2"
+                @click.prevent="handleLogout"
+              >
+                <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
+              </a>
             </template>
             <template v-else>
               <a
@@ -261,7 +120,6 @@
               >
                 <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>
               </a>
-              <hr class="my-1 border-gray-200" />
             </template>
           </div>
         </div>
@@ -269,188 +127,62 @@
 
       <div class="md:hidden">
         <button @click="toggleMobileMenu" class="text-my-custom-gray focus:outline-none">
-          <i class="fas fa-bars text-2xl"></i>
+          <i :class="isMobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'" class="text-2xl"></i>
         </button>
       </div>
     </div>
 
-    <!-- ***** Mobile Menu ***** -->
     <div v-if="isMobileMenuOpen" class="md:hidden bg-white px-4 py-2 border-t border-gray-200">
       <RouterLink
         to="/"
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2"
+        @click="closeAllDropdowns()"
       >
         <i class="fas fa-home"></i> <span>หน้าแรก</span>
       </RouterLink>
 
-      <!-- ข้อมูลโรงพยาบาล (เดิม) -->
-      <div
-        class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
-        @click="toggleDropdown('about')"
-      >
-        <i class="fas fa-hospital"></i> <span>ข้อมูลโรงพยาบาล</span>
-        <i
-          :class="{
-            'fas fa-chevron-down': !isDropdownOpen.about,
-            'fas fa-chevron-up': isDropdownOpen.about,
-          }"
-          class="text-xs ml-auto transition-transform duration-300"
-        ></i>
-      </div>
-      <div v-if="isDropdownOpen.about" class="bg-gray-100 pl-6">
-        <RouterLink
-          to="/history"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
+      <template v-for="menu in menuItems" :key="menu.key">
+        <div
+          class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
+          @click="toggleDropdown(menu.key)"
         >
-          <i class="fas fa-history"></i><span>ประวัติโรงพยาบาล</span>
-        </RouterLink>
-        <RouterLink
-          to="/vision"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-eye"></i><span>วิสัยทัศน์/พันธกิจ</span>
-        </RouterLink>
-        <RouterLink
-          to="/organization"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-sitemap"></i><span>โครงสร้างองค์กร</span>
-        </RouterLink>
-        <RouterLink
-          to="/personnel"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-users"></i><span>บุคลากร</span>
-        </RouterLink>
-      </div>
-
-      <!-- บริการ (เดิม) -->
-      <div
-        class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
-        @click="toggleDropdown('services')"
-      >
-        <i class="fas fa-concierge-bell"></i> <span>บริการ</span>
-        <i
-          :class="{
-            'fas fa-chevron-down': !isDropdownOpen.services,
-            'fas fa-chevron-up': isDropdownOpen.services,
-          }"
-          class="text-xs ml-auto transition-transform duration-300"
-        ></i>
-      </div>
-      <div v-if="isDropdownOpen.services" class="bg-gray-100 pl-6">
-        <RouterLink
-          to="/outpatient"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-stethoscope"></i><span>คลินิกผู้ป่วยนอก</span>
-        </RouterLink>
-        <RouterLink
-          to="/inpatient"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-bed"></i><span>ผู้ป่วยใน</span>
-        </RouterLink>
-        <RouterLink
-          to="/emergency"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-ambulance"></i><span>ห้องฉุกเฉิน</span>
-        </RouterLink>
-      </div>
-
-      <!-- ===== ข่าวสาร (Mobile: Accordion) ===== -->
-      <div
-        class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
-        @click="toggleDropdown('news')"
-      >
-        <i class="fas fa-newspaper"></i> <span>ข่าวสาร</span>
-        <i
-          :class="{
-            'fas fa-chevron-down': !isDropdownOpen.news,
-            'fas fa-chevron-up': isDropdownOpen.news,
-          }"
-          class="text-xs ml-auto transition-transform duration-300"
-        ></i>
-      </div>
-      <div v-if="isDropdownOpen.news" class="bg-gray-100 pl-6">
-        <RouterLink
-          :to="{ name: 'public-news' }"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
-          @click="closeAllDropdowns()"
-        >
-          <i class="fas fa-stethoscope"></i><span>ข่าวทั้งหมด</span>
-        </RouterLink>
-        <RouterLink
-          :to="{ name: 'public-news', query: { category: 'activity' } }"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
-          @click="closeAllDropdowns()"
-        >
-          กิจกรรม
-        </RouterLink>
-        <RouterLink
-          :to="{ name: 'public-news', query: { category: 'procurement' } }"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
-          @click="closeAllDropdowns()"
-        >
-          จัดซื้อ/จัดจ้าง
-        </RouterLink>
-        <RouterLink
-          :to="{ name: 'public-news', query: { category: 'recruitment' } }"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
-          @click="closeAllDropdowns()"
-        >
-          รับสมัคร
-        </RouterLink>
-        <RouterLink
-          :to="{ name: 'public-news', query: { category: 'forms' } }"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
-          @click="closeAllDropdowns()"
-        >
-          แบบฟอร์ม
-        </RouterLink>
-        <RouterLink
-          :to="{ name: 'public-news', query: { category: 'staff' } }"
-          class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200"
-          @click="closeAllDropdowns()"
-        >
-          บุคลากร
-        </RouterLink>
-      </div>
+          <i :class="menu.icon"></i>
+          <span>{{ menu.title }}</span>
+          <i
+            class="fas text-xs ml-auto transition-transform duration-300"
+            :class="isDropdownOpen[menu.key] ? 'fa-chevron-up' : 'fa-chevron-down'"
+          ></i>
+        </div>
+        <div v-if="isDropdownOpen[menu.key]" class="bg-gray-100 pl-6">
+          <RouterLink
+            v-for="item in menu.items"
+            :key="item.label"
+            :to="item.to"
+            class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
+            @click="closeAllDropdowns()"
+          >
+            <i :class="item.icon"></i>
+            <span>{{ item.label }}</span>
+          </RouterLink>
+        </div>
+      </template>
 
       <RouterLink
         to="/ita-documents-public"
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2"
+        @click="closeAllDropdowns()"
       >
         <i class="fas fa-award"></i> <span>ITA</span>
       </RouterLink>
 
-      <RouterLink
-        to="/contact"
-        class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2"
-      >
-        <i class="fas fa-id-card"></i> <span>ติดต่อเรา</span>
-      </RouterLink>
-
-      <!-- เจ้าหน้าที่ (เดิม) -->
       <div
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
         @click="toggleDropdown('staff')"
       >
         <i class="fas fa-user-circle"></i> <span>เจ้าหน้าที่</span>
         <i
-          :class="{
-            'fas fa-chevron-down': !isDropdownOpen.staff,
-            'fas fa-chevron-up': isDropdownOpen.staff,
-          }"
-          class="text-xs ml-auto transition-transform duration-300"
+          class="fas text-xs ml-auto transition-transform duration-300"
+          :class="isDropdownOpen.staff ? 'fa-chevron-up' : 'fa-chevron-down'"
         ></i>
       </div>
       <div v-if="isDropdownOpen.staff" class="bg-gray-100 pl-6">
@@ -458,6 +190,14 @@
           <div class="block px-4 py-2 text-my-custom-gray font-semibold">
             <i class="fas fa-user"></i> สวัสดี, {{ authStore.user?.username || 'ผู้ใช้งาน' }}
           </div>
+          <hr class="my-1 border-gray-200" />
+          <RouterLink
+            to="/dashboard"
+            class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
+            @click="closeAllDropdowns()"
+          >
+            <i class="fas fa-desktop"></i><span>แผงควบคุม</span>
+          </RouterLink>
           <a
             href="#"
             class="block px-4 py-2 text-my-custom-gray hover:bg-red-100 flex items-center space-x-2"
@@ -465,33 +205,8 @@
           >
             <i class="fas fa-sign-out-alt"></i><span>ออกจากระบบ</span>
           </a>
-          <hr class="my-1 border-gray-200" />
-          <RouterLink
-            to="/dashboard"
-            class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-            @click="closeAllDropdowns()"
-          >
-            <i class="fas fa-desktop"></i><span>แผงควบคุมเว็บไซต์</span>
-          </RouterLink>
-          <a
-            href="https://11123.gtwoffice.com/login"
-            target="_blank"
-            class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-            @click="closeAllDropdowns()"
-          >
-            <i class="fas fa-external-link-alt"></i><span>ระบบ Back Office</span>
-          </a>
-          <hr class="my-1 border-gray-200" />
         </template>
         <template v-else>
-          <a
-            href="http://10.0.0.5/portal"
-            target="_blank"
-            class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
-            @click="closeAllDropdowns()"
-          >
-            <i class="fas fa-external-link-alt"></i><span>บริการของเรา</span>
-          </a>
           <a
             href="#"
             class="block px-4 py-2 text-my-custom-gray hover:bg-gray-200 flex items-center space-x-2"
@@ -499,7 +214,6 @@
           >
             <i class="fas fa-sign-in-alt"></i><span>เข้าสู่ระบบ</span>
           </a>
-          <hr class="my-1 border-gray-200" />
         </template>
       </div>
     </div>
@@ -509,19 +223,67 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch, reactive } from 'vue'
+import { RouterLink, useRoute, type RouteLocationRaw } from 'vue-router'
 import LoginModal from './LoginModal.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import { CATEGORY_LIST } from '@/features/news/categories'
 
+// --- Data Structure for Menus ---
+type MenuKey = 'about' | 'services' | 'news'
+type DropdownState = Record<MenuKey | 'staff', boolean>
+
+type MenuItem = {
+  key: MenuKey
+  title: string
+  icon: string
+  items: { label: string; icon: string; to: RouteLocationRaw }[]
+}
+
+const menuItems: MenuItem[] = [
+  {
+    key: 'about',
+    title: 'ข้อมูลโรงพยาบาล',
+    icon: 'fas fa-hospital',
+    items: [
+      { label: 'ประวัติโรงพยาบาล', icon: 'fas fa-history', to: { path: '/history' } },
+      { label: 'วิสัยทัศน์/พันธกิจ', icon: 'fas fa-eye', to: { path: '/vision' } },
+      { label: 'บุคลากร', icon: 'fas fa-users', to: { path: '/personnel' } },
+    ],
+  },
+  {
+    key: 'services',
+    title: 'บริการ',
+    icon: 'fas fa-concierge-bell',
+    items: [
+      { label: 'คลินิกผู้ป่วยนอก', icon: 'fas fa-stethoscope', to: { path: '/outpatient' } },
+      { label: 'ผู้ป่วยใน', icon: 'fas fa-bed', to: { path: '/inpatient' } },
+      { label: 'ห้องฉุกเฉิน', icon: 'fas fa-ambulance', to: { path: '/emergency' } },
+    ],
+  },
+  {
+    key: 'news',
+    title: 'ข่าวสาร',
+    icon: 'fas fa-newspaper',
+    items: [
+      { label: 'ข่าวทั้งหมด', icon: 'far fa-newspaper', to: { name: 'public-news' } },
+      ...CATEGORY_LIST.filter((cat) => cat.key !== 'general').map((cat) => ({
+        label: cat.label,
+        icon: 'far fa-circle',
+        to: { name: 'public-news', query: { category: cat.key } },
+      })),
+    ],
+  },
+]
+
+// --- Component State ---
 const isMobileMenuOpen = ref(false)
-const isDropdownOpen = ref({
+const isDropdownOpen = reactive<DropdownState>({
   about: false,
   services: false,
+  news: false,
   staff: false,
-  news: false, // ✅ เพิ่ม state สำหรับเมนูข่าวสาร
-  otherServices: false,
 })
 const isLoginModalOpen = ref(false)
 
@@ -529,57 +291,53 @@ const route = useRoute()
 const authStore = useAuthStore()
 const toast = useToast()
 
-// ✅ เพิ่ม 'news' เข้าไปใน union ด้วย
-const toggleDropdown = (menu: 'about' | 'services' | 'staff' | 'news' | 'otherServices') => {
-  for (const key in isDropdownOpen.value) {
-    if (key !== menu) {
-      isDropdownOpen.value[key as keyof typeof isDropdownOpen.value] = false
-    }
-  }
-  isDropdownOpen.value[menu] = !isDropdownOpen.value[menu]
+// --- Methods ---
+const toggleDropdown = (menu: keyof DropdownState) => {
+  const currentState = isDropdownOpen[menu]
+  Object.keys(isDropdownOpen).forEach((key) => {
+    isDropdownOpen[key as keyof DropdownState] = false
+  })
+  isDropdownOpen[menu] = !currentState
 }
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
-  for (const key in isDropdownOpen.value) {
-    isDropdownOpen.value[key as keyof typeof isDropdownOpen.value] = false
+  if (!isMobileMenuOpen.value) {
+    closeAllDropdowns()
   }
 }
 
 const closeAllDropdowns = () => {
-  for (const key in isDropdownOpen.value) {
-    isDropdownOpen.value[key as keyof typeof isDropdownOpen.value] = false
-  }
+  Object.keys(isDropdownOpen).forEach((key) => {
+    isDropdownOpen[key as keyof DropdownState] = false
+  })
   isMobileMenuOpen.value = false
 }
+
 const handleClickOutside = (event: MouseEvent) => {
   const navbarElement = document.querySelector('nav')
-  if (navbarElement && !navbarElement.contains(event.target as Node) && !isLoginModalOpen.value) {
+  if (navbarElement && !navbarElement.contains(event.target as Node)) {
     closeAllDropdowns()
   }
 }
 
 const openLoginModal = () => {
-  isLoginModalOpen.value = true
   closeAllDropdowns()
+  isLoginModalOpen.value = true
 }
 
 const handleLoginSuccess = () => {
-  console.log('Login Success Handled by Navbar!')
+  // Can add logic here, e.g., show a welcome toast
 }
 
 const handleLogout = () => {
-  authStore.logout()
   closeAllDropdowns()
+  authStore.logout()
   toast.info('ออกจากระบบเรียบร้อยแล้ว')
 }
 
-watch(
-  () => route.path,
-  () => {
-    closeAllDropdowns()
-  },
-)
+// --- Lifecycle & Watchers ---
+watch(() => route.path, closeAllDropdowns)
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
@@ -590,4 +348,6 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Scoped styles can go here if needed */
+</style>

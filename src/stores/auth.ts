@@ -4,13 +4,13 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import apiService from '@/services/apiService'
 import { isAxiosError } from 'axios'
+import { updateUserProfile as apiUpdateUserProfile } from '@/services/userService'
 
 // Interface สำหรับข้อมูล User ที่เก็บใน Store
 interface User {
   id: string
   username: string
   fullName: string
-  email?: string
   roleId: number
   role: string
   vitrify: boolean
@@ -83,7 +83,6 @@ export const useAuthStore = defineStore('auth', () => {
             id: loginData.user.id || loginData.userId,
             username: loginData.user.username || loginData.username,
             fullName: loginData.user.name || loginData.user.fullName || loginData.username,
-            email: loginData.user.email,
             roleId: roleIdFromBackend,
             role: userRole,
             vitrify: loginData.user.vitrify || false,
@@ -123,6 +122,35 @@ export const useAuthStore = defineStore('auth', () => {
       return false
     } finally {
       isAuthenticating.value = false
+    }
+  }
+
+  /**
+   * @Action: updateUserProfile
+   * ใช้สำหรับอัปเดตข้อมูลโปรไฟล์ผู้ใช้ (เช่น ชื่อ-นามสกุล)
+   */
+  const updateUserProfile = async (newProfileData: { fullName: string }): Promise<boolean> => {
+    // ตรวจสอบว่ามี user login อยู่หรือไม่
+    if (!user.value) {
+      console.error('ไม่สามารถอัปเดตโปรไฟล์ได้: ไม่มีผู้ใช้งานในระบบ')
+      return false
+    }
+
+    try {
+      // เรียกใช้ Service เพื่อยิง API (ต้องสร้างฟังก์ชัน updateUserProfile ใน service ก่อน)
+      const updatedUserData = await apiUpdateUserProfile(user.value.id, newProfileData)
+
+      // อัปเดตข้อมูล fullName ใน user state ของ Pinia
+      user.value.fullName = updatedUserData.fullName
+
+      // อัปเดตข้อมูลใน sessionStorage ด้วย เพื่อให้ข้อมูลตรงกันหลังรีเฟรช
+      sessionStorage.setItem('user', JSON.stringify(user.value))
+
+      console.log('อัปเดตโปรไฟล์สำเร็จ:', user.value)
+      return true
+    } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์:', error)
+      return false
     }
   }
 
@@ -190,7 +218,6 @@ export const useAuthStore = defineStore('auth', () => {
           id: backendUser.id,
           username: backendUser.username,
           fullName: backendUser.name || backendUser.fullName, // ใช้ 'name' ถ้า 'fullName' ไม่มี
-          email: backendUser.email,
           roleId: roleIdFromBackend, // เก็บ roleId เป็น Number
           role: userRole,
           vitrify: backendUser.vitrify || false,
@@ -395,5 +422,6 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUser,
     requestPasswordReset,
     changePassword,
+    updateUserProfile,
   }
 })
