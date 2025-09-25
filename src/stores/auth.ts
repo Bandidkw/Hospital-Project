@@ -130,23 +130,20 @@ export const useAuthStore = defineStore('auth', () => {
    * ใช้สำหรับอัปเดตข้อมูลโปรไฟล์ผู้ใช้ (เช่น ชื่อ-นามสกุล)
    */
   const updateUserProfile = async (newProfileData: { fullName: string }): Promise<boolean> => {
-    // ตรวจสอบว่ามี user login อยู่หรือไม่
     if (!user.value) {
       console.error('ไม่สามารถอัปเดตโปรไฟล์ได้: ไม่มีผู้ใช้งานในระบบ')
       return false
     }
 
     try {
-      // เรียกใช้ Service เพื่อยิง API (ต้องสร้างฟังก์ชัน updateUserProfile ใน service ก่อน)
-      const updatedUserData = await apiUpdateUserProfile(user.value.id, newProfileData)
+      // ✨ เรียกใช้ Service โดยส่งไปแค่ newProfileData ตัวเดียว
+      const updatedUserData = await apiUpdateUserProfile(newProfileData)
 
-      // อัปเดตข้อมูล fullName ใน user state ของ Pinia
-      user.value.fullName = updatedUserData.fullName
+      if (updatedUserData && updatedUserData.fullName) {
+        user.value.fullName = updatedUserData.fullName
+        sessionStorage.setItem('user', JSON.stringify(user.value))
+      }
 
-      // อัปเดตข้อมูลใน sessionStorage ด้วย เพื่อให้ข้อมูลตรงกันหลังรีเฟรช
-      sessionStorage.setItem('user', JSON.stringify(user.value))
-
-      console.log('อัปเดตโปรไฟล์สำเร็จ:', user.value)
       return true
     } catch (error) {
       console.error('เกิดข้อผิดพลาดในการอัปเดตโปรไฟล์:', error)

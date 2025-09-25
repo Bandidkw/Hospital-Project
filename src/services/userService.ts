@@ -10,11 +10,12 @@ export interface User {
 }
 
 /**
- * อัปเดตข้อมูลโปรไฟล์ผู้ใช้
- * @param userId - ไอดีของผู้ใช้ที่จะอัปเดต
+ * อัปเดตข้อมูลโปรไฟล์ของผู้ใช้ที่ Login อยู่
  * @param data - ข้อมูลใหม่ที่จะส่งไป
  */
-export async function updateUserProfile(userId: string, data: { fullName: string }) {
-  const response = await apiService.patch(`/users/${userId}/profile`, data)
+export async function updateUserProfile(data: { fullName: string }) {
+  // ✨ 1. เปลี่ยน Endpoint เป็น /admin/profile
+  // ✨ 2. ไม่ต้องใช้ userId ใน URL
+  const response = await apiService.patch('/admin/profile', data)
   return response.data
 }
