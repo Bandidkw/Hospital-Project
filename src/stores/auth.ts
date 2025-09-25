@@ -385,23 +385,36 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = null
     }
   }
-  // เพิ่ม Action นี้เข้าไปใน store
+  /**
+   * @Action: changePassword
+   * สำหรับ User ที่ Login อยู่แล้ว ให้เปลี่ยนรหัสผ่านของตัวเอง
+   */
   const changePassword = async (passwords: {
-    currentPassword?: string
+    currentPassword: string
     newPassword: string
+    confirmNewPassword: string
   }): Promise<boolean> => {
     try {
-      // Endpoint นี้คุณต้องสร้างที่ฝั่ง Backend
-      await apiService.post('/auth/change-password', passwords)
+      // ✨ สร้าง Payload ให้ครบถ้วนตาม Postman
+      const payload = {
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+        confirmPassword: passwords.confirmNewPassword,
+      }
+
+      // ✨ เรียก API ด้วย PUT และ Endpoint ที่ถูกต้อง
+      await apiService.put('/admin/password', payload)
+
       // หลังจากเปลี่ยนรหัสผ่านสำเร็จ ควรจะอัปเดตสถานะใน State ด้วย
       if (user.value) {
         user.value.vitrify = false
       }
+
       console.log('เปลี่ยนรหัสผ่านสำเร็จ')
       return true
     } catch (error) {
       console.error('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน:', error)
-      // คุณอาจจะดึงข้อความ error จากหลังบ้านมาแสดงผล
+      // สามารถดึงข้อความ error จากหลังบ้านมาแสดงผลเพื่อ UX ที่ดีขึ้นได้
       return false
     }
   }

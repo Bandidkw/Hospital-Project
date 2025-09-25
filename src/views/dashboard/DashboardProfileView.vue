@@ -154,7 +154,7 @@ const updateProfile = async () => {
 }
 
 const changePassword = async () => {
-  // ✨ แก้ไขตรงนี้: ไม่ต้องใช้ .value กับ reactive object
+  // --- ส่วน Validation (เหมือนเดิม ถูกต้องแล้ว) ---
   if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
     toast.error('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!')
     return
@@ -164,11 +164,15 @@ const changePassword = async () => {
     return
   }
 
+  // ✨ แก้ไขโดยการส่ง passwordForm ทั้ง object เข้าไปเลย ✨
+  // หรือจะส่งทีละ property แบบเต็มๆ ก็ได้
   const success = await authStore.changePassword({
     currentPassword: passwordForm.currentPassword,
     newPassword: passwordForm.newPassword,
+    confirmNewPassword: passwordForm.confirmNewPassword, // <-- เพิ่มตัวนี้เข้าไป
   })
 
+  // --- ส่วนแสดงผล (เหมือนเดิม ถูกต้องแล้ว) ---
   if (success) {
     toast.success('เปลี่ยนรหัสผ่านสำเร็จ!')
     passwordForm.currentPassword = ''
