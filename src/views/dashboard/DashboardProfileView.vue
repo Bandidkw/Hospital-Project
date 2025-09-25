@@ -62,41 +62,83 @@
           <label for="currentPassword" class="block text-sm font-medium text-gray-700"
             >รหัสผ่านปัจจุบัน:</label
           >
-          <input
-            type="password"
-            id="currentPassword"
-            v-model="passwordForm.currentPassword"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-            autocomplete="current-password"
-          />
+          <div class="mt-1 relative">
+            <input
+              :type="passwordFieldTypes.current"
+              id="currentPassword"
+              v-model="passwordForm.currentPassword"
+              class="block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 focus:ring-blue-500 focus:border-blue-500"
+              required
+              autocomplete="current-password"
+            />
+            <button
+              type="button"
+              @click="togglePasswordVisibility('current')"
+              class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+              aria-label="Toggle current password visibility"
+            >
+              <i
+                class="fas"
+                :class="passwordFieldTypes.current === 'password' ? 'fa-eye' : 'fa-eye-slash'"
+              ></i>
+            </button>
+          </div>
         </div>
+
         <div>
           <label for="newPassword" class="block text-sm font-medium text-gray-700"
             >รหัสผ่านใหม่:</label
           >
-          <input
-            type="password"
-            id="newPassword"
-            v-model="passwordForm.newPassword"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-            autocomplete="new-password"
-          />
+          <div class="mt-1 relative">
+            <input
+              :type="passwordFieldTypes.new"
+              id="newPassword"
+              v-model="passwordForm.newPassword"
+              class="block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 focus:ring-blue-500 focus:border-blue-500"
+              required
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              @click="togglePasswordVisibility('new')"
+              class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+              aria-label="Toggle new password visibility"
+            >
+              <i
+                class="fas"
+                :class="passwordFieldTypes.new === 'password' ? 'fa-eye' : 'fa-eye-slash'"
+              ></i>
+            </button>
+          </div>
         </div>
+
         <div>
           <label for="confirmNewPassword" class="block text-sm font-medium text-gray-700"
             >ยืนยันรหัสผ่านใหม่:</label
           >
-          <input
-            type="password"
-            id="confirmNewPassword"
-            v-model="passwordForm.confirmNewPassword"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-            autocomplete="new-password"
-          />
+          <div class="mt-1 relative">
+            <input
+              :type="passwordFieldTypes.confirm"
+              id="confirmNewPassword"
+              v-model="passwordForm.confirmNewPassword"
+              class="block w-full border border-gray-300 rounded-md shadow-sm p-2 pr-10 focus:ring-blue-500 focus:border-blue-500"
+              required
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              @click="togglePasswordVisibility('confirm')"
+              class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-gray-700"
+              aria-label="Toggle confirm new password visibility"
+            >
+              <i
+                class="fas"
+                :class="passwordFieldTypes.confirm === 'password' ? 'fa-eye' : 'fa-eye-slash'"
+              ></i>
+            </button>
+          </div>
         </div>
+
         <div class="flex justify-end">
           <button
             type="submit"
@@ -136,6 +178,17 @@ const passwordForm = reactive({
   confirmNewPassword: '',
 })
 
+const passwordFieldTypes = reactive({
+  current: 'password',
+  new: 'password',
+  confirm: 'password',
+})
+
+//ฟังก์ชันสำหรับสลับการแสดงผล
+const togglePasswordVisibility = (field: keyof typeof passwordFieldTypes) => {
+  passwordFieldTypes[field] = passwordFieldTypes[field] === 'password' ? 'text' : 'password'
+}
+
 const updateProfile = async () => {
   if (!profile.value.fullName.trim()) {
     toast.error('กรุณากรอกชื่อ-นามสกุล')
@@ -154,7 +207,7 @@ const updateProfile = async () => {
 }
 
 const changePassword = async () => {
-  // --- ส่วน Validation (เหมือนเดิม ถูกต้องแล้ว) ---
+  // --- ส่วน Validation---
   if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
     toast.error('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!')
     return
@@ -163,16 +216,13 @@ const changePassword = async () => {
     toast.error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร!')
     return
   }
-
-  // ✨ แก้ไขโดยการส่ง passwordForm ทั้ง object เข้าไปเลย ✨
-  // หรือจะส่งทีละ property แบบเต็มๆ ก็ได้
+  // --- ส่วนส่งข้อมูลไปเปลี่ยนรหัสผ่าน---
   const success = await authStore.changePassword({
     currentPassword: passwordForm.currentPassword,
     newPassword: passwordForm.newPassword,
-    confirmNewPassword: passwordForm.confirmNewPassword, // <-- เพิ่มตัวนี้เข้าไป
+    confirmNewPassword: passwordForm.confirmNewPassword,
   })
-
-  // --- ส่วนแสดงผล (เหมือนเดิม ถูกต้องแล้ว) ---
+  // --- ส่วนแสดงผลแจ้งเตือน---
   if (success) {
     toast.success('เปลี่ยนรหัสผ่านสำเร็จ!')
     passwordForm.currentPassword = ''
