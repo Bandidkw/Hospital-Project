@@ -41,7 +41,7 @@
         >
       </div>
 
-      <div
+      <!-- <div
         class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-yellow-500 flex flex-col justify-between transform transition-transform duration-300 hover:-translate-y-2"
       >
         <div class="flex justify-between items-start">
@@ -54,9 +54,9 @@
           </div>
         </div>
         <a href="#" class="text-yellow-500 hover:underline text-sm mt-4">จัดการผู้ใช้ &rarr;</a>
-      </div>
+      </div> -->
 
-      <div
+      <!-- <div
         class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-purple-500 flex flex-col justify-between transform transition-transform duration-300 hover:-translate-y-2"
       >
         <div class="flex justify-between items-start">
@@ -69,7 +69,7 @@
           </div>
         </div>
         <a href="#" class="text-purple-500 hover:underline text-sm mt-4">จัดการบุคลากร &rarr;</a>
-      </div>
+      </div> -->
     </div>
 
     <!-- ส่วน "การดำเนินการด่วน" - แสดงเฉพาะผู้ดูแลระบบและผู้ดูแลระบบสูงสุดเท่านั้น -->
@@ -115,7 +115,7 @@
       </button>
     </div>
 
-    <div class="card bg-white p-6 rounded-lg shadow-md">
+    <!-- <div class="card bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-semibold ...">กิจกรรมล่าสุดในระบบ</h3>
 
       <div class="relative space-y-6">
@@ -144,7 +144,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -200,9 +200,8 @@ const mockActivities: ActivityLog[] = [
 // --- API Functions ---
 const fetchSummaryData = async () => {
   try {
-    // (ใช้ข้อมูลจำลองไปก่อน)
-    newsCount.value = 125
-    itaDocumentCount.value = 48
+    newsCount.value = 0
+    itaDocumentCount.value = 0
     userCount.value = 12
     personnelCount.value = 230
   } catch (error) {
@@ -230,48 +229,48 @@ const fetchRecentActivities = async () => {
 }
 
 // --- Helper Functions for UI (ส่วนที่ต้องมี) ---
-const getActivityIcon = (actionType: ActivityLog['action_type']) => {
-  switch (actionType) {
-    case 'CREATE':
-      return { bgClass: 'bg-green-100', iconClass: 'fa-plus', colorClass: 'text-green-500' }
-    case 'UPDATE':
-      return { bgClass: 'bg-blue-100', iconClass: 'fa-edit', colorClass: 'text-blue-500' }
-    case 'DELETE':
-      return { bgClass: 'bg-red-100', iconClass: 'fa-trash', colorClass: 'text-red-500' }
-    default:
-      return { bgClass: 'bg-gray-100', iconClass: 'fa-info-circle', colorClass: 'text-gray-500' }
-  }
-}
+// const getActivityIcon = (actionType: ActivityLog['action_type']) => {
+//   switch (actionType) {
+//     case 'CREATE':
+//       return { bgClass: 'bg-green-100', iconClass: 'fa-plus', colorClass: 'text-green-500' }
+//     case 'UPDATE':
+//       return { bgClass: 'bg-blue-100', iconClass: 'fa-edit', colorClass: 'text-blue-500' }
+//     case 'DELETE':
+//       return { bgClass: 'bg-red-100', iconClass: 'fa-trash', colorClass: 'text-red-500' }
+//     default:
+//       return { bgClass: 'bg-gray-100', iconClass: 'fa-info-circle', colorClass: 'text-gray-500' }
+//   }
+// }
 
-const formatActivityMessage = (activity: ActivityLog) => {
-  const user = `<span class="font-bold">${activity.user_name}</span>`
-  const target = `<span class="font-semibold text-gray-900">"${activity.target_name || ''}"</span>`
+// const formatActivityMessage = (activity: ActivityLog) => {
+//   const user = `<span class="font-bold">${activity.user_name}</span>`
+//   const target = `<span class="font-semibold text-gray-900">"${activity.target_name || ''}"</span>`
 
-  switch (activity.action_type) {
-    case 'CREATE':
-      return `${user} ได้สร้าง ${activity.target_type} ใหม่: ${target}`
-    case 'UPDATE':
-      return `${user} ได้แก้ไข ${activity.target_type}: ${target}`
-    case 'DELETE':
-      return `${user} ได้ลบ ${activity.target_type}: ${target}`
-    default:
-      return activity.details || 'กิจกรรมที่ไม่รู้จัก'
-  }
-}
+//   switch (activity.action_type) {
+//     case 'CREATE':
+//       return `${user} ได้สร้าง ${activity.target_type} ใหม่: ${target}`
+//     case 'UPDATE':
+//       return `${user} ได้แก้ไข ${activity.target_type}: ${target}`
+//     case 'DELETE':
+//       return `${user} ได้ลบ ${activity.target_type}: ${target}`
+//     default:
+//       return activity.details || 'กิจกรรมที่ไม่รู้จัก'
+//   }
+// }
 
-const formatRelativeTime = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const seconds = Math.round((now.getTime() - date.getTime()) / 1000)
-  const minutes = Math.round(seconds / 60)
-  const hours = Math.round(minutes / 60)
-  const days = Math.round(hours / 24)
+// const formatRelativeTime = (dateString: string) => {
+//   const date = new Date(dateString)
+//   const now = new Date()
+//   const seconds = Math.round((now.getTime() - date.getTime()) / 1000)
+//   const minutes = Math.round(seconds / 60)
+//   const hours = Math.round(minutes / 60)
+//   const days = Math.round(hours / 24)
 
-  if (seconds < 60) return 'เมื่อสักครู่'
-  if (minutes < 60) return `เมื่อ ${minutes} นาทีที่แล้ว`
-  if (hours < 24) return `เมื่อ ${hours} ชั่วโมงที่แล้ว`
-  return `เมื่อ ${days} วันที่แล้ว`
-}
+//   if (seconds < 60) return 'เมื่อสักครู่'
+//   if (minutes < 60) return `เมื่อ ${minutes} นาทีที่แล้ว`
+//   if (hours < 24) return `เมื่อ ${hours} ชั่วโมงที่แล้ว`
+//   return `เมื่อ ${days} วันที่แล้ว`
+// }
 
 // --- Navigation ---
 const quickAction = (action: string) => {
