@@ -14,6 +14,7 @@ export interface NewsItem {
   category?: string
   date: string
   imageUrl?: string | null
+  pdfUrl?: string
   isPublished: boolean
   createdAt: string
   updatedAt: string
@@ -28,7 +29,8 @@ export interface ApiSuccess<T> {
 export interface CreateNewsFormPayload {
   title: string
   content: string
-  category: string // ✨ เพิ่ม category
+  category: string
+  pdf?: File | null
   excerpt: string
   date: string // YYYY-MM-DD
   image?: File | null
@@ -38,7 +40,8 @@ export interface CreateNewsFormPayload {
 export interface UpdateNewsPayload {
   title?: string
   content?: string
-  category?: string // ✨ เพิ่ม category
+  category?: string
+  pdf?: File | null
   excerpt?: string
   date?: string
   isPublished?: boolean
@@ -104,6 +107,7 @@ export async function createNews(payload: CreateNewsFormPayload): Promise<NewsIt
   fd.append('excerpt', payload.excerpt ?? '')
   fd.append('date', payload.date)
   appendIfDefined(fd, 'image', payload.image)
+  appendIfDefined(fd, 'pdf', payload.pdf)
 
   const res = await apiService.post<ApiSuccess<NewsItem>>('/news', fd)
   return mapImage(res.data.data)
@@ -125,6 +129,7 @@ export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promis
       fd.append('isPublished', String(payload.isPublished))
     }
     fd.append('image', payload.image as File)
+    appendIfDefined(fd, 'pdf', payload.pdf)
 
     const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, fd)
     return mapImage(res.data.data)

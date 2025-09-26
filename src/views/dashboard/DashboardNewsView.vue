@@ -191,6 +191,20 @@
             </p>
           </div>
 
+          <div>
+            <label for="newsPdfFile" class="block text-sm font-medium text-gray-700">
+              ไฟล์เอกสารแนบ (PDF)
+            </label>
+            <input
+              id="newsPdfFile"
+              type="file"
+              accept=".pdf, application/pdf"
+              @change="onPdfFileChange"
+              class="mt-1 block w-full text-sm"
+            />
+            <p class="mt-1 text-xs text-gray-500">สำหรับเอกสารแนบ เช่น ประกาศรับสมัคร (ถ้ามี)</p>
+          </div>
+
           <div class="flex justify-end gap-3 pt-2">
             <button
               type="submit"
@@ -741,6 +755,7 @@ type NewsForm = {
   excerpt?: string
   date: string
   imageUrl: string
+  pdfUrl?: string
   isPublished: boolean
 }
 
@@ -958,6 +973,11 @@ function onFileChange(e: Event) {
     previewUrl.value = null
   }
 }
+function onPdfFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  pdfFile.value = file
+}
 
 /* =========================================================================
  * CRUD (fetch / create / update via main form)
@@ -1012,6 +1032,7 @@ async function onSubmit() {
     const created = await createNews({
       ...base,
       image: imageFile.value ?? null,
+      pdf: pdfFile.value ?? null,
     })
 
     // ถ้าติ๊กสวิตช์ “เผยแพร่แล้ว” → toggle ต่อ
@@ -1062,9 +1083,16 @@ const editForm = ref<NewsForm>({
   isPublished: false,
 })
 const editImageFile = ref<File | null>(null)
+const pdfFile = ref<File | null>(null)
+const editPdfFile = ref<File | null>(null)
 const editPreviewUrl = ref<string | null>(null)
 let editLastObjectUrl: string | null = null
 
+function onEditPdfFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0] ?? null
+  editPdfFile.value = file
+}
 const editPreviewSrc = computed(() => {
   if (editPreviewUrl.value) return editPreviewUrl.value
   return editForm.value.imageUrl ? absoluteImage(editForm.value.imageUrl) : ''
@@ -1139,6 +1167,7 @@ async function submitEdit() {
     let updated = await updateNews(v.id, {
       ...base,
       image: editImageFile.value ?? null,
+      pdf: editPdfFile.value ?? null,
     })
     console.log('ข้อมูลที่ได้จาก API หลังอัปเดต:', updated)
 
@@ -1232,6 +1261,7 @@ function resetForm() {
     isPublished: false,
   }
   imageFile.value = null
+  pdfFile.value = null
   editingNews.value = false
 
   Object.keys(touched.value).forEach((key) => {
