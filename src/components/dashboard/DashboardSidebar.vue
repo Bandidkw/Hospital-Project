@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-64 bg-gray-800 text-white flex flex-col">
+  <aside class="w-64 bg-gray-800 text-white flex flex-col min-h-screen">
     <div class="p-4 border-b border-gray-700 text-center">
       <h2 class="text-2xl font-bold">Admin Panel</h2>
       <p class="text-sm text-gray-400">
@@ -15,14 +15,13 @@
         <li class="mb-2">
           <RouterLink
             to="/dashboard"
-            class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
+            class="flex items-center p- 2 rounded-md hover:bg-gray-700 transition duration-200"
             active-class="bg-blue-600"
           >
             <i class="fas fa-tachometer-alt mr-3 text-indigo-400"></i>
             <span class="text-gray-300">แดชบอร์ด</span>
           </RouterLink>
         </li>
-
         <!-- จัดการเนื้อหา - ส่วนหัวข้อ -->
         <!-- แสดงหัวข้อนี้ถ้ามีเมนูย่อยที่ผู้ใช้เห็นได้ในกลุ่มนี้ -->
         <li class="mb-2 mt-4" v-if="authStore.isSuperAdmin">

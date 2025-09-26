@@ -21,12 +21,11 @@
 import { ref, computed } from 'vue'
 import { RouterView, useRouter, useRoute } from 'vue-router'
 import Navbar from './components/AppNavbar.vue'
-import Footer from './components/Footer.vue'
+import Footer from './components/AppFooter.vue'
 import LoadingSpinner from './components/LoadingSpinner.vue'
 import HeaderContact from './components/HeaderContact.vue'
 import BackToTopButton from './components/BackToTopButton.vue'
 
-// --- โค้ดส่วน script ของคุณถูกต้องสมบูรณ์แล้ว ไม่ต้องแก้ไข ---
 const isLoading = ref(false)
 const router = useRouter()
 const route = useRoute()

@@ -1,5 +1,5 @@
 <template>
-  <footer class="bg-gray-800 p-6 text-white mt-8">
+  <footer class="bg-gray-800 p-6 text-white">
     <div class="container mx-auto text-center">
       <p>&copy; {{ currentYear }} Hospital Website. All rights reserved.</p>
       <div class="mt-2 text-sm text-gray-400">
