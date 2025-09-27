@@ -7,14 +7,21 @@ import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 /** อ่าน BASE URL ของ API แล้วแปลงเป็น absolute URL ให้ไฟล์ */
 // ==== เพิ่ม/แก้ที่ด้านบนไฟล์ (ร่วมกับของเดิม) ====
 type EnvShape = { env: { VITE_API_BASE_URL?: string } }
-const API_BASE: string = ((import.meta as unknown as EnvShape).env.VITE_API_BASE_URL ?? '').replace(
-  /\/$/,
-  '',
-)
+
+// สำหรับไฟล์ uploads ใช้ API_BASE_URL ที่มี /api/v1
+const API_BASE_URL = (import.meta as unknown as EnvShape).env.VITE_API_BASE_URL || ''
+const FILE_BASE_URL = API_BASE_URL.replace(/\/$/, '')
 
 const toAbsoluteUrl = (u?: string): string => {
   if (!u) return ''
-  return /^https?:\/\//i.test(u) ? u : `${API_BASE}/${u.replace(/^\//, '')}`
+  // ถ้าเป็น absolute URL อยู่แล้ว ให้ return ตรง ๆ
+  if (/^https?:\/\//i.test(u)) return u
+
+  // สำหรับ relative path ให้ใช้ FILE_BASE_URL
+  const cleanPath = u.replace(/^\//, '')
+  const result = `${FILE_BASE_URL}/${cleanPath}`
+
+  return result
 }
 
 function ensureId(name: string, v: unknown): void {
@@ -37,6 +44,9 @@ function normalizeDoc(raw: unknown): ItaDocument {
     (r.filePath as string | undefined) ??
     (r.file_path as string | undefined) ??
     ''
+
+  const absoluteUrl = toAbsoluteUrl(rawUrl)
+
   return {
     id: String(r.id ?? ''),
     moit_id: r.moit_id ? String(r.moit_id) : undefined,
@@ -47,7 +57,7 @@ function normalizeDoc(raw: unknown): ItaDocument {
     sub_topic: String(r.sub_topic ?? ''),
     quarter: r.quarter === undefined || r.quarter === null ? undefined : String(r.quarter),
     fileName: (r.fileName as string | undefined) ?? (r.file_name as string | undefined),
-    fileUrl: toAbsoluteUrl(rawUrl),
+    fileUrl: absoluteUrl,
     createdAt: r.createdAt ? String(r.createdAt) : undefined,
     updatedAt: r.updatedAt ? String(r.updatedAt) : undefined,
   }
@@ -127,42 +137,25 @@ export const itaService = {
     const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now()
 
     try {
-      // Log ก่อนยิง (เฉพาะตอน dev)
-      if (import.meta.env.DEV) {
-        console.debug('[itaService] → GET', path, {
-          baseURL: apiService.defaults.baseURL,
-          withCredentials: apiService.defaults.withCredentials,
-        })
-      }
-
       const res = await apiService.get(path)
-
-      // Log หลังได้คำตอบ (เฉพาะตอน dev)
-      if (import.meta.env.DEV) {
-        const took = (typeof performance !== 'undefined' ? performance.now() : Date.now()) - t0
-        const preview =
-          typeof res.data === 'string'
-            ? res.data.slice(0, 200)
-            : Array.isArray(res.data)
-              ? `array(${res.data.length})`
-              : typeof res.data
-
-        console.debug('[itaService] ← response', {
-          status: res.status,
-          url: res.config?.url,
-          fullUrl: `${res.config?.baseURL ?? ''}${res.config?.url ?? ''}`,
-          timeMs: Math.round(took),
-          dataType: typeof res.data,
-          preview,
-        })
-      }
 
       // กันพลาด: ถ้า backend ส่ง HTML มา (เช่น SPA index.html) ให้ throw ทันที
       if (typeof res.data === 'string' && /^\s*<!doctype html/i.test(res.data)) {
         throw new Error('Invalid API response: expected JSON but received HTML')
       }
 
-      return unwrap<YearIta[]>(res, 'ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
+      const rawResult = unwrap<YearIta[]>(res, 'ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')
+
+      // ประมวลผลข้อมูลเอกสารให้เป็น absolute URL
+      const result = rawResult.map((yearData) => ({
+        ...yearData,
+        moits: yearData.moits.map((moit) => ({
+          ...moit,
+          documents: (moit.documents || []).map((doc) => normalizeDoc(doc)),
+        })),
+      }))
+
+      return result
     } catch (e: unknown) {
       console.error('[itaService] getAllTopics error:', e)
       throw new Error('ไม่สามารถดึงข้อมูล ITA ทั้งหมดได้')

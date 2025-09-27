@@ -75,9 +75,9 @@
                   <li v-for="doc in docs" :key="doc.id" class="mb-2">
                     <a
                       v-if="doc.fileUrl"
-                      :href="doc.fileUrl"
-                      target="_blank"
+                      href="#"
                       class="text-blue-600 hover:underline"
+                      @click.prevent="openFile(doc.fileUrl, doc.title)"
                     >
                       {{ doc.title }}
                     </a>
@@ -120,6 +120,9 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const selectedYear = ref<string | null>(null)
 const expandedQuarters = ref<Record<string, boolean>>({})
+
+// Development mode check
+const isDev = computed(() => import.meta.env.DEV)
 
 /* ------------------------------------
  * Computed
@@ -219,6 +222,21 @@ const fetchAllITAData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+/* ------------------------------------
+ * File Opening
+ * ---------------------------------- */
+const openFile = (fileUrl: string, title: string) => {
+  console.log('Opening file:', { fileUrl, title })
+
+  if (!fileUrl) {
+    toast.error('ไม่พบลิงก์ไฟล์')
+    return
+  }
+
+  // เปิดไฟล์ในแท็บใหม่
+  window.open(fileUrl, '_blank', 'noopener,noreferrer')
 }
 
 onMounted(fetchAllITAData)
