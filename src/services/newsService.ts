@@ -14,7 +14,7 @@ export interface NewsItem {
   category?: string
   date: string
   imageUrl?: string | null
-  pdfUrl?: string
+  pdfUrl?: string | null
   isPublished: boolean
   createdAt: string
   updatedAt: string
@@ -25,34 +25,31 @@ export interface ApiSuccess<T> {
   data: T
 }
 
-/** สร้างข่าวใหม่ (multipart/form-data) */
 export interface CreateNewsFormPayload {
   title: string
   content: string
   category: string
-  pdf?: File | null
   excerpt: string
-  date: string // YYYY-MM-DD
+  date: string
   image?: File | null
+  pdf?: File | null // รับมาทั้งคู่ แต่จะเลือกใช้แค่อย่างใดอย่างหนึ่ง
 }
 
-/** อัปเดตข่าว (ถ้ามี image ใหม่จะส่ง multipart) */
 export interface UpdateNewsPayload {
   title?: string
   content?: string
   category?: string
-  pdf?: File | null
   excerpt?: string
   date?: string
   isPublished?: boolean
   image?: File | null
+  pdf?: File | null // รับมาทั้งคู่ แต่จะเลือกใช้แค่อย่างใดอย่างหนึ่ง
 }
 
 /** --------------------------------
  * Helpers
  * -------------------------------- */
 
-/** append ลง FormData เฉพาะกรณีค่ามีจริง */
 function appendIfDefined(fd: FormData, key: string, value?: string | Blob | null): void {
   if (value != null) fd.append(key, value)
 }
@@ -68,37 +65,36 @@ function buildAssetUrl(u?: string | null): string {
 
   const root = base.replace(/\/+$/, '')
   const path = String(u).replace(/^\/+/, '')
-
-  // กันชื่อไฟล์ภาษาไทย/ช่องว่าง
   const alreadyEncoded = /%[0-9A-Fa-f]{2}/.test(path)
   const encodedPath = alreadyEncoded ? path : encodeURI(path)
 
   return `${root}/${encodedPath}`
 }
 
-/** map ให้ imageUrl เป็น absolute */
-function mapImage<T extends { imageUrl?: string | null }>(obj: T): T {
-  return { ...obj, imageUrl: buildAssetUrl(obj.imageUrl) }
+/** ✨ map ทั้ง imageUrl และ pdfUrl และเปลี่ยนชื่อให้ชัดเจน */
+function mapAssetUrls<T extends { imageUrl?: string | null; pdfUrl?: string | null }>(obj: T): T {
+  return {
+    ...obj,
+    imageUrl: buildAssetUrl(obj.imageUrl),
+    pdfUrl: buildAssetUrl(obj.pdfUrl),
+  }
 }
 
 /** --------------------------------
  * API Calls
  * -------------------------------- */
 
-/** GET /news — ดึงทั้งหมด */
 export async function getAllNews(): Promise<NewsItem[]> {
   const res = await apiService.get<ApiSuccess<NewsItem[]>>('/news')
   const items = res.data.data ?? []
-  return items.map(mapImage)
+  return items.map(mapAssetUrls)
 }
 
-/** GET /news/:id — ดึงตาม id */
 export async function getNewsById(id: IdLike): Promise<NewsItem> {
   const res = await apiService.get<ApiSuccess<NewsItem>>(`/news/${id}`)
-  return mapImage(res.data.data)
+  return mapAssetUrls(res.data.data)
 }
 
-/** POST /news — สร้างข่าวใหม่ (multipart/form-data) */
 export async function createNews(payload: CreateNewsFormPayload): Promise<NewsItem> {
   const fd = new FormData()
   fd.append('title', payload.title)
@@ -106,19 +102,18 @@ export async function createNews(payload: CreateNewsFormPayload): Promise<NewsIt
   fd.append('category', payload.category)
   fd.append('excerpt', payload.excerpt ?? '')
   fd.append('date', payload.date)
-  appendIfDefined(fd, 'image', payload.image)
-  appendIfDefined(fd, 'pdf', payload.pdf)
+
+  const fileToUpload = payload.pdf || payload.image
+  appendIfDefined(fd, 'image', fileToUpload)
 
   const res = await apiService.post<ApiSuccess<NewsItem>>('/news', fd)
-  return mapImage(res.data.data)
+  return mapAssetUrls(res.data.data)
 }
 
-/** PUT /news/:id — แก้ไขข่าว */
 export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promise<NewsItem> {
-  const hasFile = !!payload.image
+  const hasFile = !!payload.image || !!payload.pdf
 
   if (hasFile) {
-    // ── multipart/form-data ──
     const fd = new FormData()
     appendIfDefined(fd, 'title', payload.title)
     appendIfDefined(fd, 'content', payload.content)
@@ -128,38 +123,35 @@ export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promis
     if (payload.isPublished !== undefined) {
       fd.append('isPublished', String(payload.isPublished))
     }
-    fd.append('image', payload.image as File)
-    appendIfDefined(fd, 'pdf', payload.pdf)
+
+    //
+    const fileToUpload = payload.pdf || payload.image
+    appendIfDefined(fd, 'image', fileToUpload)
 
     const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, fd)
-    return mapImage(res.data.data)
+    return mapAssetUrls(res.data.data)
   }
 
-  // ── JSON ──
-  const body: Omit<UpdateNewsPayload, 'image'> & { excerpt: string } = {
-    ...payload,
-    excerpt: payload.excerpt ?? '',
-  }
+  // ── JSON (ถ้าไม่มีไฟล์) ──
+  const body = { ...payload }
   delete (body as Partial<UpdateNewsPayload>).image
+  delete (body as Partial<UpdateNewsPayload>).pdf
 
   const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, body)
-  return mapImage(res.data.data)
+  return mapAssetUrls(res.data.data)
 }
 
-/** PATCH /news/:id/toggle-publish — สลับสถานะเผยแพร่ */
 export async function togglePublish(id: IdLike, isPublished: boolean): Promise<NewsItem> {
   const res = await apiService.patch<ApiSuccess<NewsItem>>(`/news/${id}/toggle-publish`, {
     isPublished,
   })
-  return mapImage(res.data.data)
+  return mapAssetUrls(res.data.data)
 }
 
-/** DELETE /news/:id */
 export async function deleteNews(id: IdLike): Promise<void> {
   await apiService.delete(`/news/${id}`)
 }
 
-// --- Public types ---
 // --- Public types ---
 export interface PublicNewsItem {
   id: string
@@ -169,23 +161,18 @@ export interface PublicNewsItem {
   category?: string
   date: string
   imageUrl?: string | null
-  pdfUrl?: string | null // (แนะนำ) เพิ่ม pdfUrl ที่นี่ด้วยเพื่อให้ครบ
+  pdfUrl?: string | null
 }
 
-// ✨ ลบบรรทัดซ้ำซ้อนออก ให้เหลือแค่อันนี้อันเดียว
 export type PublicNewsEx = PublicNewsItem & {
   isPublished?: boolean
   createdAt?: string
   updatedAt?: string
 }
 
-/** GET /news/public — รายการสำหรับหน้าเว็บสาธารณะ */
 export async function getPublicNews(): Promise<PublicNewsItem[]> {
-  // ✨ เพิ่ม cache-busting parameter
-  const params = {
-    _: new Date().getTime(),
-  }
+  const params = { _: new Date().getTime() }
   const res = await apiService.get<ApiSuccess<PublicNewsItem[]>>('/news/public', { params })
   const items = res.data.data ?? []
-  return items.map(mapImage)
+  return items.map(mapAssetUrls)
 }
