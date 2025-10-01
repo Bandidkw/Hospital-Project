@@ -103,7 +103,7 @@ export async function createNews(payload: CreateNewsFormPayload): Promise<NewsIt
   const fd = new FormData()
   fd.append('title', payload.title)
   fd.append('content', payload.content)
-  fd.append('category', payload.category) // ✨ เพิ่ม category
+  fd.append('category', payload.category)
   fd.append('excerpt', payload.excerpt ?? '')
   fd.append('date', payload.date)
   appendIfDefined(fd, 'image', payload.image)
@@ -122,7 +122,7 @@ export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promis
     const fd = new FormData()
     appendIfDefined(fd, 'title', payload.title)
     appendIfDefined(fd, 'content', payload.content)
-    appendIfDefined(fd, 'category', payload.category) // ✨ เพิ่ม category
+    appendIfDefined(fd, 'category', payload.category)
     fd.append('excerpt', payload.excerpt ?? '')
     appendIfDefined(fd, 'date', payload.date)
     if (payload.isPublished !== undefined) {
@@ -160,6 +160,7 @@ export async function deleteNews(id: IdLike): Promise<void> {
 }
 
 // --- Public types ---
+// --- Public types ---
 export interface PublicNewsItem {
   id: string
   title: string
@@ -168,6 +169,14 @@ export interface PublicNewsItem {
   category?: string
   date: string
   imageUrl?: string | null
+  pdfUrl?: string | null // (แนะนำ) เพิ่ม pdfUrl ที่นี่ด้วยเพื่อให้ครบ
+}
+
+// ✨ ลบบรรทัดซ้ำซ้อนออก ให้เหลือแค่อันนี้อันเดียว
+export type PublicNewsEx = PublicNewsItem & {
+  isPublished?: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
 /** GET /news/public — รายการสำหรับหน้าเว็บสาธารณะ */

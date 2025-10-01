@@ -90,9 +90,20 @@
               class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
               @error="onImgError"
             />
+
+            <a
+              v-else-if="n.pdfUrl"
+              :href="absoluteImage(n.pdfUrl)"
+              target="_blank"
+              class="w-full h-full flex items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+            >
+              <i class="fas fa-file-pdf text-5xl"></i>
+            </a>
+
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
               <i class="far fa-image text-3xl"></i>
             </div>
+
             <div
               class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent"
             ></div>
@@ -104,6 +115,7 @@
               </span>
             </div>
           </div>
+
           <div class="p-5">
             <h2
               class="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors"
@@ -288,16 +300,10 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { isAxiosError } from '@/services/apiService'
-import { getPublicNews, type PublicNewsItem } from '@/services/newsService'
+import { getPublicNews, type PublicNewsEx } from '@/services/newsService'
 import { attachCategory, CATEGORY_LIST } from '@/features/news/categories'
 
 /* ---------- Types ---------- */
-type PublicNewsEx = PublicNewsItem & {
-  isPublished?: boolean
-  createdAt?: string
-  updatedAt?: string
-  category?: string
-}
 
 /* ---------- State ---------- */
 const loading = ref(false)
