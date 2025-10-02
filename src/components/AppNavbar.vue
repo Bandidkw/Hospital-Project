@@ -260,6 +260,7 @@ const menuItems: MenuItem[] = [
       { label: 'คลินิกผู้ป่วยนอก', icon: 'fas fa-stethoscope', to: { path: '/outpatient' } },
       { label: 'ผู้ป่วยใน', icon: 'fas fa-bed', to: { path: '/inpatient' } },
       { label: 'ห้องฉุกเฉิน', icon: 'fas fa-ambulance', to: { path: '/emergency' } },
+      { label: 'ส่งตัวผู้ป่วย', icon: 'fas fa-exchange-alt', to: { path: '/patient-referral' } },
     ],
   },
   {
