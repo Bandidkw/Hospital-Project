@@ -84,7 +84,7 @@
         >
           <div class="relative h-56 md:h-64 bg-gray-100 overflow-hidden">
             <img
-              v-if="n.imageUrl"
+              v-if="n.imageUrl && !isPdf(n.imageUrl)"
               :src="absoluteImage(n.imageUrl)"
               :alt="n.title"
               class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
@@ -92,8 +92,8 @@
             />
 
             <a
-              v-else-if="n.pdfUrl"
-              :href="absoluteImage(n.pdfUrl)"
+              v-else-if="n.imageUrl && isPdf(n.imageUrl)"
+              :href="absoluteImage(n.imageUrl)"
               target="_blank"
               class="w-full h-full flex items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
             >
@@ -125,7 +125,16 @@
             </h2>
             <p class="text-sm text-gray-600 mt-2 line-clamp-3">{{ n.excerpt || n.content }}</p>
             <div class="mt-4 flex items-center justify-between">
+              <a
+                v-if="n.imageUrl && isPdf(n.imageUrl)"
+                :href="absoluteImage(n.imageUrl)"
+                target="_blank"
+                class="text-blue-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
+              >
+                เปิดไฟล์แนบ <i class="fas fa-external-link-alt text-[11px]"></i>
+              </a>
               <button
+                v-else
                 class="text-blue-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
                 @click="openQuickView(n)"
               >
@@ -456,6 +465,10 @@ async function fetchNews() {
 function openQuickView(n: PublicNewsEx) {
   quickView.value = n
   copied.value = false
+}
+function isPdf(url?: string | null): boolean {
+  if (!url) return false
+  return url.toLowerCase().endsWith('.pdf')
 }
 
 onMounted(() => {
