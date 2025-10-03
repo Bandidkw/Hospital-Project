@@ -8,6 +8,7 @@ import { useAuthStore } from './stores/auth'
 
 // นำเข้า Tailwind CSS (ถ้ายังไม่ได้ทำ)
 import './assets/main.css' // ตรวจสอบให้แน่ใจว่าไฟล์นี้มี @tailwind base; @tailwind components; @tailwind utilities;
+import '@vuepic/vue-datepicker/dist/main.css'
 
 // นำเข้า FontAwesome (ถ้ายังไม่ได้ทำ)
 import '@fortawesome/fontawesome-free/css/all.css'
