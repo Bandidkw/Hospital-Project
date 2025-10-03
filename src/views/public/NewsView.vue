@@ -90,20 +90,18 @@
               class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
               @error="onImgError"
             />
-
             <a
               v-else-if="n.imageUrl && isPdf(n.imageUrl)"
               :href="absoluteImage(n.imageUrl)"
               target="_blank"
               class="w-full h-full flex items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
             >
-              <i class="fas fa-file-pdf text-5xl"></i>
+              <i class="far fa-file-pdf text-5xl"></i>
+              <!-- <span class="mt-2 text-sm font-semibold">เปิดไฟล์ PDF</span> -->
             </a>
-
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
               <i class="far fa-image text-3xl"></i>
             </div>
-
             <div
               class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent"
             ></div>

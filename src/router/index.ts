@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import NewsDetailView from '../views/NewsDetailView.vue'
 
 // ------------------------------------
 // Role helpers (ช่วยอ่านง่ายขึ้น)
@@ -69,6 +70,11 @@ const router = createRouter({
       path: '/ita-documents-public',
       name: 'ita-documents-public',
       component: () => import('@/views/ita/ItaPublicView.vue'),
+    },
+    {
+      path: '/news/:id', // :id คือ dynamic parameter
+      name: 'news-detail',
+      component: NewsDetailView,
     },
 
     // ---------- Dashboard (with Sidebar layout) ----------

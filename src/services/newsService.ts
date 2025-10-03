@@ -123,11 +123,9 @@ export async function updateNews(id: IdLike, payload: UpdateNewsPayload): Promis
     if (payload.isPublished !== undefined) {
       fd.append('isPublished', String(payload.isPublished))
     }
-
     //
     const fileToUpload = payload.pdf || payload.image
     appendIfDefined(fd, 'image', fileToUpload)
-
     const res = await apiService.put<ApiSuccess<NewsItem>>(`/news/${id}`, fd)
     return mapAssetUrls(res.data.data)
   }
@@ -153,6 +151,14 @@ export async function deleteNews(id: IdLike): Promise<void> {
 }
 
 // --- Public types ---
+
+export type NewsCategory =
+  | 'general'
+  | 'activity'
+  | 'procurement'
+  | 'recruitment'
+  | 'forms'
+  | 'staff'
 export interface PublicNewsItem {
   id: string
   title: string

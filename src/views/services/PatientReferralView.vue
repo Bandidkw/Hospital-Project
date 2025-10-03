@@ -33,84 +33,40 @@
       </div>
 
       <div class="bg-white p-6 md:p-8 rounded-lg shadow-md">
-        <section v-if="currentStep === 1" class="space-y-4">
-          <h2 class="text-2xl font-bold text-gray-800">1. ข้อมูลผู้ป่วยและต้นทาง</h2>
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label for="patientName" class="block text-sm font-medium text-gray-700"
-                >ชื่อ-นามสกุล ผู้ป่วย</label
-              >
-              <input
-                id="patientName"
-                v-model="formData.patientName"
-                type="text"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-              />
+        <form @submit.prevent="submitForm">
+          <section v-if="currentStep === 1" class="space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800">1. ข้อมูลผู้ป่วยและต้นทาง</h2>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label for="patientName" class="block text-sm font-medium text-gray-700"
+                  >ชื่อ-นามสกุล ผู้ป่วย</label
+                >
+                <input
+                  id="patientName"
+                  v-model="formData.patientName"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
+              <div>
+                <label for="patientHN" class="block text-sm font-medium text-gray-700"
+                  >เลข HN (Hospital Number)</label
+                >
+                <input
+                  id="patientHN"
+                  v-model="formData.patientHN"
+                  type="text"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                />
+              </div>
             </div>
             <div>
-              <label for="patientHN" class="block text-sm font-medium text-gray-700"
-                >เลข HN (Hospital Number)</label
+              <label for="originHospital" class="block text-sm font-medium text-gray-700"
+                >โรงพยาบาลต้นทาง</label
               >
-              <input
-                id="patientHN"
-                v-model="formData.patientHN"
-                type="text"
-                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-              />
-            </div>
-          </div>
-          <div>
-            <label for="originHospital" class="block text-sm font-medium text-gray-700"
-              >โรงพยาบาลต้นทาง</label
-            >
-            <select
-              id="originHospital"
-              v-model="formData.originHospitalId"
-              class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-            >
-              <option disabled value="">-- กรุณาเลือกโรงพยาบาล --</option>
-              <option v-for="hospital in hospitalList" :key="hospital.id" :value="hospital.id">
-                {{ hospital.name }}
-              </option>
-            </select>
-          </div>
-          <div>
-            <label for="referralFile" class="block text-sm font-medium text-gray-700"
-              >อัปโหลดเอกสารส่งตัว (ถ้ามี)</label
-            >
-            <input
-              id="referralFile"
-              @change="onFileChange"
-              type="file"
-              class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-          </div>
-        </section>
-
-        <section v-if="currentStep === 2" class="space-y-6">
-          <h2 class="text-2xl font-bold text-gray-800">2. โรงพยาบาลปลายทางและคลินิก</h2>
-          <div
-            v-for="(dest, destIndex) in formData.destinations"
-            :key="destIndex"
-            class="p-4 border rounded-lg bg-gray-50 space-y-3"
-          >
-            <div class="flex justify-between items-start">
-              <h3 class="font-semibold pt-2">ปลายทางที่ {{ destIndex + 1 }}</h3>
-              <button
-                v-if="formData.destinations.length > 1"
-                @click="removeDestination(destIndex)"
-                type="button"
-                class="px-3 py-2 text-red-600 hover:text-red-800"
-                title="ลบปลายทางนี้"
-              >
-                <i class="fas fa-times-circle"></i>
-              </button>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">โรงพยาบาลปลายทาง</label>
               <select
-                v-model="dest.hospitalId"
-                @change="handleHospitalChange(destIndex)"
+                id="originHospital"
+                v-model="formData.originHospitalId"
                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
               >
                 <option disabled value="">-- กรุณาเลือกโรงพยาบาล --</option>
@@ -119,136 +75,178 @@
                 </option>
               </select>
             </div>
+            <div>
+              <label for="referralFile" class="block text-sm font-medium text-gray-700"
+                >อัปโหลดเอกสารส่งตัว (ถ้ามี)</label
+              >
+              <input
+                id="referralFile"
+                @change="onFileChange"
+                type="file"
+                class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+            </div>
+          </section>
+          <section v-if="currentStep === 2" class="space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800">2. โรงพยาบาลปลายทางและคลินิก</h2>
             <div
-              v-for="(clinic, clinicIndex) in dest.clinics"
-              :key="clinicIndex"
-              class="flex items-end gap-2"
+              v-for="(dest, destIndex) in formData.destinations"
+              :key="destIndex"
+              class="p-4 border rounded-lg bg-gray-50 space-y-3"
             >
-              <div class="flex-grow">
-                <label class="block text-sm font-medium text-gray-700">คลินิก/แผนก</label>
-                <select
-                  v-model="clinic.clinicId"
-                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
-                  :disabled="!dest.hospitalId"
+              <div class="flex justify-between items-start">
+                <h3 class="font-semibold pt-2">ปลายทางที่ {{ destIndex + 1 }}</h3>
+                <button
+                  v-if="formData.destinations.length > 1"
+                  @click="removeDestination(destIndex)"
+                  type="button"
+                  class="px-3 py-2 text-red-600 hover:text-red-800"
+                  title="ลบปลายทางนี้"
                 >
-                  <option disabled value="">
-                    {{ dest.hospitalId ? '-- กรุณาเลือกคลินิก --' : 'โปรดเลือกโรงพยาบาลก่อน' }}
-                  </option>
-                  <option
-                    v-for="clinicOpt in dest.availableClinics"
-                    :key="clinicOpt.id"
-                    :value="clinicOpt.id"
-                  >
-                    {{ clinicOpt.name }}
+                  <i class="fas fa-times-circle"></i>
+                </button>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">โรงพยาบาลปลายทาง</label>
+                <select
+                  v-model="dest.hospitalId"
+                  @change="handleHospitalChange(destIndex)"
+                  class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                >
+                  <option disabled value="">-- กรุณาเลือกโรงพยาบาล --</option>
+                  <option v-for="hospital in hospitalList" :key="hospital.id" :value="hospital.id">
+                    {{ hospital.name }}
                   </option>
                 </select>
               </div>
-              <button
-                v-if="dest.clinics.length > 1"
-                @click="removeClinic(destIndex, clinicIndex)"
-                type="button"
-                class="px-3 py-2 text-red-600 hover:text-red-800"
-                title="ลบคลินิก"
+              <div
+                v-for="(clinic, clinicIndex) in dest.clinics"
+                :key="clinicIndex"
+                class="flex items-end gap-2"
               >
-                <i class="fas fa-trash"></i>
+                <div class="flex-grow">
+                  <label class="block text-sm font-medium text-gray-700">คลินิก/แผนก</label>
+                  <select
+                    v-model="clinic.clinicId"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm"
+                    :disabled="!dest.hospitalId"
+                  >
+                    <option disabled value="">
+                      {{ dest.hospitalId ? '-- กรุณาเลือกคลินิก --' : 'โปรดเลือกโรงพยาบาลก่อน' }}
+                    </option>
+                    <option
+                      v-for="clinicOpt in dest.availableClinics"
+                      :key="clinicOpt.id"
+                      :value="clinicOpt.id"
+                    >
+                      {{ clinicOpt.name }}
+                    </option>
+                  </select>
+                </div>
+                <button
+                  v-if="dest.clinics.length > 1"
+                  @click="removeClinic(destIndex, clinicIndex)"
+                  type="button"
+                  class="px-3 py-2 text-red-600 hover:text-red-800"
+                  title="ลบคลินิก"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+              <button
+                @click="addClinic(destIndex)"
+                type="button"
+                class="text-sm text-blue-600 hover:underline"
+              >
+                + เพิ่มคลินิก/ใบนัด
               </button>
             </div>
             <button
-              @click="addClinic(destIndex)"
+              @click="addDestination"
               type="button"
-              class="text-sm text-blue-600 hover:underline"
+              class="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100"
             >
-              + เพิ่มคลินิก/ใบนัด
+              + เพิ่มโรงพยาบาลปลายทางอื่น
+            </button>
+          </section>
+          <section v-if="currentStep === 3" class="space-y-4">
+            <h2 class="text-2xl font-bold text-gray-800">3. เลือกวันและเวลาเดินทาง</h2>
+            <div class="flex justify-center pt-4">
+              <!-- component -->
+              <CustomCalendar v-model="formData.travelDate" />
+            </div>
+          </section>
+          <section v-if="currentStep === 4" class="space-y-6">
+            <h2 class="text-2xl font-bold text-gray-800">4. ตรวจสอบและยืนยันข้อมูล</h2>
+            <div class="border-b pb-4">
+              <h3 class="font-semibold text-lg text-gray-700 mb-2">ข้อมูลผู้ป่วย</h3>
+              <p><strong>ชื่อ-นามสกุล:</strong> {{ formData.patientName }}</p>
+              <p><strong>HN:</strong> {{ formData.patientHN }}</p>
+              <p>
+                <strong>โรงพยาบาลต้นทาง:</strong> {{ getHospitalName(formData.originHospitalId) }}
+              </p>
+            </div>
+            <div class="border-b pb-4">
+              <h3 class="font-semibold text-lg text-gray-700 mb-2">ข้อมูลปลายทาง</h3>
+              <div v-for="(dest, index) in formData.destinations" :key="index" class="mb-3">
+                <p class="font-medium">
+                  <strong>ปลายทางที่ {{ index + 1 }}:</strong>
+                  {{ getHospitalName(dest.hospitalId) }}
+                </p>
+                <ul class="list-disc list-inside ml-4">
+                  <li v-for="(clinic, cIndex) in dest.clinics" :key="cIndex">
+                    {{ getClinicName(dest.hospitalId, clinic.clinicId) }}
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div>
+              <h3 class="font-semibold text-lg text-gray-700 mb-2">วันและเวลาเดินทาง</h3>
+              <p>
+                <strong>วันที่เลือก:</strong>
+                {{
+                  formData.travelDate.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                }}
+              </p>
+            </div>
+
+            <p class="text-gray-600 mt-4">กรุณาตรวจสอบข้อมูลทั้งหมดให้ถูกต้องก่อนกดยืนยัน</p>
+          </section>
+          <div class="mt-8 flex justify-between">
+            <button
+              v-if="currentStep > 1"
+              @click="prevStep"
+              type="button"
+              class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              ย้อนกลับ
+            </button>
+            <div v-else></div>
+            <button
+              v-if="currentStep < 4"
+              @click="nextStep"
+              type="button"
+              class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              ถัดไป
+            </button>
+            <button
+              v-if="currentStep === 4"
+              type="submit"
+              :disabled="isSubmitting"
+              class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 disabled:bg-gray-400"
+            >
+              <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
+              <span>{{ isSubmitting ? 'กำลังส่ง...' : 'ยืนยันการส่งข้อมูล' }}</span>
             </button>
           </div>
-          <button
-            @click="addDestination"
-            type="button"
-            class="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100"
-          >
-            + เพิ่มโรงพยาบาลปลายทางอื่น
-          </button>
-        </section>
-
-        <section v-if="currentStep === 3" class="space-y-4">
-          <h2 class="text-2xl font-bold text-gray-800">3. เลือกวันและเวลาเดินทาง</h2>
-          <div class="flex justify-center pt-4">
-            <!-- component -->
-            <CustomCalendar v-model="formData.travelDate" />
-          </div>
-        </section>
-
-        <section v-if="currentStep === 4" class="space-y-6">
-          <h2 class="text-2xl font-bold text-gray-800">4. ตรวจสอบและยืนยันข้อมูล</h2>
-
-          <div class="border-b pb-4">
-            <h3 class="font-semibold text-lg text-gray-700 mb-2">ข้อมูลผู้ป่วย</h3>
-            <p><strong>ชื่อ-นามสกุล:</strong> {{ formData.patientName }}</p>
-            <p><strong>HN:</strong> {{ formData.patientHN }}</p>
-            <p>
-              <strong>โรงพยาบาลต้นทาง:</strong> {{ getHospitalName(formData.originHospitalId) }}
-            </p>
-          </div>
-
-          <div class="border-b pb-4">
-            <h3 class="font-semibold text-lg text-gray-700 mb-2">ข้อมูลปลายทาง</h3>
-            <div v-for="(dest, index) in formData.destinations" :key="index" class="mb-3">
-              <p class="font-medium">
-                <strong>ปลายทางที่ {{ index + 1 }}:</strong> {{ getHospitalName(dest.hospitalId) }}
-              </p>
-              <ul class="list-disc list-inside ml-4">
-                <li v-for="(clinic, cIndex) in dest.clinics" :key="cIndex">
-                  {{ getClinicName(dest.hospitalId, clinic.clinicId) }}
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div>
-            <h3 class="font-semibold text-lg text-gray-700 mb-2">วันและเวลาเดินทาง</h3>
-            <p>
-              <strong>วันที่เลือก:</strong>
-              {{
-                formData.travelDate.toLocaleDateString('th-TH', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })
-              }}
-            </p>
-          </div>
-
-          <p class="text-gray-600 mt-4">กรุณาตรวจสอบข้อมูลทั้งหมดให้ถูกต้องก่อนกดยืนยัน</p>
-        </section>
-
-        <div class="mt-8 flex justify-between">
-          <button
-            v-if="currentStep > 1"
-            @click="prevStep"
-            type="button"
-            class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            ย้อนกลับ
-          </button>
-          <div v-else></div>
-          <button
-            v-if="currentStep < 4"
-            @click="nextStep"
-            type="button"
-            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            ถัดไป
-          </button>
-          <button
-            v-if="currentStep === 4"
-            type="submit"
-            class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-          >
-            ยืนยันการส่งข้อมูล
-          </button>
-        </div>
+        </form>
       </div>
     </div>
   </main>
@@ -260,7 +258,10 @@ import { ref, reactive, onMounted } from 'vue'
 import '@vuepic/vue-datepicker/dist/main.css'
 import CustomCalendar from '@/components/CustomCalendar.vue'
 import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+const toast = useToast()
 // --- Interfaces for Data ---
 interface Hospital {
   id: string
@@ -290,6 +291,7 @@ const mockClinics: Record<string, Clinic[]> = {
 }
 
 // --- Component State ---
+const isSubmitting = ref(false)
 const currentStep = ref(1)
 const stepLabels = ['ข้อมูลผู้ป่วย', 'เลือกปลายทาง', 'เลือกวันเวลา', 'ยืนยันข้อมูล']
 const hospitalList = ref<Hospital[]>([])
@@ -325,8 +327,6 @@ onMounted(() => {
 })
 
 // --- Methods ---
-
-const toast = useToast()
 const handleHospitalChange = async (destIndex: number) => {
   const destination = formData.destinations[destIndex]
   destination.availableClinics = []
@@ -426,6 +426,26 @@ const nextStep = () => {
 }
 const prevStep = () => {
   if (currentStep.value > 1) currentStep.value--
+}
+const submitForm = async () => {
+  if (isSubmitting.value) return
+
+  isSubmitting.value = true
+  toast.info('กำลังส่งข้อมูล...')
+
+  try {
+    console.log('Form Data to Submit:', JSON.parse(JSON.stringify(formData)))
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+    toast.success('ส่งข้อมูลการส่งตัวผู้ป่วยสำเร็จ!')
+    // หน่วงเวลา 1.5 วินาทีเพื่อให้ผู้ใช้เห็น Toast ก่อน
+    setTimeout(() => {
+      router.push('/')
+    }, 1500)
+  } catch (error) {
+    console.error('Submission failed:', error)
+    toast.error('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง')
+    isSubmitting.value = false
+  }
 }
 </script>
 

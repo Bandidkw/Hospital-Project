@@ -44,19 +44,30 @@
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-        <article
+        <a
           v-for="n in latestNews"
           :key="n.id"
-          class="group bg-white rounded-2xl shadow-sm overflow-hidden text-left ring-1 ring-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+          :href="getArticleLink(n)"
+          :target="isPdfUrl(n.imageUrl) ? '_blank' : '_self'"
+          class="group block bg-white rounded-2xl shadow-sm overflow-hidden text-left ring-1 ring-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
           <div class="relative w-full h-56 md:h-60 lg:h-64 bg-gray-100">
             <img
-              v-if="n.imageUrl"
+              v-if="isImageUrl(n.imageUrl)"
               :src="absoluteImage(n.imageUrl)"
               :alt="n.title"
               class="absolute inset-0 w-full h-full object-cover"
               @error="onImgError"
             />
+
+            <div
+              v-else-if="isPdfUrl(n.imageUrl)"
+              class="absolute inset-0 flex flex-col items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+            >
+              <i class="far fa-file-pdf text-5xl"></i>
+              <span class="mt-2 text-sm font-semibold">เปิดไฟล์ PDF</span>
+            </div>
+
             <div v-else class="absolute inset-0 flex items-center justify-center text-gray-400">
               <i class="far fa-image text-3xl"></i>
             </div>
@@ -82,7 +93,7 @@
               {{ n.excerpt || n.content || '' }}
             </p>
           </div>
-        </article>
+        </a>
 
         <div v-if="!latestNews.length" class="col-span-full text-gray-500 py-10">
           <i class="fas fa-info-circle mr-2"></i> ยังไม่มีข่าวสาร
@@ -214,7 +225,6 @@ async function fetchNews() {
     loading.value = false
   }
 }
-
 /* ---------- Derived ---------- */
 const filteredByCategory = computed(() =>
   selectedCategory.value === 'all'
@@ -247,6 +257,38 @@ function formatDate(d: string) {
   } catch {
     return d
   }
+}
+/**
+ * ตรวจสอบว่า URL เป็นไฟล์รูปภาพหรือไม่
+ * @param url - ลิงก์ที่ต้องการตรวจสอบ
+ */
+function isImageUrl(url?: string | null): boolean {
+  if (!url) return false
+  // ตรวจสอบว่าลงท้ายด้วยนามสกุลรูปภาพที่รู้จักหรือไม่ (ไม่สนตัวพิมพ์เล็ก/ใหญ่)
+  return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url)
+}
+
+/**
+ * ตรวจสอบว่า URL เป็นไฟล์ PDF หรือไม่
+ * @param url - ลิงก์ที่ต้องการตรวจสอบ
+ */
+function isPdfUrl(url?: string | null): boolean {
+  if (!url) return false
+  return url.toLowerCase().endsWith('.pdf')
+}
+
+/**
+ * สร้างลิงก์สำหรับการ์ดข่าว
+ * @param newsItem - ข้อมูลข่าว
+ */
+function getArticleLink(newsItem: PublicNewsItem): string {
+  const url = newsItem.imageUrl
+  // ถ้า URL เป็น PDF ให้ใช้ URL นั้นเป็นลิงก์เลย
+  if (isPdfUrl(url)) {
+    return absoluteImage(url) // ใช้ฟังก์ชันเดิมเพื่อสร้าง Full URL
+  }
+  // ถ้าไม่ใช่ PDF ให้ลิงก์ไปที่หน้ารายละเอียดข่าว
+  return `/news/${newsItem.id}`
 }
 </script>
 

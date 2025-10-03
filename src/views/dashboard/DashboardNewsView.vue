@@ -734,8 +734,8 @@ const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
 const categoryLabels = computed(() =>
   Object.fromEntries(CATEGORY_LIST.map(({ key, label }) => [key, label])),
 )
-const PDF_CATEGORIES = ['procurement', 'recruitment']
-const IMAGE_CATEGORIES = ['activity', 'general', 'forms', 'staff']
+const PDF_CATEGORIES = ['procurement', 'recruitment', 'forms', 'staff']
+const IMAGE_CATEGORIES = ['activity', 'general']
 
 function makeExcerpt(title: string, content: string, max = 200): string {
   const t = title.trim()
