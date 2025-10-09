@@ -98,28 +98,33 @@ const emit = defineEmits(['update:modelValue'])
 const DAILY_LIMIT = 20
 const dayLabels = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา']
 
+//function to determine initial minute selection
+const getInitialMinute = (date: Date | null): 0 | 30 => {
+  if (!date) return 0 // ถ้าไม่มีค่าเริ่มต้น ให้เป็น 00
+  const minutes = date.getMinutes()
+  // ถ้าค่าน้อยกว่า 30 ให้ปัดลงเป็น 00, ถ้ามากกว่าหรือเท่ากับ 30 ให้เป็น 30
+  return minutes < 30 ? 0 : 30
+}
+
 // --- Component State ---
 const currentDate = ref(props.modelValue || new Date())
 const selectedDate = ref<Date | null>(props.modelValue)
 const selectedHour = ref(props.modelValue ? props.modelValue.getHours() : 9)
-const selectedMinute = ref(props.modelValue ? props.modelValue.getMinutes() : 0)
+const selectedMinute = ref(getInitialMinute(props.modelValue))
 const dailySlots = ref<Record<string, number>>({})
 const isLoading = ref(false)
 
 // --- Mock API ---
 async function fetchAvailability(year: number, month: number): Promise<Record<string, number>> {
   console.log(`Fetching availability for ${year}-${month + 1}...`)
-  // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 500))
-
-  // Example data for October 2025 (month is 0-indexed, so 9 is October)
   if (year === 2025 && month === 9) {
     return {
-      '2025-10-25': 20, // Full
-      '2025-10-26': 18, // 2 slots remaining
+      '2025-10-25': 20,
+      '2025-10-26': 18,
     }
   }
-  return {} // Return empty for other months
+  return {}
 }
 
 async function fetchAvailabilityForCurrentMonth() {

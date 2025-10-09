@@ -34,6 +34,7 @@
 
       <div class="bg-white p-6 md:p-8 rounded-lg shadow-md">
         <form @submit.prevent="submitForm">
+          <!-- step 1 -->
           <section v-if="currentStep === 1" class="space-y-4">
             <h2 class="text-2xl font-bold text-gray-800">1. ข้อมูลผู้ป่วยและต้นทาง</h2>
             <div class="grid sm:grid-cols-2 gap-4">
@@ -75,18 +76,48 @@
                 </option>
               </select>
             </div>
+
             <div>
-              <label for="referralFile" class="block text-sm font-medium text-gray-700"
-                >อัปโหลดเอกสารส่งตัว (ถ้ามี)</label
-              >
+              <label for="referralFile" class="block text-sm font-medium text-gray-700">
+                อัปโหลดเอกสารส่งตัว (ไม่เกิน 5 ไฟล์)
+              </label>
               <input
                 id="referralFile"
                 @change="onFileChange"
                 type="file"
-                class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                multiple
+                accept=".pdf,.jpg,.jpeg,.png"
+                class="hidden"
               />
+              <label
+                for="referralFile"
+                class="cursor-pointer inline-block px-4 py-2 bg-blue-50 text-blue-700 rounded-full font-semibold text-sm hover:bg-blue-100"
+              >
+                เลือกไฟล์
+              </label>
+
+              <div v-if="formData.referralFiles.length > 0" class="mt-4 space-y-2">
+                <p class="text-sm font-medium text-gray-800">ไฟล์ที่เลือก:</p>
+                <div
+                  v-for="(file, index) in formData.referralFiles"
+                  :key="index"
+                  class="flex items-center justify-between bg-gray-100 p-2 rounded-md text-sm"
+                >
+                  <span class="text-gray-700 truncate pr-2">{{ file.name }}</span>
+                  <button
+                    @click="removeFile(index)"
+                    type="button"
+                    class="text-red-500 hover:text-red-700 font-bold"
+                    title="ลบไฟล์นี้"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+              <p v-else class="mt-2 text-sm text-gray-500">ยังไม่ได้เลือกไฟล์ใด</p>
             </div>
           </section>
+          <!-- step 2 -->
           <section v-if="currentStep === 2" class="space-y-6">
             <h2 class="text-2xl font-bold text-gray-800">2. โรงพยาบาลปลายทางและคลินิก</h2>
             <div
@@ -169,6 +200,7 @@
               + เพิ่มโรงพยาบาลปลายทางอื่น
             </button>
           </section>
+          <!-- step 3 -->
           <section v-if="currentStep === 3" class="space-y-4">
             <h2 class="text-2xl font-bold text-gray-800">3. เลือกวันและเวลาเดินทาง</h2>
             <div class="flex justify-center pt-4">
@@ -176,8 +208,10 @@
               <CustomCalendar v-model="formData.travelDate" />
             </div>
           </section>
+          <!-- step 4 -->
           <section v-if="currentStep === 4" class="space-y-6">
             <h2 class="text-2xl font-bold text-gray-800">4. ตรวจสอบและยืนยันข้อมูล</h2>
+
             <div class="border-b pb-4">
               <h3 class="font-semibold text-lg text-gray-700 mb-2">ข้อมูลผู้ป่วย</h3>
               <p><strong>ชื่อ-นามสกุล:</strong> {{ formData.patientName }}</p>
@@ -185,7 +219,25 @@
               <p>
                 <strong>โรงพยาบาลต้นทาง:</strong> {{ getHospitalName(formData.originHospitalId) }}
               </p>
+              <div class="mt-2">
+                <p>
+                  <strong>เอกสารส่งตัวที่แนบ: </strong>
+                  <span v-if="formData.referralFiles.length > 0">
+                    {{ formData.referralFiles.length }} ไฟล์
+                  </span>
+                  <span v-else class="text-gray-500">ไม่ได้แนบไฟล์</span>
+                </p>
+                <ul
+                  v-if="formData.referralFiles.length > 0"
+                  class="list-disc list-inside ml-4 text-sm text-gray-600"
+                >
+                  <li v-for="file in formData.referralFiles" :key="file.name">
+                    {{ file.name }}
+                  </li>
+                </ul>
+              </div>
             </div>
+
             <div class="border-b pb-4">
               <h3 class="font-semibold text-lg text-gray-700 mb-2">ข้อมูลปลายทาง</h3>
               <div v-for="(dest, index) in formData.destinations" :key="index" class="mb-3">
@@ -200,25 +252,30 @@
                 </ul>
               </div>
             </div>
+
             <div>
               <h3 class="font-semibold text-lg text-gray-700 mb-2">วันและเวลาเดินทาง</h3>
               <p>
-                <strong>วันที่เลือก:</strong>
-                {{
-                  formData.travelDate.toLocaleDateString('th-TH', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })
-                }}
+                <strong>วันที่เลือก: </strong>
+                <span v-if="formData.travelDate">
+                  {{
+                    formData.travelDate.toLocaleDateString('th-TH', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  }}
+                </span>
+                <span v-else class="text-gray-500"> ยังไม่ได้เลือก </span>
               </p>
             </div>
 
             <p class="text-gray-600 mt-4">กรุณาตรวจสอบข้อมูลทั้งหมดให้ถูกต้องก่อนกดยืนยัน</p>
           </section>
           <div class="mt-8 flex justify-between">
+            <!-- btn -->
             <button
               v-if="currentStep > 1"
               @click="prevStep"
@@ -254,8 +311,6 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-// import Datepicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
 import CustomCalendar from '@/components/CustomCalendar.vue'
 import { useToast } from 'vue-toastification'
 import { useRouter } from 'vue-router'
@@ -300,7 +355,7 @@ const formData = reactive({
   patientName: '',
   patientHN: '',
   originHospitalId: '',
-  referralFile: null as File | null,
+  referralFiles: [] as File[], // 👈 **เปลี่ยนจาก referralFile เป็น referralFiles และกำหนดเป็น Array**
   destinations: [
     {
       hospitalId: '',
@@ -337,11 +392,35 @@ const handleHospitalChange = async (destIndex: number) => {
   }
 }
 
+// 👇 **อัปเดตฟังก์ชัน onFileChange ใหม่ทั้งหมด**
 const onFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement
-  if (target.files && target.files[0]) {
-    formData.referralFile = target.files[0]
+  const newFiles = target.files
+
+  if (!newFiles) return
+
+  // นำไฟล์ชุดเดิมและชุดใหม่มารวมกัน
+  const combinedFiles = [...formData.referralFiles, ...Array.from(newFiles)]
+
+  // ตรวจสอบว่าไฟล์ที่รวมกันแล้วเกิน 5 ไฟล์หรือไม่
+  if (combinedFiles.length > 5) {
+    toast.error('คุณสามารถอัปโหลดไฟล์ได้สูงสุด 5 ไฟล์เท่านั้น')
+    // **สำคัญ:** ต้องล้างค่าใน input ออกเพื่อให้ผู้ใช้เลือกไฟล์ซ้ำได้หากต้องการ
+    target.value = ''
+    return
   }
+
+  // อัปเดต state ด้วยไฟล์ที่รวมกันแล้ว
+  formData.referralFiles = combinedFiles
+
+  // **สำคัญ:** ล้างค่าใน input ทุกครั้งเพื่อให้ change event ทำงานถูกต้อง
+  // หากผู้ใช้ลบไฟล์บางส่วนแล้วต้องการเลือกไฟล์เดิมซ้ำ
+  target.value = ''
+}
+
+// เพิ่มฟังก์ชันสำหรับลบไฟล์
+const removeFile = (fileIndex: number) => {
+  formData.referralFiles.splice(fileIndex, 1)
 }
 
 const addDestination = () => {
@@ -363,40 +442,48 @@ const removeClinic = (destIndex: number, clinicIndex: number) => {
 
 const getHospitalName = (hospitalId: string): string => {
   if (!hospitalId) return 'N/A'
-  // ใช้ .find() เพื่อค้นหา object hospital ที่มี id ตรงกันใน hospitalList
   const hospital = hospitalList.value.find((h) => h.id === hospitalId)
-  // ถ้าเจอ ให้คืนค่า name, ถ้าไม่เจอ ให้คืนค่า ID เดิมไปก่อน
   return hospital ? hospital.name : hospitalId
 }
 
 const getClinicName = (hospitalId: string, clinicId: string): string => {
   if (!hospitalId || !clinicId) return 'N/A'
-  // 1. หาลิสต์ของคลินิกทั้งหมดที่อยู่ในโรงพยาบาลนั้นๆ ก่อน
   const clinicsOfHospital = mockClinics[hospitalId]
-  if (!clinicsOfHospital) return clinicId // ถ้าไม่พบคลังข้อมูลคลินิกของ รพ. นี้
-
-  // 2. เมื่อได้ลิสต์มาแล้ว ก็ใช้ .find() เพื่อค้นหาคลินิกที่มี id ตรงกัน
+  if (!clinicsOfHospital) return clinicId
   const clinic = clinicsOfHospital.find((c) => c.id === clinicId)
-
-  // ถ้าเจอ ให้คืนค่า name, ถ้าไม่เจอ ให้คืนค่า ID เดิมไปก่อน
   return clinic ? clinic.name : clinicId
 }
 
+// 👇 **อัปเดตฟังก์ชัน validateStep1 ใหม่ทั้งหมด**
 const validateStep1 = () => {
+  // Regex ที่อนุญาตเฉพาะตัวอักษรไทย, อังกฤษ, ตัวเลข และวรรค
+  const validPattern = /^[a-zA-Z0-9ก-๙\s]*$/
+
   if (!formData.patientName.trim()) {
     toast.error('กรุณากรอกชื่อผู้ป่วย')
     return false
   }
+  if (!validPattern.test(formData.patientName)) {
+    toast.error('ชื่อ-สกุล ต้องไม่มีสัญลักษณ์พิเศษ')
+    return false
+  }
+
   if (!formData.patientHN.trim()) {
     toast.error('กรุณากรอกเลข HN')
     return false
   }
+  if (!validPattern.test(formData.patientHN)) {
+    toast.error('เลข HN ต้องไม่มีสัญลักษณ์พิเศษ')
+    return false
+  }
+
   if (!formData.originHospitalId) {
     toast.error('กรุณาเลือกโรงพยาบาลต้นทาง')
     return false
   }
   return true
 }
+
 const validateStep2 = () => {
   for (const dest of formData.destinations) {
     if (!dest.hospitalId) {
@@ -415,13 +502,11 @@ const validateStep2 = () => {
 
 const nextStep = () => {
   if (currentStep.value === 1 && !validateStep1()) {
-    return // หยุดถ้า Step 1 ไม่ผ่าน
+    return
   }
   if (currentStep.value === 2 && !validateStep2()) {
-    return // หยุดถ้า Step 2 ไม่ผ่าน
+    return
   }
-  // เพิ่ม validateStep3 ตามความจำเป็น
-
   if (currentStep.value < 4) currentStep.value++
 }
 const prevStep = () => {
@@ -429,7 +514,6 @@ const prevStep = () => {
 }
 const submitForm = async () => {
   if (isSubmitting.value) return
-
   isSubmitting.value = true
   toast.info('กำลังส่งข้อมูล...')
 
@@ -437,7 +521,6 @@ const submitForm = async () => {
     console.log('Form Data to Submit:', JSON.parse(JSON.stringify(formData)))
     await new Promise((resolve) => setTimeout(resolve, 2000))
     toast.success('ส่งข้อมูลการส่งตัวผู้ป่วยสำเร็จ!')
-    // หน่วงเวลา 1.5 วินาทีเพื่อให้ผู้ใช้เห็น Toast ก่อน
     setTimeout(() => {
       router.push('/')
     }, 1500)
