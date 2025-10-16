@@ -50,6 +50,11 @@ const router = createRouter({
       component: () => import('@/views/services/InpatientView.vue'),
     },
     {
+      path: '/status', // <-- เพิ่ม path นี้
+      name: 'status',
+      component: () => import('@/views/StatusTracker.vue'),
+    },
+    {
       path: '/emergency',
       name: 'emergency',
       component: () => import('@/views/services/EmergencyView.vue'),

@@ -9,7 +9,8 @@ import type { YearIta, Moit, ItaDocument } from '@/types/ita'
 type EnvShape = { env: { VITE_API_BASE_URL?: string } }
 
 // สำหรับไฟล์ uploads ใช้ API_BASE_URL ที่มี /api/v1
-const API_BASE_URL = (import.meta as unknown as EnvShape).env.VITE_API_BASE_URL ||
+const API_BASE_URL =
+  (import.meta as unknown as EnvShape).env.VITE_API_BASE_URL ||
   'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1'
 const FILE_BASE_URL = API_BASE_URL.replace(/\/$/, '')
 
@@ -80,7 +81,7 @@ export const itaService = {
   },
 
   async createYear(payload: {
-    year: string
+    year: string | number
     title: string
     description: string
   }): Promise<YearIta> {
