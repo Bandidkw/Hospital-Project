@@ -136,7 +136,7 @@ export const itaService = {
 
   async getAllTopics(): Promise<YearIta[]> {
     const path = '/user/year-moit'
-    const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now()
+    // const t0 = typeof performance !== 'undefined' ? performance.now() : Date.now()
 
     try {
       const res = await apiService.get(path)
