@@ -52,13 +52,24 @@
           </RouterLink>
         </li>
         <!-- ITA - ทุกคนเห็นได้ (user, admin, superadmin) -->
-        <li class="mb-2">
+        <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
             to="/dashboard/ita"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
             active-class="bg-blue-600"
           >
             <i class="fas fa-file-alt mr-3 text-red-500"></i> <span class="text-gray-300">ITA</span>
+          </RouterLink>
+        </li>
+        <!-- หมวดหมู่ - เฉพาะ OPD -->
+        <li class="mb-2" v-if="authStore.isOpd">
+          <RouterLink
+            to="/dashboard/opd-home"
+            class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
+            active-class="bg-blue-600"
+          >
+            <i class="fas fa-tags mr-3 text-yellow-500"></i>
+            <span class="text-gray-300">OPD</span>
           </RouterLink>
         </li>
         <!-- สไลด์ - เฉพาะ Admin และ SuperAdmin -->
@@ -146,7 +157,6 @@
             <span class="text-gray-300">ตั้งค่าเว็บไซต์</span>
           </RouterLink>
         </li>
-
         <!-- รายงาน - ส่วนหัวข้อ -->
         <li class="mb-2 mt-4" v-if="authStore.isSuperAdmin">
           <!-- เฉพาะ Admin และ SuperAdmin -->
@@ -242,19 +252,17 @@ const toast = useToast()
 watch(
   () => authStore.isAuthenticated,
   (newVal) => {
-    // console.log('DashboardSidebar: isAuthenticated changed to', newVal)
     if (!newVal) {
-      console.log('DashboardSidebar: User logged out, redirecting to home.')
+      // console.log('DashboardSidebar: User logged out, redirecting to home.')
       router.push({ name: 'home' })
       toast.info('ออกจากระบบเรียบร้อยแล้ว')
     }
   },
   { immediate: true },
 )
-
 onMounted(() => {
   if (!authStore.isAuthenticated) {
-    console.log('DashboardSidebar: On mount, user not authenticated, redirecting to home.')
+    // console.log('DashboardSidebar: On mount, user not authenticated, redirecting to home.')
     router.push({ name: 'home' })
   }
 })

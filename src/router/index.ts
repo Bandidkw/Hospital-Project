@@ -16,7 +16,7 @@ const ROLES = {
 } as const
 
 const ANY_DASHBOARD = [ROLES.USER, ROLES.OPD, ROLES.ADMIN, ROLES.SUPERADMIN]
-// count OPD_ONLY = [ROLES.OPD]
+const OPD_ONLY = [ROLES.OPD]
 const ADMIN_ONLY = [ROLES.ADMIN, ROLES.SUPERADMIN]
 const SUPERADMIN_ONLY = [ROLES.SUPERADMIN]
 
@@ -52,7 +52,7 @@ const router = createRouter({
       component: () => import('@/views/services/InpatientView.vue'),
     },
     {
-      path: '/status', // <-- เพิ่ม path นี้
+      path: '/status',
       name: 'status',
       component: () => import('@/views/StatusTracker.vue'),
     },
@@ -98,7 +98,6 @@ const router = createRouter({
           component: () => import('@/views/dashboard/DashboardHomeView.vue'),
           meta: { requiresAuth: true, roles: ANY_DASHBOARD },
         },
-
         // Content Management
         {
           path: 'news',
@@ -172,6 +171,12 @@ const router = createRouter({
           name: 'dashboard-statistics',
           component: () => import('@/views/dashboard/DashboardStatisticsView.vue'),
           meta: { requiresAuth: true, roles: ADMIN_ONLY },
+        },
+        {
+          path: 'opd-home',
+          name: 'dashboard-opd-home',
+          component: () => import('@/views/dashboard/opd/DashboardOpd.vue'), // โหลด Component ที่สร้างขึ้น
+          meta: { requiresAuth: true, roles: OPD_ONLY },
         },
 
         // Account
@@ -268,7 +273,7 @@ router.beforeEach(async (to, from, next) => {
   const requiredRoles = to.meta.roles as string[] | undefined
 
   // VIP admin guard: ไม่ให้ออกจากโซน /dashboard
-  const isVipAdmin = authStore.isAdmin || authStore.isSuperAdmin
+  const isVipAdmin = authStore.isOpd || authStore.isAdmin || authStore.isSuperAdmin
   const isTryingToLeaveDashboard = !to.path.startsWith('/dashboard')
 
   if (isVipAdmin && isTryingToLeaveDashboard) {

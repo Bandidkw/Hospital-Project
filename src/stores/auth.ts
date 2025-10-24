@@ -19,11 +19,11 @@ interface User {
 // Map สำหรับแปลง roleId เป็นชื่อ Role ที่อ่านง่าย
 const ROLE_MAPPING: { [key: number]: string } = {
   10: 'user',
+  20: 'opd',
   50: 'admin',
   90: 'superadmin',
 }
 
-// กำหนด Pinia Store สำหรับจัดการสถานะการยืนยันตัวตน (Authentication)
 export const useAuthStore = defineStore('auth', () => {
   const router = useRouter()
 
@@ -42,17 +42,10 @@ export const useAuthStore = defineStore('auth', () => {
   const getUser = computed(() => user.value)
   const getToken = computed(() => token.value)
   const isUser = computed(() => user.value?.role === 'user')
+  const isOpd = computed(() => user.value?.role === 'opd')
   const isAdmin = computed(() => user.value?.role === 'admin')
   const isSuperAdmin = computed(() => user.value?.role === 'superadmin')
 
-  /**
-   * @Action: login
-   * ใช้สำหรับเข้าสู่ระบบผู้ใช้โดยเรียก API
-   * - อัปเดตสถานะ isAuthenticating, loginError
-   * - เก็บ Token ใน State และ sessionStorage หากสำเร็จ
-   * - เรียก fetchUserProfile เพื่อดึงข้อมูลผู้ใช้
-   * - จัดการข้อผิดพลาดจาก API และ Network
-   */
   const login = async (usernameInput: string, passwordInput: string): Promise<boolean> => {
     isAuthenticating.value = true
     loginError.value = null
@@ -64,16 +57,10 @@ export const useAuthStore = defineStore('auth', () => {
       })
 
       const authToken = response.data.data.token
-
-      // ตรวจสอบว่า authToken เป็น String และมีค่า
       if (typeof authToken === 'string' && authToken) {
         token.value = authToken // เก็บ Token ที่เป็น String โดยตรง
         sessionStorage.setItem('token', token.value) // เก็บ Token ใน sessionStorage
-
-        // ตั้งค่า Authorization Header สำหรับ API Service เพื่อใช้ในการเรียก API ถัดไป
         apiService.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-
-        // ตั้งค่า user จากข้อมูลที่ได้จาก login response แทนการเรียก fetchUserProfile
         const loginData = response.data.data
         if (loginData.user) {
           const roleIdFromBackend = parseInt(loginData.user.role || loginData.role, 10)
@@ -125,10 +112,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  /**
-   * @Action: updateUserProfile
-   * ใช้สำหรับอัปเดตข้อมูลโปรไฟล์ผู้ใช้ (เช่น ชื่อ-นามสกุล)
-   */
   const updateUserProfile = async (newProfileData: { fullName: string }): Promise<boolean> => {
     if (!user.value) {
       console.error('ไม่สามารถอัปเดตโปรไฟล์ได้: ไม่มีผู้ใช้งานในระบบ')
@@ -136,16 +119,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     try {
-      // ✨ 1. สร้าง Payload ให้ตรงกับที่ Backend ต้องการ
       const payload = {
-        name: newProfileData.fullName, // Map `fullName` ไปที่ `name`
-        username: user.value.username, // ดึง username จาก state ปัจจุบัน
+        name: newProfileData.fullName,
+        username: user.value.username,
       }
-
-      // ✨ 2. เรียกใช้ Service ด้วย payload ใหม่
       const updatedUserData = await apiUpdateUserProfile(payload)
-
-      // ✨ 3. อัปเดต state จากข้อมูลที่ได้กลับมา (Backend อาจจะคืน `name` ไม่ใช่ `fullName`)
       if (updatedUserData) {
         user.value.fullName = updatedUserData.name || updatedUserData.fullName
         sessionStorage.setItem('user', JSON.stringify(user.value))
@@ -158,13 +136,6 @@ export const useAuthStore = defineStore('auth', () => {
       return false
     }
   }
-
-  /**
-   * @Action: requestPasswordReset
-   * ใช้สำหรับส่งคำขอรีเซ็ตรหัสผ่านโดยเรียก API
-   * - อัปเดตสถานะ isAuthenticating, loginError
-   * - จัดการข้อผิดพลาดจาก API และ Network
-   */
   const requestPasswordReset = async (email: string): Promise<boolean> => {
     isAuthenticating.value = true
     loginError.value = null
@@ -194,41 +165,28 @@ export const useAuthStore = defineStore('auth', () => {
       isAuthenticating.value = false
     }
   }
-
-  /**
-   * @Action: fetchUserProfile
-   * ใช้สำหรับดึงข้อมูลโปรไฟล์ผู้ใช้จาก API โดยใช้ Token ที่มีอยู่
-   * - อัปเดตข้อมูล user ใน State และ sessionStorage
-   * - จัดการข้อผิดพลาด เช่น Token หมดอายุ (401) และทำการ logout อัตโนมัติ
-   */
   const fetchUserProfile = async (): Promise<boolean> => {
     profileError.value = null // เคลียร์ error เก่าก่อนเริ่ม
     if (!token.value) {
       profileError.value = 'Token ไม่พร้อมใช้งาน กรุณาเข้าสู่ระบบ'
       return false
     }
-
     try {
-      // ตรวจสอบให้แน่ใจว่า apiService ถูกตั้งค่าให้ส่ง Authorization header ด้วย token
       const response = await apiService.get('/auth/profile')
       const backendUser = response.data.data // จาก Response ล่าสุดของ /auth/profile, response.data.data คือ Object ผู้ใช้
 
       if (backendUser) {
-        // แปลง 'role' จาก String เป็น Number ก่อนนำไปใช้กับ ROLE_MAPPING
         const roleIdFromBackend = parseInt(backendUser.role, 10)
-        const userRole = ROLE_MAPPING[roleIdFromBackend] || 'user' // Map บทบาท
-
-        // กำหนดค่า user object ใน Store
+        const userRole = ROLE_MAPPING[roleIdFromBackend] || 'user'
         user.value = {
           id: backendUser.id,
           username: backendUser.username,
-          fullName: backendUser.name || backendUser.fullName, // ใช้ 'name' ถ้า 'fullName' ไม่มี
-          roleId: roleIdFromBackend, // เก็บ roleId เป็น Number
+          fullName: backendUser.name || backendUser.fullName,
+          roleId: roleIdFromBackend,
           role: userRole,
           vitrify: backendUser.vitrify || false,
         }
-        // isAuthenticated.value = true;
-        sessionStorage.setItem('user', JSON.stringify(user.value)) // เก็บข้อมูลผู้ใช้ใน sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(user.value))
         return true
       } else {
         profileError.value = 'ไม่สามารถดึงข้อมูลโปรไฟล์ได้: ข้อมูลไม่สมบูรณ์'
@@ -236,25 +194,16 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (error: unknown) {
       console.error('การดึงข้อมูลโปรไฟล์ผู้ใช้ล้มเหลว:', error)
-
-      // ตรวจสอบว่าเป็น Axios Error และมีสถานะ 401 หรือไม่
       if (isAxiosError(error) && error.response && error.response.status === 401) {
         logout() // Logout อัตโนมัติเมื่อ Token หมดอายุ
         profileError.value = 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบอีกครั้ง'
       } else {
-        // ถ้าไม่ใช่ Error 401 ก็ให้แสดงข้อความผิดพลาดทั่วไป
         profileError.value = 'ไม่สามารถดึงข้อมูลโปรไฟล์ได้: เกิดข้อผิดพลาด'
       }
       return false
     }
   }
 
-  /**
-   * @Action: logout
-   * ใช้สำหรับออกจากระบบ
-   * - ล้างข้อมูล user และ token ใน State และ sessionStorage
-   * - Redirect ไปยังหน้าแรก
-   */
   const logout = () => {
     user.value = null
     token.value = null
@@ -263,16 +212,10 @@ export const useAuthStore = defineStore('auth', () => {
     profileError.value = null
     sessionStorage.removeItem('user')
     sessionStorage.removeItem('token')
-    // ล้าง Authorization Header เมื่อออกจากระบบ
     delete apiService.defaults.headers.common['Authorization']
     router.push('/')
   }
 
-  /**
-   * @Action: devLogin
-   * ใช้สำหรับจำลองการเข้าสู่ระบบในโหมด Dev (เพื่อการทดสอบ)
-   * - กำหนด user และ token ตาม role ที่ระบุ
-   */
   const devLogin = async (role: 'user' | 'admin' | 'superadmin'): Promise<boolean> => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -337,11 +280,6 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
-  /**
-   * @Action: fetchUser
-   * ใช้สำหรับดึงข้อมูลผู้ใช้และ Token จาก sessionStorage เมื่อแอปพลิเคชันโหลด
-   * - คงสถานะการเข้าสู่ระบบไว้หากมีข้อมูลที่ถูกต้อง
-   */
   const fetchUser = () => {
     const storedUser = sessionStorage.getItem('user')
     const storedToken = sessionStorage.getItem('token')
@@ -385,10 +323,7 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = null
     }
   }
-  /**
-   * @Action: changePassword
-   * สำหรับ User ที่ Login อยู่แล้ว ให้เปลี่ยนรหัสผ่านของตัวเอง
-   */
+
   const changePassword = async (passwords: {
     currentPassword: string
     newPassword: string
@@ -401,11 +336,7 @@ export const useAuthStore = defineStore('auth', () => {
         newPassword: passwords.newPassword,
         confirmPassword: passwords.confirmNewPassword,
       }
-
-      // ✨ เรียก API ด้วย PUT และ Endpoint ที่ถูกต้อง
       await apiService.put('/admin/password', payload)
-
-      // หลังจากเปลี่ยนรหัสผ่านสำเร็จ ควรจะอัปเดตสถานะใน State ด้วย
       if (user.value) {
         user.value.vitrify = false
       }
@@ -431,6 +362,7 @@ export const useAuthStore = defineStore('auth', () => {
     getUser,
     getToken,
     isUser,
+    isOpd,
     isAdmin,
     isSuperAdmin,
     login,

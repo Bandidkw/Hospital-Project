@@ -186,7 +186,6 @@ const password = ref('')
 const isLoading = ref(false)
 const showPassword = ref(false)
 
-// New state for Forgot Password functionality
 const isForgotPasswordMode = ref(false)
 const resetEmail = ref('')
 const resetError = ref<string | null>(null)
@@ -216,31 +215,26 @@ const submitLogin = async () => {
   if (success) {
     emit('loginSuccess')
     toast.success('เข้าสู่ระบบสำเร็จ!')
-
-    // --- นี่คือ Logic การนำทางที่อัปเกรดแล้ว ---
     if (authStore.user?.vitrify) {
-      // 1. ถ้าถูกบังคับให้เปลี่ยนรหัส -> ส่งไปหน้าเปลี่ยนรหัสทันที
       console.log('User must change password. Redirecting to /force-change-password')
       toast.info('กรุณาตั้งรหัสผ่านใหม่เพื่อความปลอดภัย')
       router.push('/force-change-password')
     } else {
-      // 2. ถ้าไม่ต้องเปลี่ยนรหัส -> ค่อยเช็ค role เพื่อไปหน้าแดชบอร์ด
       console.log('Password is fine. Redirecting based on role.')
-      if (authStore.isAdmin || authStore.isSuperAdmin) {
+      if (authStore.isOpd || authStore.isAdmin || authStore.isSuperAdmin) {
         router.push('/dashboard')
       } else {
         router.push('/')
       }
     }
 
-    closeModal() // ปิด Modal
+    closeModal()
   } else {
     emit('loginFailed', authStore.loginError || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ')
     toast.error(authStore.loginError || 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง')
   }
 }
 
-// New function for Forgot Password submission
 const submitForgotPassword = async () => {
   if (!resetEmail.value) {
     resetError.value = 'กรุณากรอกอีเมล'
@@ -251,21 +245,18 @@ const submitForgotPassword = async () => {
   resetError.value = null // Clear previous errors
 
   try {
-    // This assumes you will add a `requestPasswordReset` action to your authStore
-    // which makes an API call to your backend.
     const success = await authStore.requestPasswordReset(resetEmail.value)
 
     if (success) {
       toast.success('ส่งคำขอรีเซ็ตรหัสผ่านสำเร็จ! กรุณาตรวจสอบอีเมลของคุณ')
-      closeModal() // Close modal after successful request
+      closeModal()
     } else {
-      // The authStore.requestPasswordReset should set an error message if failed
       resetError.value = authStore.loginError || 'ไม่สามารถส่งคำขอรีเซ็ตรหัสผ่านได้'
       toast.error(resetError.value)
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error requesting password reset:', error)
-    resetError.value = error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ'
+    resetError.value = 'เกิดข้อผิดพลาดในการเชื่อมต่อ'
     toast.error(resetError.value)
   } finally {
     isLoading.value = false
@@ -279,7 +270,7 @@ const handleDevLogin = async (role: 'user' | 'admin' | 'superadmin') => {
 
   if (success) {
     toast.success(`เข้าสู่ระบบในฐานะ ${role} สำเร็จ!`)
-    if (authStore.isAdmin || authStore.isSuperAdmin) {
+    if (authStore.isOpd || authStore.isAdmin || authStore.isSuperAdmin) {
       router.push('/dashboard').catch((err) => {
         console.error('เกิดข้อผิดพลาดในการนำทางไป Dashboard (Dev Login):', err)
       })
