@@ -10,11 +10,13 @@ import NewsDetailView from '../views/NewsDetailView.vue'
 // ------------------------------------
 const ROLES = {
   USER: 'user',
+  OPD: 'opd',
   ADMIN: 'admin',
   SUPERADMIN: 'superadmin',
 } as const
 
-const ANY_DASHBOARD = [ROLES.USER, ROLES.ADMIN, ROLES.SUPERADMIN]
+const ANY_DASHBOARD = [ROLES.USER, ROLES.OPD, ROLES.ADMIN, ROLES.SUPERADMIN]
+// count OPD_ONLY = [ROLES.OPD]
 const ADMIN_ONLY = [ROLES.ADMIN, ROLES.SUPERADMIN]
 const SUPERADMIN_ONLY = [ROLES.SUPERADMIN]
 

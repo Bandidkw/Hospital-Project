@@ -84,7 +84,7 @@
           </RouterLink>
         </li>
         <!-- โครงสร้างองค์กร - เฉพาะ Admin และ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
             to="/dashboard/org-structure"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -103,7 +103,7 @@
           </div>
         </li>
         <!-- ไฟล์มีเดีย - เฉพาะ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/media-files"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -112,9 +112,9 @@
             <i class="fas fa-photo-video mr-3 text-blue-500"></i>
             <span class="text-gray-300">ไฟล์มีเดีย</span>
           </RouterLink>
-        </li>
+        </li> -->
         <!-- รูปภาพตามหน้า - เฉพาะ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/page-images"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -123,7 +123,7 @@
             <i class="fas fa-image mr-3 text-red-400"></i>
             <span class="text-gray-300">รูปภาพตามหน้า</span>
           </RouterLink>
-        </li>
+        </li> -->
         <!-- Audit Logs - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
