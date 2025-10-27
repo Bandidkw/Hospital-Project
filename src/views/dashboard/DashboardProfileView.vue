@@ -207,7 +207,6 @@ const updateProfile = async () => {
 }
 
 const changePassword = async () => {
-  // --- ส่วน Validation---
   if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
     toast.error('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!')
     return
@@ -216,13 +215,11 @@ const changePassword = async () => {
     toast.error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร!')
     return
   }
-  // --- ส่วนส่งข้อมูลไปเปลี่ยนรหัสผ่าน---
   const success = await authStore.changePassword({
     currentPassword: passwordForm.currentPassword,
     newPassword: passwordForm.newPassword,
     confirmNewPassword: passwordForm.confirmNewPassword,
   })
-  // --- ส่วนแสดงผลแจ้งเตือน---
   if (success) {
     toast.success('เปลี่ยนรหัสผ่านสำเร็จ!')
     passwordForm.currentPassword = ''

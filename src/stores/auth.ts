@@ -330,27 +330,59 @@ export const useAuthStore = defineStore('auth', () => {
     confirmNewPassword: string
   }): Promise<boolean> => {
     try {
-      // ✨ สร้าง Payload ให้ครบถ้วนตาม Postman
       const payload = {
         currentPassword: passwords.currentPassword,
         newPassword: passwords.newPassword,
         confirmPassword: passwords.confirmNewPassword,
       }
-      await apiService.put('/admin/password', payload)
+      let apiUrl: string
+      const userRole = user.value?.role
+
+      if (userRole === 'admin') {
+        apiUrl = '/admin/password'
+      } else if (userRole === 'opd') {
+        apiUrl = '/opd/change-password'
+      } else if (userRole === 'superadmin') {
+        apiUrl = '/super-admin/password'
+      } else {
+        console.error('ไม่พบ role ที่ถูกต้องสำหรับการเปลี่ยนรหัสผ่าน')
+        return false
+      }
+      await apiService.put(apiUrl, payload)
       if (user.value) {
         user.value.vitrify = false
       }
-
       console.log('เปลี่ยนรหัสผ่านสำเร็จ')
       return true
     } catch (error) {
       console.error('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน:', error)
-      // สามารถดึงข้อความ error จากหลังบ้านมาแสดงผลเพื่อ UX ที่ดีขึ้นได้
       return false
     }
   }
 
-  // คืนค่า State, Computed Properties และ Actions
+  const changePasswordOPD = async (passwords: {
+    currentPassword: string
+    newPassword: string
+    confirmNewPassword: string
+  }): Promise<boolean> => {
+    try {
+      const payload = {
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+        confirmPassword: passwords.confirmNewPassword,
+      }
+      await apiService.put('/opd/change-password', payload)
+      if (user.value) {
+        user.value.vitrify = false
+      }
+      console.log('เปลี่ยนรหัสผ่านสำเร็จ')
+      return true
+    } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน:', error)
+      return false
+    }
+  }
+
   return {
     user,
     token,
@@ -372,6 +404,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUser,
     requestPasswordReset,
     changePassword,
+    changePasswordOPD,
     updateUserProfile,
   }
 })
