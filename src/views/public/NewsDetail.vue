@@ -46,9 +46,10 @@
           class="relative aspect-video rounded-xl overflow-hidden shadow-lg"
         >
           <img
-            :src="absoluteImage(newsItem.imageUrl)"
+            :src="newsItem.imageUrl"
             :alt="newsItem.title"
             class="w-full h-full object-cover"
+            @error="onImgError"
           />
         </div>
 
@@ -83,17 +84,21 @@ const loading = ref(true)
 const errorMsg = ref<string | null>(null)
 const newsId = ref(route.params.id as string)
 
-/* ---------- Helper Functions (คัดลอกมาจาก NewsSection.vue) ---------- */
-function absoluteImage(u?: string | null): string {
-  if (!u) return ''
-  if (/^https?:\/\//i.test(u)) return u
-  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
-  const root = base.replace(/\/api(\/v\d+)?$/i, '')
-  return `${root}/${String(u).replace(/^\/+/, '')}`
-}
+/* ---------- Helper Functions ---------- */
 function isImageUrl(url?: string | null): boolean {
   if (!url) return false
   return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url)
+}
+function onImgError(e: Event) {
+  const el = e.target as HTMLImageElement
+  console.error('[NewsDetail] Image failed to load:', el.src)
+  // แสดง placeholder เมื่อโหลดภาพไม่สำเร็จ
+  const fallback =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#4b5563">ไม่สามารถโหลดภาพได้</text></svg>`,
+    )
+  if (el && el.src !== fallback) el.src = fallback
 }
 function formatDate(d: string) {
   try {

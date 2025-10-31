@@ -25,9 +25,10 @@
 
         <div v-if="newsItem.imageUrl && !isPdf(newsItem.imageUrl)" class="mb-6">
           <img
-            :src="absoluteImage(newsItem.imageUrl)"
+            :src="newsItem.imageUrl"
             :alt="newsItem.title"
             class="w-full h-96 object-cover rounded-lg shadow-sm"
+            @error="onImgError"
           />
         </div>
 
@@ -39,7 +40,7 @@
 
         <div v-if="newsItem.pdfUrl || (newsItem.imageUrl && isPdf(newsItem.imageUrl))" class="mt-8">
           <a
-            :href="newsItem.pdfUrl || absoluteImage(newsItem.imageUrl)"
+            :href="newsItem.pdfUrl || newsItem.imageUrl || ''"
             target="_blank"
             class="inline-flex items-center gap-2 bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
           >
@@ -83,15 +84,6 @@ const errorMsg = ref<string | null>(null)
 
 // --- เพิ่มฟังก์ชัน Utilities ---
 
-function absoluteImage(u?: string | null): string {
-  if (!u) return ''
-  if (/^https?:\/\//i.test(u)) return u
-
-  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
-  const root = base.replace(/\/api(\/v\d+)?$/i, '')
-  return `${root}/${String(u).replace(/^\/+/, '')}`
-}
-
 function isPdf(url?: string | null): boolean {
   if (!url) return false
   return url.toLowerCase().endsWith('.pdf')
@@ -118,6 +110,18 @@ function formatDate(d: string) {
   } catch {
     return d // คืนค่าเดิมหากการแปลงล้มเหลว
   }
+}
+
+function onImgError(e: Event) {
+  const el = e.target as HTMLImageElement
+  console.error('[NewsDetailView] Image failed to load:', el.src)
+  // แสดง placeholder เมื่อโหลดภาพไม่สำเร็จ
+  const fallback =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#4b5563">ไม่สามารถโหลดภาพได้</text></svg>`,
+    )
+  if (el && el.src !== fallback) el.src = fallback
 }
 
 // --- โค้ดดึงข้อมูล ---

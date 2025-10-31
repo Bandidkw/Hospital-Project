@@ -67,10 +67,13 @@ function buildAssetUrl(u?: string | null): string {
 
   const root = base.replace(/\/+$/, '')
   const path = String(u).replace(/^\/+/, '')
-  const alreadyEncoded = /%[0-9A-Fa-f]{2}/.test(path)
-  const encodedPath = alreadyEncoded ? path : encodeURI(path)
 
-  return `${root}/${encodedPath}`
+  // ไม่ encode URL เพราะ backend ต้องการชื่อไฟล์ตามที่เป็นอยู่
+  const result = `${root}/${path}`
+  console.log('[buildAssetUrl] input:', u)
+  console.log('[buildAssetUrl] result:', result)
+
+  return result
 }
 
 /** ✨ map ทั้ง imageUrl และ pdfUrl และเปลี่ยนชื่อให้ชัดเจน */
@@ -192,8 +195,8 @@ export async function getNewsPublicById(id: string): Promise<PublicNewsItem | nu
   if (!id) {
     throw new Error('News ID is required.')
   }
-  const correctPath = `/news/public/detail/${id}`
-
-  const response = await apiService.get(correctPath)
-  return response.data.data as PublicNewsItem
+  const correctPath = `/news/public/detail`
+  const response = await apiService.get(correctPath, { params: { id } })
+  const data = response.data.data as PublicNewsItem
+  return mapAssetUrls(data)
 }
