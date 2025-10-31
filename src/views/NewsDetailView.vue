@@ -1,70 +1,67 @@
 <template>
   <main class="bg-gray-50 py-12 md:py-16">
     <div class="max-w-4xl mx-auto px-4">
-      <div v-if="loading" class="text-center text-gray-500">
-        <i class="fas fa-spinner fa-spin text-2xl"></i>
-        <p class="mt-2">กำลังโหลดข้อมูล...</p>
-      </div>
+      <article
+        v-if="newsItem"
+        class="bg-white p-6 md:p-10 rounded-xl shadow-2xl transition-shadow duration-300 hover:shadow-3xl"
+      >
+        <div class="mb-4 text-sm text-blue-600 hover:text-blue-800 transition-colors">
+          <RouterLink to="/news" class="inline-flex items-center gap-1">
+            <i class="fas fa-chevron-left text-xs"></i> ข่าวสารทั้งหมด
+          </RouterLink>
+        </div>
 
-      <div v-else-if="errorMsg" class="text-center text-red-600">
-        <i class="fas fa-exclamation-triangle text-2xl"></i>
-        <p class="mt-2">เกิดข้อผิดพลาด: {{ errorMsg }}</p>
-        <RouterLink to="/" class="mt-4 inline-block text-blue-600 hover:underline">
-          กลับไปหน้าหลัก
-        </RouterLink>
-      </div>
+        <header class="pb-6 border-b border-gray-100 mb-6">
+          <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-snug">
+            {{ newsItem.title }}
+          </h1>
+          <div class="mt-4 flex items-center gap-4 text-gray-600">
+            <p class="text-sm font-medium">
+              <i class="far fa-calendar-alt mr-2 text-blue-500"></i>
+              เผยแพร่เมื่อ:
+              <span class="text-gray-700 font-semibold">{{ formatDate(newsItem.date) }}</span>
+            </p>
+            <span
+              v-if="newsItem.category"
+              class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800"
+            >
+              {{ newsItem.category }}
+            </span>
+          </div>
+        </header>
 
-      <article v-else-if="newsItem" class="bg-white p-6 md:p-8 rounded-lg shadow-md">
-        <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight">
-          {{ newsItem.title }}
-        </h1>
-        <p class="text-gray-500 mt-3 border-b pb-4 mb-6">
-          <i class="far fa-calendar-alt mr-2"></i>
-          เผยแพร่เมื่อ: {{ formatDate(newsItem.date) }}
-        </p>
-
-        <div v-if="newsItem.imageUrl && !isPdf(newsItem.imageUrl)" class="mb-6">
+        <div
+          v-if="newsItem.imageUrl && !isPdf(newsItem.imageUrl)"
+          class="mb-8 rounded-lg overflow-hidden shadow-xl border border-gray-100"
+        >
           <img
-            :src="newsItem.imageUrl"
+            :src="absoluteImage(newsItem.imageUrl)"
             :alt="newsItem.title"
-            class="w-full h-96 object-cover rounded-lg shadow-sm"
+            class="w-full object-fill h-64 md:h-96"
             @error="onImgError"
           />
         </div>
 
-        <div class="prose max-w-none">
-          <p v-for="(p, i) in normalizeParagraphs(newsItem.content || '')" :key="i">
+        <div class="prose max-w-none text-gray-800 leading-relaxed text-lg space-y-4">
+          <p v-for="(p, i) in normalizeParagraphs(newsItem.content || '')" :key="i" class="mb-4">
             {{ p }}
           </p>
         </div>
 
-        <div v-if="newsItem.pdfUrl || (newsItem.imageUrl && isPdf(newsItem.imageUrl))" class="mt-8">
+        <div
+          v-if="newsItem.pdfUrl || (newsItem.imageUrl && isPdf(newsItem.imageUrl))"
+          class="mt-10 pt-6 border-t border-gray-100"
+        >
           <a
-            :href="newsItem.pdfUrl || newsItem.imageUrl || ''"
+            :href="newsItem.pdfUrl || absoluteImage(newsItem.imageUrl) || ''"
             target="_blank"
-            class="inline-flex items-center gap-2 bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
+            class="inline-flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-red-700 hover:shadow-xl transition-all duration-200"
           >
-            <i class="far fa-file-pdf"></i>
-            ดาวน์โหลดเอกสารแนบ (PDF)
+            <i class="far fa-file-pdf text-xl"></i>
+            <span class="text-lg">ดาวน์โหลดเอกสารแนบ (PDF)</span>
           </a>
         </div>
-
-        <div class="mt-8 pt-4 border-t">
-          <RouterLink
-            to="/news"
-            class="text-blue-600 hover:underline inline-flex items-center gap-1"
-          >
-            <i class="fas fa-arrow-left text-[11px]"></i> กลับไปหน้าข่าวสารทั้งหมด
-          </RouterLink>
-        </div>
       </article>
-
-      <div v-else class="text-center text-gray-500">
-        <p>ไม่พบข้อมูลข่าวที่ระบุ</p>
-        <RouterLink to="/news" class="mt-4 inline-block text-blue-600 hover:underline">
-          ดูข่าวสารทั้งหมด
-        </RouterLink>
-      </div>
     </div>
   </main>
 </template>
@@ -83,6 +80,16 @@ const loading = ref(true)
 const errorMsg = ref<string | null>(null)
 
 // --- เพิ่มฟังก์ชัน Utilities ---
+
+function absoluteImage(u?: string | null): string {
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+  const root = base.replace(/\/api(\/v\d+)?$/i, '')
+  // 🟢 URL ภาพจาก API
+  // มีรูปแบบเป็น uploads/NEWS_... ดังนั้นต้องต่อจาก root ให้ถูกต้อง
+  return `${root}/${String(u).replace(/^\/+/, '')}`
+}
 
 function isPdf(url?: string | null): boolean {
   if (!url) return false
@@ -108,26 +115,19 @@ function formatDate(d: string) {
       year: 'numeric',
     })
   } catch {
-    return d // คืนค่าเดิมหากการแปลงล้มเหลว
+    return d
   }
 }
 
-function onImgError(e: Event) {
-  const el = e.target as HTMLImageElement
-  console.error('[NewsDetailView] Image failed to load:', el.src)
-  // แสดง placeholder เมื่อโหลดภาพไม่สำเร็จ
-  const fallback =
-    'data:image/svg+xml;utf8,' +
-    encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#4b5563">ไม่สามารถโหลดภาพได้</text></svg>`,
-    )
-  if (el && el.src !== fallback) el.src = fallback
+// ℹ️ ฟังก์ชันจัดการเมื่อรูปภาพหลักโหลดไม่ได้
+function onImgError(event: Event) {
+  ;(event.target as HTMLImageElement).src = '/path/to/placeholder/image.png' // 👈 แทนที่ด้วย path รูปภาพสำรอง
+  ;(event.target as HTMLImageElement).classList.add('opacity-50') // ทำให้จางลงเล็กน้อย
 }
 
-// --- โค้ดดึงข้อมูล ---
+// --- โค้ดดึงข้อมูล (ปรับปรุงตามการแก้ไข 404/401) ---
 
 onMounted(async () => {
-  // 1. ตรวจสอบ ID
   if (!newsId) {
     errorMsg.value = 'ไม่พบ ID ของข่าว'
     loading.value = false
@@ -135,14 +135,15 @@ onMounted(async () => {
   }
 
   try {
+    // 🟢 ใช้ getNewsPublicById ที่ได้รับการแก้ไขให้ส่ง ID เป็น Query Parameter แล้ว
     const data = await getNewsPublicById(newsId)
+
     if (data && data.id) {
       newsItem.value = data
     } else {
-      errorMsg.value = 'ไม่พบข้อมูลข่าวสารที่ระบุ ID' // แสดงข้อความนี้แทน
+      errorMsg.value = 'ไม่พบข้อมูลข่าวสารที่ระบุ ID'
     }
   } catch (e) {
-    // 4. จัดการข้อผิดพลาด
     console.error('Failed to fetch news item:', e)
     errorMsg.value = isAxiosError(e)
       ? (e.response?.data as { message?: string })?.message || e.message
