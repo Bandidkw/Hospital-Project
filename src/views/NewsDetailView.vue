@@ -23,15 +23,23 @@
           เผยแพร่เมื่อ: {{ formatDate(newsItem.date) }}
         </p>
 
-        <div v-if="newsItem.imageUrl" class="mb-6">
-          <img :src="newsItem.imageUrl" :alt="newsItem.title" class="w-full rounded-lg shadow-sm" />
+        <div v-if="newsItem.imageUrl && !isPdf(newsItem.imageUrl)" class="mb-6">
+          <img
+            :src="absoluteImage(newsItem.imageUrl)"
+            :alt="newsItem.title"
+            class="w-full h-96 object-cover rounded-lg shadow-sm"
+          />
         </div>
 
-        <div class="prose max-w-none" v-html="newsItem.content"></div>
+        <div class="prose max-w-none">
+          <p v-for="(p, i) in normalizeParagraphs(newsItem.content || '')" :key="i">
+            {{ p }}
+          </p>
+        </div>
 
-        <div v-if="newsItem.pdfUrl" class="mt-8">
+        <div v-if="newsItem.pdfUrl || (newsItem.imageUrl && isPdf(newsItem.imageUrl))" class="mt-8">
           <a
-            :href="newsItem.pdfUrl"
+            :href="newsItem.pdfUrl || absoluteImage(newsItem.imageUrl)"
             target="_blank"
             class="inline-flex items-center gap-2 bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 transition-colors"
           >
@@ -39,46 +47,66 @@
             ดาวน์โหลดเอกสารแนบ (PDF)
           </a>
         </div>
+
+        <div class="mt-8 pt-4 border-t">
+          <RouterLink
+            to="/news"
+            class="text-blue-600 hover:underline inline-flex items-center gap-1"
+          >
+            <i class="fas fa-arrow-left text-[11px]"></i> กลับไปหน้าข่าวสารทั้งหมด
+          </RouterLink>
+        </div>
       </article>
 
       <div v-else class="text-center text-gray-500">
         <p>ไม่พบข้อมูลข่าวที่ระบุ</p>
+        <RouterLink to="/news" class="mt-4 inline-block text-blue-600 hover:underline">
+          ดูข่าวสารทั้งหมด
+        </RouterLink>
       </div>
     </div>
   </main>
 </template>
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
-import { getNewsById, type NewsItem } from '@/services/newsService'
+import { useRoute, RouterLink } from 'vue-router'
+import { getNewsPublicById, type PublicNewsItem } from '@/services/newsService'
 import { isAxiosError } from '@/services/apiService'
 
 const route = useRoute()
 const newsId = route.params.id as string
 
-const newsItem = ref<NewsItem | null>(null)
+const newsItem = ref<PublicNewsItem | null>(null)
 const loading = ref(true)
 const errorMsg = ref<string | null>(null)
 
-onMounted(async () => {
-  if (!newsId) {
-    errorMsg.value = 'ไม่พบ ID ของข่าว'
-    loading.value = false
-    return
-  }
+// --- เพิ่มฟังก์ชัน Utilities ---
 
-  try {
-    const data = await getNewsById(newsId)
-    newsItem.value = data
-  } catch (e) {
-    console.error('Failed to fetch news item:', e)
-    errorMsg.value = isAxiosError(e)
-      ? (e.response?.data as { message?: string })?.message || e.message
-      : 'ไม่สามารถโหลดข้อมูลข่าวได้'
-  } finally {
-    loading.value = false
-  }
-})
+function absoluteImage(u?: string | null): string {
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+
+  const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+  const root = base.replace(/\/api(\/v\d+)?$/i, '')
+  return `${root}/${String(u).replace(/^\/+/, '')}`
+}
+
+function isPdf(url?: string | null): boolean {
+  if (!url) return false
+  return url.toLowerCase().endsWith('.pdf')
+}
+
+function normalizeParagraphs(text: string): string[] {
+  const clean = String(text ?? '')
+    .replace(/\r/g, '')
+    .trim()
+  if (!clean) return []
+  return clean
+    .split(/\n{2,}|\n-\n/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
 
 function formatDate(d: string) {
   try {
@@ -88,7 +116,35 @@ function formatDate(d: string) {
       year: 'numeric',
     })
   } catch {
-    return d
+    return d // คืนค่าเดิมหากการแปลงล้มเหลว
   }
 }
+
+// --- โค้ดดึงข้อมูล ---
+
+onMounted(async () => {
+  // 1. ตรวจสอบ ID
+  if (!newsId) {
+    errorMsg.value = 'ไม่พบ ID ของข่าว'
+    loading.value = false
+    return
+  }
+
+  try {
+    const data = await getNewsPublicById(newsId)
+    if (data && data.id) {
+      newsItem.value = data
+    } else {
+      errorMsg.value = 'ไม่พบข้อมูลข่าวสารที่ระบุ ID' // แสดงข้อความนี้แทน
+    }
+  } catch (e) {
+    // 4. จัดการข้อผิดพลาด
+    console.error('Failed to fetch news item:', e)
+    errorMsg.value = isAxiosError(e)
+      ? (e.response?.data as { message?: string })?.message || e.message
+      : 'ไม่สามารถโหลดข้อมูลข่าวได้'
+  } finally {
+    loading.value = false
+  }
+})
 </script>

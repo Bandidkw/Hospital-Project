@@ -44,11 +44,13 @@
       </div>
 
       <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-        <a
+        <component
           v-for="n in latestNews"
           :key="n.id"
+          :is="getCardTag(n)"
           :href="getArticleLink(n)"
           :target="isPdfUrl(n.imageUrl) ? '_blank' : '_self'"
+          :class="getCardClasses(n)"
           class="group block bg-white rounded-2xl shadow-sm overflow-hidden text-left ring-1 ring-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
         >
           <div class="relative w-full h-56 md:h-60 lg:h-64 bg-gray-100">
@@ -93,7 +95,7 @@
               {{ n.excerpt || n.content || '' }}
             </p>
           </div>
-        </a>
+        </component>
 
         <div v-if="!latestNews.length" class="col-span-full text-gray-500 py-10">
           <i class="fas fa-info-circle mr-2"></i> ยังไม่มีข่าวสาร
@@ -208,7 +210,6 @@ async function fetchNews() {
   try {
     const data = await getPublicNews()
     const raw = (Array.isArray(data) ? data : []) as ApiPublicNews[]
-
     const mapped: NewsWithCategory[] = raw.map((n) => ({
       ...n,
       excerpt: normalizeExcerpt(n.excerpt, n.content),
@@ -283,12 +284,30 @@ function isPdfUrl(url?: string | null): boolean {
  */
 function getArticleLink(newsItem: PublicNewsItem): string {
   const url = newsItem.imageUrl
-  // ถ้า URL เป็น PDF ให้ใช้ URL นั้นเป็นลิงก์เลย
   if (isPdfUrl(url)) {
-    return absoluteImage(url) // ใช้ฟังก์ชันเดิมเพื่อสร้าง Full URL
+    return absoluteImage(url)
   }
-  // ถ้าไม่ใช่ PDF ให้ลิงก์ไปที่หน้ารายละเอียดข่าว
   return `/news/${newsItem.id}`
+}
+
+function getCardTag(newsItem: PublicNewsItem): 'a' | 'div' {
+  const isPDF = isPdfUrl(newsItem.imageUrl)
+  const isImage = isImageUrl(newsItem.imageUrl)
+  if (isPDF) {
+    return 'a'
+  }
+  if (isImage) {
+    return 'div'
+  }
+  return 'a'
+}
+
+function getCardClasses(newsItem: PublicNewsItem): string {
+  if (getCardTag(newsItem) === 'a') {
+    return 'hover:shadow-lg hover:-translate-y-0.5'
+  }
+  // หากเป็น div (คลิกไม่ได้)
+  return 'cursor-default'
 }
 </script>
 

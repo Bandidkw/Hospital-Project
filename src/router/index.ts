@@ -72,6 +72,11 @@ const router = createRouter({
       component: () => import('@/views/public/NewsView.vue'),
       meta: { requiresAuth: false },
     },
+    {
+      path: '/news/:id',
+      name: 'news-detail',
+      component: () => import('@/views/public/NewsDetail.vue'),
+    },
     { path: '/contact', name: 'contact', component: () => import('@/views/ContactView.vue') },
     {
       path: '/ita-documents-public',
@@ -79,7 +84,7 @@ const router = createRouter({
       component: () => import('@/views/ita/ItaPublicView.vue'),
     },
     {
-      path: '/news/:id', // :id คือ dynamic parameter
+      path: '/news/:id',
       name: 'news-detail',
       component: NewsDetailView,
     },

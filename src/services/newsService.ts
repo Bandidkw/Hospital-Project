@@ -1,4 +1,6 @@
 // src/services/newsService.ts
+
+// import type { PublicNewsItem } from '@/types/new'
 import apiService from './apiService'
 
 /** --------------------------------
@@ -92,6 +94,7 @@ export async function getAllNews(): Promise<NewsItem[]> {
 
 export async function getNewsById(id: IdLike): Promise<NewsItem> {
   const res = await apiService.get<ApiSuccess<NewsItem>>(`/news/${id}`)
+  console.log(res.data.data)
   return mapAssetUrls(res.data.data)
 }
 
@@ -161,24 +164,36 @@ export type NewsCategory =
   | 'staff'
 export interface PublicNewsItem {
   id: string
+  slug: string
   title: string
+  content: string
   excerpt?: string
-  content?: string
-  category?: string
   date: string
+  category?: string
+  filename?: string
   imageUrl?: string | null
+  isPublished: boolean
+  createdAt: string
+  updatedAt: string
   pdfUrl?: string | null
 }
-
 export type PublicNewsEx = PublicNewsItem & {
   isPublished?: boolean
   createdAt?: string
   updatedAt?: string
 }
-
 export async function getPublicNews(): Promise<PublicNewsItem[]> {
   const params = { _: new Date().getTime() }
   const res = await apiService.get<ApiSuccess<PublicNewsItem[]>>('/news/public', { params })
   const items = res.data.data ?? []
   return items.map(mapAssetUrls)
+}
+export async function getNewsPublicById(id: string): Promise<PublicNewsItem | null> {
+  if (!id) {
+    throw new Error('News ID is required.')
+  }
+  const correctPath = `/news/public/detail/${id}`
+
+  const response = await apiService.get(correctPath)
+  return response.data.data as PublicNewsItem
 }

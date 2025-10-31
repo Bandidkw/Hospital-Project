@@ -131,13 +131,13 @@
               >
                 เปิดไฟล์แนบ <i class="fas fa-external-link-alt text-[11px]"></i>
               </a>
-              <button
+              <RouterLink
                 v-else
+                :to="{ name: 'news-detail', params: { id: n.id } }"
                 class="text-blue-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
-                @click="openQuickView(n)"
               >
                 อ่านต่อ <i class="fas fa-arrow-right text-[11px]"></i>
-              </button>
+              </RouterLink>
             </div>
           </div>
         </article>
@@ -178,7 +178,7 @@
       </div>
     </div>
 
-    <div
+    <!-- <div
       v-if="quickView"
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
       role="dialog"
@@ -273,7 +273,7 @@
                     {{ copied ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกลิงก์' }}
                   </button>
                   <RouterLink
-                    :to="{ name: 'news' }"
+                    :to="{ path: '/news', query: route.query }"
                     class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50"
                     @click="quickView = null"
                   >
@@ -299,7 +299,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </main>
 </template>
 
@@ -322,8 +322,6 @@ const sortKey = ref<'date' | 'title'>('date')
 const sortAsc = ref(false)
 const page = ref(1)
 const pageSize = ref(9)
-const quickView = ref<PublicNewsEx | null>(null)
-const copied = ref(false)
 
 /* ---------- Utils ---------- */
 const categoryLabels = computed(() =>
@@ -356,46 +354,6 @@ function onImgError(e: Event) {
       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text></svg>`,
     )
   if (el && el.src !== fallback) el.src = fallback
-}
-function normalizeParagraphs(text: string): string[] {
-  const clean = String(text ?? '')
-    .replace(/\r/g, '')
-    .trim()
-  if (!clean) return []
-  return clean
-    .split(/\n{2,}|\n-\n/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-function buildNewsPermalink(n: { id: string }) {
-  return `${window.location.origin}/news/${n.id}`
-}
-async function copyLink(n: { id: string; title?: string }) {
-  try {
-    await navigator.clipboard.writeText(buildNewsPermalink(n))
-    copied.value = true
-    setTimeout(() => (copied.value = false), 1500)
-  } catch {
-    copied.value = false
-  }
-}
-async function shareNews(n: { id: string; title?: string }) {
-  const url = buildNewsPermalink(n)
-  const title = n.title || 'ข่าวสาร'
-  const text = `แนะนำให้อ่าน: ${title}`
-  if ('share' in navigator) {
-    try {
-      await (navigator as Navigator & { share: (data?: ShareData) => Promise<void> }).share({
-        title,
-        text,
-        url,
-      })
-      return
-    } catch {
-      /* noop */
-    }
-  }
-  await copyLink(n)
 }
 function getSortTime(n: { date: string; updatedAt?: string; createdAt?: string }) {
   return new Date(n.updatedAt || n.createdAt || n.date).getTime()
@@ -460,10 +418,6 @@ async function fetchNews() {
 }
 
 /* ---------- Event Handlers ---------- */
-function openQuickView(n: PublicNewsEx) {
-  quickView.value = n
-  copied.value = false
-}
 function isPdf(url?: string | null): boolean {
   if (!url) return false
   return url.toLowerCase().endsWith('.pdf')
