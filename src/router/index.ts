@@ -134,7 +134,7 @@ const router = createRouter({
         {
           path: 'org-structure',
           name: 'dashboard-org-structure',
-          component: () => import('@/views/dashboard/DashboardOrgStructureView.vue'),
+          component: () => import('@/views/dashboard/DashboardPersonnelView.vue'),
           meta: { requiresAuth: true, roles: ADMIN_ONLY },
         },
 
