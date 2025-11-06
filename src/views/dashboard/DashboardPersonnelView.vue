@@ -195,7 +195,7 @@ const personnelList = ref<PersonnelItem[]>([])
 const loading = ref(true)
 const errorMsg = ref<string | null>(null)
 
-const initialPersonnel: PersonnelItem = {
+const initialPersonnel: PersonnelItem & { imageFile?: File | null } = {
   id: '',
   name: '',
   position: '',
@@ -203,9 +203,10 @@ const initialPersonnel: PersonnelItem = {
   tel: undefined,
   imageUrl: null,
   isDirector: false,
+  imageFile: null,
 }
 
-const currentPersonnel = ref<PersonnelItem>({ ...initialPersonnel })
+const currentPersonnel = ref<PersonnelItem & { imageFile?: File | null }>({ ...initialPersonnel })
 const editingPersonnel = ref(false)
 
 const personnelToDeleteId = ref<string | null>(null)
@@ -247,7 +248,6 @@ const savePersonnel = async () => {
       await createPersonnel(currentPersonnel.value)
       toast.success('เพิ่มบุคลากรสำเร็จ!')
     }
-
     await fetchPersonnel()
     resetForm()
   } catch (e) {
@@ -340,14 +340,16 @@ function absoluteImage(u?: string | null): string {
 const handleImageUpload = (event: Event) => {
   const input = event.target as HTMLInputElement
   if (input.files && input.files[0]) {
-    // Mock-up: ใช้ FileReader เพื่อแสดงภาพชั่วคราว
+    const file = input.files[0]
+    currentPersonnel.value.imageFile = file
     const reader = new FileReader()
     reader.onload = (e) => {
       currentPersonnel.value.imageUrl = e.target?.result as string
     }
-    reader.readAsDataURL(input.files[0])
-
-    // 🚨 ในการใช้งานจริง: ควรส่งไฟล์ไปยัง API ทันที และรับ URL กลับมา
+    reader.readAsDataURL(file)
+  } else {
+    currentPersonnel.value.imageFile = null
+    currentPersonnel.value.imageUrl = null
   }
 }
 </script>

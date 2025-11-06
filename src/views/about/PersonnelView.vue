@@ -21,15 +21,24 @@
         คณะผู้บริหารโรงพยาบาลแม่แตง
       </h2>
 
+      <div v-if="directorList.length === 1" class="flex justify-center mb-12">
+        <PersonnelCard
+          :personnel="directorList[0]"
+          :is-director="true"
+          class="w-full sm:w-1/2 md:w-1/3"
+        />
+      </div>
       <div
-        v-if="directorList.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12 justify-items-center"
+        v-else-if="directorList.length > 1"
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12 justify-center"
       >
         <PersonnelCard v-for="p in directorList" :key="p.id" :personnel="p" :is-director="true" />
       </div>
       <div v-else class="text-center py-5 text-gray-500 mb-8">ไม่พบข้อมูลคณะผู้บริหาร</div>
 
-      <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">บุคลากร</h2>
+      <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">
+        หัวหน้ากลุ่มงาน
+      </h2>
 
       <div
         v-if="staffList.length > 0"
@@ -37,11 +46,11 @@
       >
         <PersonnelCard v-for="p in staffList" :key="p.id" :personnel="p" />
       </div>
-      <div v-else class="text-center py-5 text-gray-500 mb-8">ไม่พบข้อมูลบุคลากรทั่วไปในระบบ</div>
+      <div v-else class="text-center py-5 text-gray-500 mb-8">ไม่พบข้อมูลหัวหน้ากลุ่มงานในระบบ</div>
     </div>
 
     <div v-else class="text-center py-10 text-gray-500">
-      <p>ไม่พบข้อมูลบุคลากรในระบบ</p>
+      <p>ไม่พบข้อมูลหัวหน้ากลุ่มงานในระบบ</p>
     </div>
   </div>
 </template>
@@ -82,12 +91,9 @@ const directorList = computed(() => {
 
 const staffList = computed(() => {
   // กรองเฉพาะคนที่ isDirector เป็น false
-  return (
-    personnelList.value
-      .filter((p) => !p.isDirector)
-      // (ทางเลือก) จัดเรียงบุคลากรทั่วไปตามตำแหน่งหรือชื่อ
-      .sort((a, b) => a.position.localeCompare(b.position))
-  )
+  return personnelList.value
+    .filter((p) => !p.isDirector)
+    .sort((a, b) => a.position.localeCompare(b.position))
 })
 
 // ------------------------------------------------------------------

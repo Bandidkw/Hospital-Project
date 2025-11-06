@@ -25,7 +25,6 @@ export interface PersonnelCreateUpdateData {
   position: string
   specialty?: string
   tel?: string
-  // 🟢 เพิ่ม File เข้ามาเพื่อรองรับการส่งรูปภาพ
   imageFile?: File | null
   isDirector: boolean
 }

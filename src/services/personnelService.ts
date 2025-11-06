@@ -127,8 +127,6 @@ export async function createPersonnel(data: PersonnelCreateUpdateData): Promise<
 
   formData.append('name', data.name)
   formData.append('position', data.position)
-
-  // ... (append specialty, tel, imageFile) ...
   if (data.specialty) {
     formData.append('specialty', data.specialty)
   }
@@ -138,9 +136,6 @@ export async function createPersonnel(data: PersonnelCreateUpdateData): Promise<
   if (data.imageFile) {
     formData.append('file', data.imageFile, data.imageFile.name)
   }
-
-  // 🟢 สำคัญ: เพิ่ม isDirector เข้าไปใน FormData
-  // แปลง boolean เป็น string ('true'/'false') ก่อนส่ง form-data
   formData.append('isDirector', String(data.isDirector))
 
   const response = await apiService.post('/personnel', formData, {
