@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto p-8 bg-white my-8 rounded-xl shadow-lg">
-    <h1 class="text-4xl font-extrabold text-blue-800 mb-2">บุคลากร</h1>
+    <h1 class="text-4xl font-extrabold text-blue-800 mb-2">คณะผู้บริหารโรงพยาบาลแม่แตง</h1>
     <p class="text-gray-700 leading-relaxed mb-8 border-b pb-4">
       โรงพยาบาลแม่แตงภาคภูมิใจในทีมบุคลากรทางการแพทย์และเจ้าหน้าที่ผู้เชี่ยวชาญ
       ซึ่งเป็นหัวใจสำคัญในการให้บริการดูแลสุขภาพแก่ประชาชนทุกคน...
@@ -17,9 +17,9 @@
     </div>
 
     <div v-else-if="personnelList.length > 0">
-      <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">
+      <!-- <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">
         คณะผู้บริหารโรงพยาบาลแม่แตง
-      </h2>
+      </h2> -->
 
       <div v-if="directorList.length === 1" class="flex justify-center mb-12">
         <PersonnelCard
@@ -36,9 +36,9 @@
       </div>
       <div v-else class="text-center py-5 text-gray-500 mb-8">ไม่พบข้อมูลคณะผู้บริหาร</div>
 
-      <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">
+      <!-- <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">
         หัวหน้ากลุ่มงาน
-      </h2>
+      </h2> -->
 
       <div
         v-if="staffList.length > 0"

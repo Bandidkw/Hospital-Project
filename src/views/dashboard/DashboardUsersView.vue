@@ -46,9 +46,9 @@
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
-            <option value="admin">Admin</option>
-            <option value="editor">Editor</option>
-            <option value="viewer">Viewer</option>
+            <option value="admin">Superadmin</option>
+            <option value="editor">Admin</option>
+            <option value="viewer">Opd</option>
           </select>
         </div>
         <div class="flex justify-end space-x-3">
@@ -174,7 +174,7 @@ const saveUser = () => {
   if (editingUser.value) {
     const index = usersList.value.findIndex((u) => u.id === currentUser.value.id)
     if (index !== -1) {
-      const { password, ...rest } = currentUser.value
+      const { password: _password, ...rest } = currentUser.value
       usersList.value[index] = { ...rest }
     }
     toast.success('แก้ไขผู้ใช้งานสำเร็จ!')
