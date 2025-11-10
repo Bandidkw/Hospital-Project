@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-blue-500 text-white text-sm py-2">
+  <div class="bg-blue-700 text-white text-sm py-2">
     <div class="container mx-auto flex justify-between items-center px-4">
       <div class="flex items-center space-x-4">
         <span>📞 053-123456</span>

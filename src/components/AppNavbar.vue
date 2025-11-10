@@ -174,7 +174,6 @@
       >
         <i class="fas fa-award"></i> <span>ITA</span>
       </RouterLink>
-
       <div
         class="block py-2 text-my-custom-gray hover:bg-gray-100 flex items-center space-x-2 cursor-pointer"
         @click="toggleDropdown('staff')"
@@ -231,7 +230,7 @@ import { useToast } from 'vue-toastification'
 import { CATEGORY_LIST } from '@/features/news/categories'
 
 // --- Data Structure for Menus ---
-type MenuKey = 'about' | 'services' | 'news'
+type MenuKey = 'about' | 'services' | 'news' | 'complaint'
 type DropdownState = Record<MenuKey | 'staff', boolean>
 
 type MenuItem = {
@@ -277,6 +276,12 @@ const menuItems: MenuItem[] = [
       })),
     ],
   },
+  {
+    key: 'complaint',
+    title: 'ร้องเรียน',
+    icon: 'fas fa-bullhorn',
+    items: [{ label: 'ร้องเรียน', icon: 'fas fa-headset', to: { path: '/complaint-form' } }],
+  },
 ]
 
 // --- Component State ---
@@ -286,6 +291,7 @@ const isDropdownOpen = reactive<DropdownState>({
   services: false,
   news: false,
   staff: false,
+  complaint: false,
 })
 const isLoginModalOpen = ref(false)
 

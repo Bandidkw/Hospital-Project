@@ -39,7 +39,9 @@
               />
             </div>
             <div>
-              <label for="email" class="block text-gray-700 text-sm font-bold mb-2">อีเมล:</label>
+              <label for="email" class="block text-gray-700 text-sm font-bold mb-2"
+                >เบอร์โทรศัพท์:</label
+              >
               <input
                 type="email"
                 id="email"

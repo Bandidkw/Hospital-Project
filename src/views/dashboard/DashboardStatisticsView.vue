@@ -1,67 +1,108 @@
 <template>
   <div class="p-6 bg-white rounded-lg shadow-md">
     <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-      <i class="fas fa-chart-bar mr-3 text-red-600"></i> สถิติ
+      <i class="fas fa-chart-bar mr-3 text-blue-600"></i> สถิติและการวิเคราะห์
     </h2>
-    <p class="text-gray-700 mb-6">หน้านี้แสดงสถิติและข้อมูลเชิงลึกต่างๆ ของเว็บไซต์และระบบ.</p>
+    <p class="text-gray-700 mb-6">หน้าสรุปข้อมูลการใช้งานเว็บไซต์และระบบ</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Summary Card 1 -->
-      <div class="bg-blue-100 p-6 rounded-lg shadow-md">
-        <h3 class="text-xl font-semibold text-blue-800 mb-2">ผู้เยี่ยมชมเว็บไซต์ (รายวัน)</h3>
-        <p class="text-4xl font-bold text-blue-900">5,432</p>
-        <p class="text-sm text-blue-700">เทียบกับเมื่อวาน: +15%</p>
-      </div>
-
-      <!-- Summary Card 2 -->
-      <div class="bg-green-100 p-6 rounded-lg shadow-md">
-        <h3 class="text-xl font-semibold text-green-800 mb-2">จำนวนการดาวน์โหลดเอกสาร ITA</h3>
-        <p class="text-4xl font-bold text-green-900">1,876</p>
-        <p class="text-sm text-green-700">เดือนนี้: 250 ครั้ง</p>
-      </div>
-
-      <!-- Summary Card 3 -->
-      <div class="bg-yellow-100 p-6 rounded-lg shadow-md">
-        <h3 class="text-xl font-semibold text-yellow-800 mb-2">ข่าวสารที่ถูกดูมากที่สุด</h3>
-        <p class="text-2xl font-bold text-yellow-900">"การฉีดวัคซีนไข้หวัดใหญ่"</p>
-        <p class="text-sm text-yellow-700">ยอดวิว: 1,500</p>
-      </div>
+    <div v-if="loading" class="text-center py-10">
+      <i class="fas fa-spinner fa-spin text-5xl text-blue-500"></i>
+      <p class="mt-4 text-lg text-gray-600">กำลังโหลดข้อมูลสถิติ...</p>
     </div>
 
-    <!-- Placeholder for Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">กราฟผู้เยี่ยมชมเว็บไซต์ (รายเดือน)</h3>
-        <div class="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500 rounded-md">
-          <!-- Placeholder for a chart library like Chart.js or D3.js -->
-          กราฟข้อมูล
+    <div v-else>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-50 p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+          <p class="text-sm font-medium text-blue-700">ผู้เยี่ยมชมเว็บไซต์ (วันนี้)</p>
+          <p class="text-3xl font-extrabold text-gray-900 mt-1">
+            {{ summary.dailyVisitors.toLocaleString() }}
+          </p>
+          <p class="text-xs text-blue-500 mt-1">เทียบกับเมื่อวาน: {{ summary.dailyChange }}%</p>
         </div>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">สถิติการเข้าถึงเมนูยอดนิยม</h3>
-        <div class="w-full h-64 bg-gray-200 flex items-center justify-center text-gray-500 rounded-md">
-          <!-- Placeholder for a pie chart or bar chart -->
-          กราฟข้อมูล
-        </div>
-      </div>
-    </div>
 
-    <div class="mt-8 bg-gray-50 p-6 rounded-lg shadow-inner">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">ข้อมูลเชิงลึกเพิ่มเติม</h3>
-      <p class="text-gray-700">
-        หน้านี้สามารถเชื่อมต่อกับเครื่องมือวิเคราะห์เว็บไซต์ (เช่น Google Analytics)
-        เพื่อแสดงข้อมูลสถิติที่ละเอียดและแม่นยำยิ่งขึ้น.
-      </p>
+        <div class="bg-green-50 p-6 rounded-lg shadow-md border-l-4 border-green-500">
+          <p class="text-sm font-medium text-green-700">จำนวนดาวน์โหลด ITA (ทั้งหมด)</p>
+          <p class="text-3xl font-extrabold text-gray-900 mt-1">
+            {{ summary.itaDownloads.toLocaleString() }}
+          </p>
+          <p class="text-xs text-green-500 mt-1">
+            เดือนนี้: {{ summary.monthlyItaDownloads.toLocaleString() }} ครั้ง
+          </p>
+        </div>
+      </div>
+
+      <div class="card bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">เมนูที่เข้าชมยอดนิยม (5 อันดับแรก)</h3>
+        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="py-3 px-6 text-left text-xs font-medium text-gray-600 uppercase">เมนู</th>
+              <th class="py-3 px-6 text-center text-xs font-medium text-gray-600 uppercase">
+                ยอดเข้าชม (ครั้ง)
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(item, index) in topMenus" :key="index" class="border-b hover:bg-gray-50">
+              <td class="py-3 px-6 text-left font-medium">{{ item.menu }}</td>
+              <td class="py-3 px-6 text-center text-gray-700">{{ item.views.toLocaleString() }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="topMenus.length === 0" class="text-center py-4 text-gray-500">
+          ไม่พบข้อมูลการเข้าถึงเมนู
+        </div>
+      </div>
+
+      <div class="mt-8 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+        <p class="font-semibold text-gray-700 mb-2">ข้อมูลเชิงลึกเพิ่มเติม</p>
+        <p class="text-sm text-gray-600">
+          หน้านี้แสดงข้อมูลสถิติที่ประมวลผลภายในระบบเท่านั้น สำหรับข้อมูลที่ละเอียดกว่า (เช่น
+          กราฟรายเดือน/รายปี) จะต้องมีการพัฒนา Backend เพิ่มเติมเพื่อจัดการ Log ข้อมูลเหล่านั้น
+        </p>
+        <a
+          href="#"
+          class="mt-3 inline-block bg-gray-500 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-600 transition duration-300"
+        >
+          <i class="fas fa-cogs mr-2"></i> ข้อมูลการใช้งานระบบ (Log)
+        </a>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// Logic for fetching and displaying statistics
-// In a real application, you would integrate with a charting library (e.g., Chart.js, ApexCharts)
-// and fetch data from your backend or an analytics API.
-</script>
+import { ref, onMounted } from 'vue'
+import { useToast } from 'vue-toastification'
+// 🟢 Import Type และ Service ที่สร้างใหม่
+import type { SummaryStats, TopMenuItem } from '@/types/statistics'
+import { fetchStatistics } from '@/services/statisticsService'
 
-<style scoped>
-/* Specific styles for this page */
-</style>
+const toast = useToast()
+
+const summary = ref<SummaryStats>({
+  dailyVisitors: 0,
+  dailyChange: '0%',
+  itaDownloads: 0,
+  monthlyItaDownloads: 0,
+})
+
+const topMenus = ref<TopMenuItem[]>([])
+const loading = ref(true)
+
+const fetchStats = async () => {
+  loading.value = true
+  try {
+    const data = await fetchStatistics()
+    summary.value = data.summary
+    topMenus.value = data.topMenus
+  } catch (e) {
+    toast.error('ไม่สามารถโหลดข้อมูลสถิติได้')
+    console.error('Fetch stats failed:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchStats)
+</script>

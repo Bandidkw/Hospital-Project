@@ -32,5 +32,4 @@
 
 <script setup lang="ts">
 import { RouterView, RouterLink } from 'vue-router'
-// สามารถเพิ่ม Logic ของ Sidebar ที่นี่ได้ เช่น การเรียกใช้ authStore
 </script>

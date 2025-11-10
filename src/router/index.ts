@@ -31,6 +31,12 @@ const router = createRouter({
     { path: '/history', name: 'history', component: () => import('@/views/about/HistoryView.vue') },
     { path: '/vision', name: 'vision', component: () => import('@/views/about/VisionView.vue') },
     {
+      path: '/complaint-form',
+      name: 'complaint',
+      component: () => import('@/views/ComplaintFormView.vue'),
+    },
+
+    {
       path: '/organization',
       name: 'organization',
       component: () => import('@/views/about/OrganizationView.vue'),
@@ -151,7 +157,6 @@ const router = createRouter({
           component: () => import('@/views/dashboard/DashboardPageImagesView.vue'),
           meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
         },
-
         // Admin tools
         {
           path: 'audit-logs',
@@ -169,13 +174,13 @@ const router = createRouter({
           path: 'reports',
           name: 'dashboard-reports',
           component: () => import('@/views/dashboard/DashboardReportsView.vue'),
-          meta: { requiresAuth: true, roles: ADMIN_ONLY },
+          meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
         },
         {
           path: 'statistics',
           name: 'dashboard-statistics',
           component: () => import('@/views/dashboard/DashboardStatisticsView.vue'),
-          meta: { requiresAuth: true, roles: ADMIN_ONLY },
+          meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
         },
         {
           path: 'opd-home',
@@ -198,7 +203,6 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
         },
 
-        // ITA (topics & editor) — ใช้ layout dashboard (มี sidebar)
         {
           path: 'ita',
           name: 'dashboard-ita',
@@ -216,6 +220,12 @@ const router = createRouter({
           name: 'ItaTopicEdit',
           component: () => import('@/views/dashboard/ita/ItaTopicEditView.vue'),
           meta: { requiresAuth: true, roles: ANY_DASHBOARD },
+        },
+        {
+          path: 'complaints',
+          name: 'DashboardComplaints',
+          component: () => import('@/views/dashboard/DashboardComplaintView.vue'),
+          meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
         },
       ],
     },

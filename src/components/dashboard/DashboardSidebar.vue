@@ -73,7 +73,7 @@
           </RouterLink>
         </li>
         <!-- สไลด์ - เฉพาะ Admin และ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/slides"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -82,9 +82,9 @@
             <i class="fas fa-images mr-3 text-blue-400"></i>
             <span class="text-gray-300">สไลด์</span>
           </RouterLink>
-        </li>
-        <!-- ลิงก์ Footer - เฉพาะ Admin และ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        </li> -->
+        <!-- ลิงก์ Footer - เฉพาะ SuperAdmin -->
+        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/footer-links"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -93,7 +93,7 @@
             <i class="fas fa-link mr-3 text-pink-400"></i>
             <span class="text-gray-300">ลิงก์ Footer</span>
           </RouterLink>
-        </li>
+        </li> -->
         <!-- โครงสร้างองค์กร - เฉพาะ Admin และ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
@@ -173,6 +173,16 @@
           >
             <i class="fas fa-chart-line mr-3 text-cyan-500"></i>
             <span class="text-gray-300">รายงาน</span>
+          </RouterLink>
+        </li>
+        <li class="mb-2" v-if="authStore.isSuperAdmin">
+          <RouterLink
+            to="/dashboard/complaints"
+            class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
+            active-class="bg-blue-600"
+          >
+            <i class="fas fa-headset mr-3 text-red-500"></i>
+            <span class="text-gray-300">จัดการข้อร้องเรียน</span>
           </RouterLink>
         </li>
         <!-- สถิติ - เฉพาะ Admin และ SuperAdmin -->

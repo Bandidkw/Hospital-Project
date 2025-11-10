@@ -46,9 +46,9 @@
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
-            <option value="admin">Superadmin</option>
-            <option value="editor">Admin</option>
             <option value="viewer">Opd</option>
+            <option value="editor">Admin</option>
+            <option value="admin">Superadmin</option>
           </select>
         </div>
         <div class="flex justify-end space-x-3">
