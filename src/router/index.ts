@@ -137,6 +137,21 @@ const router = createRouter({
           component: () => import('@/views/dashboard/DashboardFooterLinksView.vue'),
           meta: { requiresAuth: true, roles: ADMIN_ONLY },
         },
+        // 🟢 1. ROUTE สำหรับ แก้ไขประวัติโรงพยาบาล
+        {
+          path: 'history-edit',
+          name: 'dashboard-history-edit',
+          component: () => import('@/views/dashboard/DashboardHistoryEditView.vue'),
+          meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
+        },
+
+        // 🟢 2. ROUTE สำหรับ แก้ไขวิสัยทัศน์/พันธกิจ
+        // {
+        //   path: 'vision-edit',
+        //   name: 'dashboard-vision-edit',
+        //   component: () => import('@/views/dashboard/VisionView.vue'),
+        //   meta: { requiresAuth: true, roles: SUPER_ADMIN_ONLY },
+        // },
         {
           path: 'org-structure',
           name: 'dashboard-org-structure',

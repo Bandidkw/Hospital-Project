@@ -29,7 +29,7 @@
             <i class="fas fa-folder mr-2"></i> จัดการเนื้อหา
           </div>
         </li>
-        <!-- ข่าวสาร - เฉพาะ SuperAdmin -->
+        <!-- 🟢 ข่าวสาร - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
             to="/dashboard/news"
@@ -40,7 +40,7 @@
             <span class="text-gray-300">ข่าวสาร</span>
           </RouterLink>
         </li>
-        <!-- หมวดหมู่ - เฉพาะ SuperAdmin -->
+        <!-- 🟢 หมวดหมู่ - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/categories"
@@ -51,7 +51,7 @@
             <span class="text-gray-300">หมวดหมู่</span>
           </RouterLink>
         </li>
-        <!-- ITA - ทุกคนเห็นได้ (user, admin, superadmin) -->
+        <!-- 🟢 ITA - ทุกคนเห็นได้ (user, admin, superadmin) -->
         <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
             to="/dashboard/ita"
@@ -61,8 +61,8 @@
             <i class="fas fa-file-alt mr-3 text-red-500"></i> <span class="text-gray-300">ITA</span>
           </RouterLink>
         </li>
-        <!-- หมวดหมู่ - เฉพาะ OPD -->
-        <li class="mb-2" v-if="authStore.isOpd">
+        <!-- 🟢 หมวดหมู่ - เฉพาะ OPD -->
+        <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isOpd">
           <RouterLink
             to="/dashboard/opd-home"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -72,28 +72,28 @@
             <span class="text-gray-300">OPD</span>
           </RouterLink>
         </li>
-        <!-- สไลด์ - เฉพาะ Admin และ SuperAdmin -->
-        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <!-- 🟢 แก้ไขประวัติ รพ. เฉพาะ SuperAdmin -->
+        <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
-            to="/dashboard/slides"
+            to="/dashboard/history-edit"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
             active-class="bg-blue-600"
           >
-            <i class="fas fa-images mr-3 text-blue-400"></i>
-            <span class="text-gray-300">สไลด์</span>
+            <i class="fas fa-file-alt mr-3 text-orange-500"></i>
+            <span class="text-gray-300">แก้ไขประวัติ รพ.</span>
           </RouterLink>
-        </li> -->
-        <!-- ลิงก์ Footer - เฉพาะ SuperAdmin -->
-        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
+        </li>
+        <!-- 🟢 แก้ไขวิสัยทัศน์ เฉพาะ SuperAdmin -->
+        <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
-            to="/dashboard/footer-links"
+            to="/dashboard/vision-edit"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
             active-class="bg-blue-600"
           >
-            <i class="fas fa-link mr-3 text-pink-400"></i>
-            <span class="text-gray-300">ลิงก์ Footer</span>
+            <i class="fas fa-lightbulb mr-3 text-indigo-500"></i>
+            <span class="text-gray-300">แก้ไขวิสัยทัศน์</span>
           </RouterLink>
-        </li> -->
+        </li>
         <!-- โครงสร้างองค์กร - เฉพาะ Admin และ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
