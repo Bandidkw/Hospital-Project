@@ -4,27 +4,36 @@
       <h2 class="text-3xl font-semibold text-gray-700 mb-8">ติดต่อเรา</h2>
       <div class="md:grid md:grid-cols-2 md:gap-8 px-4 md:px-0 text-left">
         <div class="bg-white p-8 rounded-lg shadow-md">
-          <h3 class="text-xl font-semibold text-gray-800 mb-4">ข้อมูลติดต่อโรงพยาบาลแม่แตง</h3>
-          <p class="text-gray-600 mb-2">
-            <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i>ตำบลสันมหาพน, อำเภอแม่แตง,
-            จังหวัดเชียงใหม่
+          <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            ข้อมูลติดต่อ{{ settingsStore.settings?.hospitalNameTh }}
+          </h3>
+
+          <p v-if="settingsStore.settings?.address" class="text-gray-600 mb-2">
+            <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i>
+            {{ settingsStore.settings.address }}
           </p>
-          <p class="text-gray-600 mb-2">
-            <i class="fas fa-phone mr-2 text-blue-500"></i>[หมายเลขโทรศัพท์]
+
+          <p v-if="settingsStore.settings?.telMain" class="text-gray-600 mb-2">
+            <i class="fas fa-phone mr-2 text-blue-500"></i>
+            โทร: {{ settingsStore.settings.telMain }}
           </p>
-          <p class="text-gray-600 mb-4">
-            <i class="fas fa-envelope mr-2 text-blue-500"></i>[ที่อยู่อีเมล]
+
+          <p v-if="settingsStore.settings?.emailMain" class="text-gray-600 mb-4">
+            <i class="fas fa-envelope mr-2 text-blue-500"></i>
+            อีเมล: {{ settingsStore.settings.emailMain }}
           </p>
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15082.352329367468!2d98.9419184!3d19.1234567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30da761014022a87%3A0x102d36d41880f00!2sSan%20Maha%20Phon%2C%20Mae%20Taeng%20District%2C%20Chiang%20Mai!5e0!3m2!1sen!2sth!4v1628424915729!5m2!1sen!2sth"
-            width="100%"
-            height="250"
-            style="border: 0"
-            allowfullscreen
-            loading="lazy"
-            class="rounded-lg"
+
+          <div
+            v-if="settingsStore.settings?.googleMapIframe"
+            v-html="settingsStore.settings.googleMapIframe"
+            class="w-full h-[250px] rounded-lg overflow-hidden"
+          ></div>
+          <div
+            v-else
+            class="bg-gray-200 h-[250px] flex items-center justify-center text-gray-500 rounded-lg"
           >
-          </iframe>
+            ไม่พบข้อมูลแผนที่ (กรุณาตั้งค่าใน Dashboard)
+          </div>
         </div>
 
         <div class="bg-white p-8 rounded-lg shadow-md mt-8 md:mt-0">
@@ -39,12 +48,12 @@
               />
             </div>
             <div>
-              <label for="email" class="block text-gray-700 text-sm font-bold mb-2"
+              <label for="phone" class="block text-gray-700 text-sm font-bold mb-2"
                 >เบอร์โทรศัพท์:</label
               >
               <input
-                type="email"
-                id="email"
+                type="tel"
+                id="phone"
                 class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               />
             </div>
@@ -72,5 +81,21 @@
 </template>
 
 <script setup lang="ts">
-// ในอนาคตเราสามารถเพิ่ม Logic การส่งฟอร์มได้ที่นี่
+import { useSettingsStore } from '@/stores/settings'
+import { onMounted } from 'vue'
+
+const settingsStore = useSettingsStore()
+
+// 🟢 โหลดข้อมูลการตั้งค่าเมื่อ Component นี้ถูกสร้าง
+onMounted(() => {
+  settingsStore.loadSettings()
+})
 </script>
+
+<style scoped>
+:deep(.w-full iframe) {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+</style>

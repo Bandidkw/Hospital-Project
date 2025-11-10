@@ -1,5 +1,5 @@
 <template>
-  <nav class="bg-white py-4 text-my-custom-gray shadow-lg relative z-50">
+  <nav class="bg-white py-1 text-my-custom-gray shadow-lg relative z-50">
     <div class="container mx-auto flex justify-between items-center h-16 px-4">
       <router-link to="/" class="flex items-center space-x-3 shrink-0">
         <img src="/src/assets/MTH-Logo/logo.png" alt="Hospital Logo" class="h-14 w-14" />
@@ -278,7 +278,7 @@ const menuItems: MenuItem[] = [
   },
   {
     key: 'complaint',
-    title: 'ร้องเรียน',
+    title: 'ข้อร้องเรียน',
     icon: 'fas fa-bullhorn',
     items: [{ label: 'ร้องเรียน', icon: 'fas fa-headset', to: { path: '/complaint-form' } }],
   },
