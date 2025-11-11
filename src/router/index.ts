@@ -16,9 +16,10 @@ const ROLES = {
 } as const
 
 const ANY_DASHBOARD = [ROLES.USER, ROLES.OPD, ROLES.ADMIN, ROLES.SUPERADMIN]
-const OPD_ONLY = [ROLES.OPD]
+// const OPD_ONLY = [ROLES.OPD]
 const ADMIN_ONLY = [ROLES.ADMIN, ROLES.SUPERADMIN]
 const SUPERADMIN_ONLY = [ROLES.SUPERADMIN]
+const OPD_SUPERADMIN_ONLY = [ROLES.OPD, ROLES.SUPERADMIN]
 
 // ------------------------------------
 // Router
@@ -201,7 +202,7 @@ const router = createRouter({
           path: 'opd-home',
           name: 'dashboard-opd-home',
           component: () => import('@/views/dashboard/opd/DashboardOpd.vue'), // โหลด Component ที่สร้างขึ้น
-          meta: { requiresAuth: true, roles: OPD_ONLY },
+          meta: { requiresAuth: true, roles: OPD_SUPERADMIN_ONLY },
         },
 
         // Account
