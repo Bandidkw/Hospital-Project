@@ -41,7 +41,7 @@ import { useToast } from 'vue-toastification'
 const toast = useToast()
 
 const visionData = ref<VisionData>({
-  id: 0,
+  id: '',
   vision: '',
   missionHtml: '',
   coreValuesHtml: '',
