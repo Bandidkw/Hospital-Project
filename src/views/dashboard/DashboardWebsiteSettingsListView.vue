@@ -5,7 +5,18 @@
         <h2 class="text-3xl font-extrabold text-gray-800 mb-2 flex items-center">
           <i class="fas fa-list mr-4 text-purple-600"></i> รายการตั้งค่าเว็บไซต์
         </h2>
-        <p class="text-gray-600">ดูและจัดการข้อมูลการตั้งค่าเว็บไซต์ทั้งหมด</p>
+        <p class="text-gray-600">
+          ดูและจัดการข้อมูลการตั้งค่าเว็บไซต์ทั้งหมด
+          <span v-if="allSettings.length > 0" class="ml-2">
+            (เปิดใช้งาน:
+            <span
+              :class="activeCount === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
+            >
+              {{ activeCount }}
+            </span>
+            / {{ allSettings.length }})
+          </span>
+        </p>
       </div>
       <router-link
         to="/dashboard/website-settings"
@@ -47,6 +58,16 @@
                 #{{ index + 1 }}
               </span>
               <h3 class="text-xl font-bold text-gray-800">{{ setting.hospitalNameTh }}</h3>
+              <span
+                :class="[
+                  'text-xs font-semibold px-2 py-1 rounded',
+                  setting.isActive
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-600',
+                ]"
+              >
+                {{ setting.isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}
+              </span>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -75,14 +96,28 @@
 
           <div class="flex gap-2 ml-4">
             <button
+              @click.stop="toggleSetting(setting.id)"
+              :class="[
+                'text-white px-4 py-2 rounded transition',
+                setting.isActive
+                  ? 'bg-green-500 hover:bg-green-600'
+                  : 'bg-gray-400 hover:bg-gray-500',
+              ]"
+              :title="setting.isActive ? 'ปิดการใช้งาน' : 'เปิดการใช้งาน'"
+            >
+              <i :class="setting.isActive ? 'fas fa-toggle-on' : 'fas fa-toggle-off'"></i>
+            </button>
+            <button
               @click.stop="editSetting(setting)"
               class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
+              title="แก้ไข"
             >
               <i class="fas fa-edit"></i>
             </button>
             <button
               @click.stop="deleteSetting(setting.id)"
               class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+              title="ลบ"
             >
               <i class="fas fa-trash"></i>
             </button>
@@ -94,10 +129,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { fetchAllSettings } from '@/services/settingsService'
+import { fetchAllSettings, toggleSettings, deleteSettings } from '@/services/settingsService'
 import type { SettingsData } from '@/types/settings'
 
 const router = useRouter()
@@ -105,6 +140,7 @@ const toast = useToast()
 
 const loading = ref(true)
 const allSettings = ref<SettingsData[]>([])
+const activeCount = computed(() => allSettings.value.filter((s) => s.isActive).length)
 
 const loadAllSettings = async () => {
   loading.value = true
@@ -125,15 +161,70 @@ const viewDetail = (setting: SettingsData) => {
   // TODO: Navigate to detail page or show modal
 }
 
+const toggleSetting = async (id: string) => {
+  const setting = allSettings.value.find((s) => s.id === id)
+  
+  // ถ้ากำลังจะเปิดใช้งาน (จาก false -> true)
+  if (setting && !setting.isActive) {
+    const activeCount = allSettings.value.filter((s) => s.isActive).length
+    
+    if (activeCount >= 1) {
+      toast.warning('สามารถเปิดใช้งานได้เพียง 1 การตั้งค่าเท่านั้น กรุณาปิดการตั้งค่าอื่นก่อน')
+      return
+    }
+    
+    const confirmed = confirm(
+      `คุณต้องการเปิดใช้งานการตั้งค่า "${setting.hospitalNameTh}" หรือไม่?\n\nการตั้งค่านี้จะถูกใช้แสดงผลบนเว็บไซต์`,
+    )
+    if (!confirmed) return
+  }
+  
+  // ถ้ากำลังจะปิดใช้งาน (จาก true -> false)
+  if (setting && setting.isActive) {
+    const confirmed = confirm(
+      `คุณต้องการปิดใช้งานการตั้งค่า "${setting.hospitalNameTh}" หรือไม่?\n\nเว็บไซต์จะไม่แสดงข้อมูลการตั้งค่านี้`,
+    )
+    if (!confirmed) return
+  }
+  
+  try {
+    await toggleSettings(id)
+    toast.success('เปลี่ยนสถานะการใช้งานสำเร็จ')
+    // โหลดข้อมูลใหม่เพื่ออัพเดทสถานะ
+    await loadAllSettings()
+  } catch (e) {
+    toast.error('ไม่สามารถเปลี่ยนสถานะได้')
+    console.error('Toggle settings failed:', e)
+  }
+}
+
 const editSetting = (setting: SettingsData) => {
   router.push({ path: '/dashboard/website-settings', query: { id: setting.id } })
 }
 
 const deleteSetting = async (id: string) => {
-  if (!confirm('คุณต้องการลบข้อมูลนี้หรือไม่?')) return
+  const setting = allSettings.value.find((s) => s.id === id)
   
-  toast.warning('ฟังก์ชันลบยังไม่ได้เชื่อมต่อ API')
-  // TODO: Implement delete API
+  // ตรวจสอบว่าเป็นการตั้งค่าที่กำลังใช้งานอยู่หรือไม่
+  if (setting?.isActive) {
+    toast.error('ไม่สามารถลบการตั้งค่าที่กำลังใช้งานอยู่ได้ กรุณาปิดการใช้งานก่อน')
+    return
+  }
+  
+  const confirmed = confirm(
+    `คุณต้องการลบการตั้งค่า "${setting?.hospitalNameTh}" หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`,
+  )
+  if (!confirmed) return
+  
+  try {
+    await deleteSettings(id)
+    toast.success('ลบการตั้งค่าสำเร็จ')
+    // โหลดข้อมูลใหม่
+    await loadAllSettings()
+  } catch (e) {
+    toast.error('ไม่สามารถลบการตั้งค่าได้')
+    console.error('Delete settings failed:', e)
+  }
 }
 
 onMounted(loadAllSettings)

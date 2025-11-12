@@ -95,15 +95,35 @@ export async function createSettings(data: SettingsData): Promise<void> {
 
 /**
  * ดึงข้อมูลตั้งค่าเว็บไซต์ตาม ID
- * ใช้ GET /settings/:id
+ * เนื่องจาก API ไม่รองรับ GET /settings/:id จึงใช้ GET /settings แทน
  */
 export async function fetchSettingsById(id: string): Promise<SettingsData> {
   try {
-    const response = await apiService.get<any>(`/settings/${id}`)
+    // ใช้ GET /settings เพราะ API ไม่รองรับ GET /settings/:id
+    const response = await apiService.get<any>('/settings')
+    
+    // ข้อมูลจริงอยู่ที่ response.data.data (API wrapper format)
     const actualData = response.data?.data || response.data
     
-    if (actualData && actualData.id) {
-      return actualData
+    // ถ้าข้อมูลเป็น object เดี่ยวและมี id ตรงกัน
+    if (actualData && typeof actualData === 'object' && !Array.isArray(actualData)) {
+      if (actualData.id === id || !id) {
+        return actualData as SettingsData
+      }
+    }
+    
+    // ถ้าข้อมูลเป็น array ให้หา id ที่ตรงกัน
+    if (Array.isArray(actualData)) {
+      const found = actualData.find((item: any) => item.id === id)
+      if (found) {
+        return found as SettingsData
+      }
+    }
+    
+    // ถ้าไม่เจอ ให้ส่งข้อมูลแรกที่มี (fallback)
+    if (actualData && typeof actualData === 'object' && 'id' in actualData) {
+      console.warn(`Settings with id ${id} not found, using available data`)
+      return actualData as SettingsData
     }
     
     throw new Error('Settings not found')
@@ -122,6 +142,32 @@ export async function updateSettings(id: string, data: SettingsData): Promise<vo
     await apiService.patch(`/settings/${id}`, data)
   } catch (error) {
     console.error('API Error: Failed to update settings', error)
+    throw error
+  }
+}
+
+/**
+ * เปิด/ปิดการใช้งานการตั้งค่าเว็บไซต์
+ * ใช้ PATCH /settings/:id/toggle
+ */
+export async function toggleSettings(id: string): Promise<void> {
+  try {
+    await apiService.patch(`/settings/${id}/toggle`)
+  } catch (error) {
+    console.error('API Error: Failed to toggle settings', error)
+    throw error
+  }
+}
+
+/**
+ * ลบข้อมูลตั้งค่าเว็บไซต์
+ * ใช้ DELETE /settings/:id
+ */
+export async function deleteSettings(id: string): Promise<void> {
+  try {
+    await apiService.delete(`/settings/${id}`)
+  } catch (error) {
+    console.error('API Error: Failed to delete settings', error)
     throw error
   }
 }

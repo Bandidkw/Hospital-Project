@@ -26,7 +26,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="hospitalNameTh" class="block text-sm font-semibold text-gray-700"
-              >ชื่อโรงพยาบาล (เต็ม):</label
+              >ชื่อโรงพยาบาล (เต็ม): <span class="text-red-500">*</span></label
             >
             <input
               type="text"
@@ -39,12 +39,13 @@
           </div>
           <div>
             <label for="hospitalNameEn" class="block text-sm font-semibold text-gray-700"
-              >ชื่อโรงพยาบาล (English/ชื่อย่อ):</label
+              >ชื่อโรงพยาบาล (English/ชื่อย่อ): <span class="text-red-500">*</span></label
             >
             <input
               type="text"
               id="hospitalNameEn"
               v-model="websiteSettings.hospitalNameEn"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Maetaeng Hospital"
             />
@@ -52,33 +53,38 @@
 
           <div class="col-span-full">
             <label for="address" class="block text-sm font-semibold text-gray-700"
-              >ที่อยู่โรงพยาบาล:</label
+              >ที่อยู่โรงพยาบาล: <span class="text-red-500">*</span></label
             >
             <textarea
               id="address"
               v-model="websiteSettings.address"
               rows="3"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             ></textarea>
           </div>
 
           <div>
             <label for="zipCode" class="block text-sm font-semibold text-gray-700"
-              >รหัสไปรษณีย์:</label
+              >รหัสไปรษณีย์: <span class="text-red-500">*</span></label
             >
             <input
               type="text"
               id="zipCode"
               v-model="websiteSettings.zipCode"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <div>
-            <label for="province" class="block text-sm font-semibold text-gray-700">จังหวัด:</label>
+            <label for="province" class="block text-sm font-semibold text-gray-700"
+              >จังหวัด: <span class="text-red-500">*</span></label
+            >
             <input
               type="text"
               id="province"
               v-model="websiteSettings.province"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -92,24 +98,26 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="telMain" class="block text-sm font-semibold text-gray-700"
-              >เบอร์โทรศัพท์หลัก:</label
+              >เบอร์โทรศัพท์หลัก: <span class="text-red-500">*</span></label
             >
             <input
               type="tel"
               id="telMain"
               v-model="websiteSettings.telMain"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="053-XXX-XXXX"
             />
           </div>
           <div>
             <label for="fax" class="block text-sm font-semibold text-gray-700"
-              >เบอร์โทรสาร (FAX):</label
+              >เบอร์โทรสาร (FAX): <span class="text-red-500">*</span></label
             >
             <input
               type="tel"
               id="fax"
               v-model="websiteSettings.fax"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="053-YYY-YYYY"
             />
@@ -117,12 +125,13 @@
 
           <div class="col-span-full">
             <label for="emailMain" class="block text-sm font-semibold text-gray-700"
-              >อีเมลหลัก:</label
+              >อีเมลหลัก: <span class="text-red-500">*</span></label
             >
             <input
               type="email"
               id="emailMain"
               v-model="websiteSettings.emailMain"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="info@yourhospital.com"
             />
@@ -291,6 +300,7 @@ const websiteSettings = ref<SettingsData>({
   googleMapIframe: '',
   metaDescription: '',
   keywords: '',
+  isActive: false,
 })
 
 const loading = ref(false)
@@ -319,10 +329,68 @@ const loadSettingData = async () => {
 }
 
 // ------------------------------------------------------------------
-// 3. SAVE LOGIC
+// 3. VALIDATION
+// ------------------------------------------------------------------
+
+const validateForm = (): boolean => {
+  const settings = websiteSettings.value
+
+  // ตรวจสอบข้อมูลทั่วไป
+  if (!settings.hospitalNameTh?.trim()) {
+    toast.error('กรุณากรอกชื่อโรงพยาบาล (ภาษาไทย)')
+    return false
+  }
+  if (!settings.hospitalNameEn?.trim()) {
+    toast.error('กรุณากรอกชื่อโรงพยาบาล (ภาษาอังกฤษ)')
+    return false
+  }
+  if (!settings.address?.trim()) {
+    toast.error('กรุณากรอกที่อยู่โรงพยาบาล')
+    return false
+  }
+  if (!settings.zipCode?.trim()) {
+    toast.error('กรุณากรอกรหัสไปรษณีย์')
+    return false
+  }
+  if (!settings.province?.trim()) {
+    toast.error('กรุณากรอกจังหวัด')
+    return false
+  }
+
+  // ตรวจสอบข้อมูลการติดต่อ
+  if (!settings.telMain?.trim()) {
+    toast.error('กรุณากรอกเบอร์โทรศัพท์หลัก')
+    return false
+  }
+  if (!settings.fax?.trim()) {
+    toast.error('กรุณากรอกเบอร์โทรสาร (FAX)')
+    return false
+  }
+  if (!settings.emailMain?.trim()) {
+    toast.error('กรุณากรอกอีเมลหลัก')
+    return false
+  }
+
+  // ตรวจสอบรูปแบบอีเมล
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(settings.emailMain)) {
+    toast.error('รูปแบบอีเมลไม่ถูกต้อง')
+    return false
+  }
+
+  return true
+}
+
+// ------------------------------------------------------------------
+// 4. SAVE LOGIC
 // ------------------------------------------------------------------
 
 const saveWebsiteSettings = async () => {
+  // ตรวจสอบข้อมูลก่อนบันทึก
+  if (!validateForm()) {
+    return
+  }
+
   isSaving.value = true
   try {
     if (editMode.value && websiteSettings.value.id) {
