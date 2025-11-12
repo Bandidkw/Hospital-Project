@@ -51,12 +51,75 @@ export async function fetchSettings(): Promise<SettingsData> {
 }
 
 /**
- * อัปเดตข้อมูลตั้งค่าเว็บไซต์ (สำหรับ Admin Dashboard)
- * ใช้ PATCH /settings/id
+ * ดึงข้อมูลตั้งค่าเว็บไซต์ทั้งหมด (Get All)
+ * ใช้ GET /settings
+ * รองรับทั้งกรณีที่ API ส่งกลับมาเป็น array หรือ object เดี่ยว
  */
-export async function updateSettings(data: SettingsData): Promise<void> {
+export async function fetchAllSettings(): Promise<SettingsData[]> {
   try {
-    await apiService.patch(PATCH_SETTINGS_URL, data)
+    const response = await apiService.get<any>('/settings')
+    
+    // ข้อมูลจริงอยู่ที่ response.data.data (API wrapper format)
+    const actualData = response.data?.data || response.data
+    
+    // กรณีที่ข้อมูลเป็น array
+    if (actualData && Array.isArray(actualData)) {
+      return actualData
+    }
+    
+    // กรณีที่ข้อมูลเป็น object เดี่ยว ให้แปลงเป็น array
+    if (actualData && typeof actualData === 'object' && 'id' in actualData) {
+      return [actualData as SettingsData]
+    }
+    
+    console.warn('API returned success but data format is unexpected.')
+    return []
+  } catch (error) {
+    console.error('API Error: Failed to fetch all settings', error)
+    throw error
+  }
+}
+
+/**
+ * สร้างข้อมูลตั้งค่าเว็บไซต์ใหม่ (สำหรับ Admin Dashboard)
+ * ใช้ POST /settings
+ */
+export async function createSettings(data: SettingsData): Promise<void> {
+  try {
+    await apiService.post('/settings', data)
+  } catch (error) {
+    console.error('API Error: Failed to create settings', error)
+    throw error
+  }
+}
+
+/**
+ * ดึงข้อมูลตั้งค่าเว็บไซต์ตาม ID
+ * ใช้ GET /settings/:id
+ */
+export async function fetchSettingsById(id: string): Promise<SettingsData> {
+  try {
+    const response = await apiService.get<any>(`/settings/${id}`)
+    const actualData = response.data?.data || response.data
+    
+    if (actualData && actualData.id) {
+      return actualData
+    }
+    
+    throw new Error('Settings not found')
+  } catch (error) {
+    console.error('API Error: Failed to fetch settings by ID', error)
+    throw error
+  }
+}
+
+/**
+ * อัปเดตข้อมูลตั้งค่าเว็บไซต์ (สำหรับ Admin Dashboard)
+ * ใช้ PATCH /settings/:id
+ */
+export async function updateSettings(id: string, data: SettingsData): Promise<void> {
+  try {
+    await apiService.patch(`/settings/${id}`, data)
   } catch (error) {
     console.error('API Error: Failed to update settings', error)
     throw error

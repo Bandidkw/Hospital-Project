@@ -1,19 +1,24 @@
 <template>
   <div class="p-6 bg-white rounded-xl shadow-2xl transition duration-500">
     <h2 class="text-3xl font-extrabold text-gray-800 mb-2 flex items-center">
-      <i class="fas fa-globe mr-4 text-cyan-600"></i> ตั้งค่าเว็บไซต์
+      <i class="fas fa-globe mr-4 text-cyan-600"></i>
+      {{ editMode ? 'แก้ไขตั้งค่าเว็บไซต์' : 'สร้างตั้งค่าเว็บไซต์ใหม่' }}
     </h2>
-    <p class="text-gray-600 mb-6 border-b pb-4">
-      จัดการข้อมูลพื้นฐานของเว็บไซต์ เช่น ชื่อโรงพยาบาล, ที่อยู่, เบอร์โทรศัพท์,
-      และช่องทางติดต่ออื่นๆ ที่จะแสดงผลบนหน้าเว็บไซต์.
-    </p>
-
-    <div v-if="loading" class="text-center py-12">
-      <i class="fas fa-spinner fa-spin text-6xl text-blue-500"></i>
-      <p class="mt-4 text-lg text-gray-600">กำลังโหลดข้อมูลตั้งค่า...</p>
+    <div class="flex justify-between items-center mb-4 border-b pb-4">
+      <p class="text-gray-600">
+        {{ editMode ? 'แก้ไขข้อมูลการตั้งค่าเว็บไซต์' : 'สร้างข้อมูลการตั้งค่าเว็บไซต์ใหม่' }}
+        เช่น ชื่อโรงพยาบาล, ที่อยู่, เบอร์โทรศัพท์, และช่องทางติดต่ออื่นๆ
+      </p>
+      <router-link
+        to="/dashboard/website-settings-list"
+        class="flex items-center bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-300 shadow-md whitespace-nowrap"
+      >
+        <i class="fas fa-list mr-2"></i>
+        ดูข้อมูลทั้งหมด
+      </router-link>
     </div>
 
-    <form v-else @submit.prevent="saveWebsiteSettings" class="space-y-8">
+    <form @submit.prevent="saveWebsiteSettings" class="space-y-8">
       <div class="card bg-gray-200 p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
         <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
           <i class="fas fa-info-circle mr-2 text-blue-500"></i> ข้อมูลทั่วไป
@@ -242,7 +247,13 @@
         >
           <i class="fas fa-spinner fa-spin mr-2" v-if="isSaving"></i>
           <i class="fas fa-save mr-2" v-else></i>
-          {{ isSaving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า' }}
+          {{
+            isSaving
+              ? 'กำลังบันทึก...'
+              : editMode
+                ? 'อัพเดทการตั้งค่า'
+                : 'สร้างการตั้งค่า'
+          }}
         </button>
       </div>
     </form>
@@ -250,21 +261,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
-// 💡 เราใช้ Service ที่คุณปรับปรุงล่าสุดซึ่งเชื่อมต่อ API จริงแล้ว
-import { fetchSettings, updateSettings } from '@/services/settingsService'
+import { createSettings, fetchSettingsById, updateSettings } from '@/services/settingsService'
 import type { SettingsData } from '@/types/settings'
 
+const route = useRoute()
 const toast = useToast()
 
 // ------------------------------------------------------------------
 // 1. STATE MANAGEMENT
 // ------------------------------------------------------------------
 
-// 🟢 โครงสร้าง State ที่สมบูรณ์และสอดคล้องกับ SettingsData
 const websiteSettings = ref<SettingsData>({
-  id: 'global-settings-1',
+  id: '',
   hospitalNameTh: '',
   hospitalNameEn: '',
   address: '',
@@ -275,31 +286,34 @@ const websiteSettings = ref<SettingsData>({
   emailMain: '',
   facebookUrl: '',
   lineId: '',
-  youtubeUrl: '', // 🟢 เพิ่ม field ที่หายไป
-  twitterUrl: '', // 🟢 เพิ่ม field ที่หายไป
+  youtubeUrl: '',
+  twitterUrl: '',
   googleMapIframe: '',
   metaDescription: '',
   keywords: '',
 })
 
-const loading = ref(true)
+const loading = ref(false)
 const isSaving = ref(false)
+const editMode = computed(() => !!route.query.id)
 
 // ------------------------------------------------------------------
 // 2. LIFECYCLE & DATA FETCHING
 // ------------------------------------------------------------------
 
-const fetchWebsiteSettings = async () => {
-  // 1. เริ่มโหลด (loading.value ถูกตั้งเป็น true ก่อนเข้า try/catch)
+const loadSettingData = async () => {
+  const id = route.query.id as string
+  if (!id) return
+
   loading.value = true
   try {
-    const data = await fetchSettings()
+    const data = await fetchSettingsById(id)
     websiteSettings.value = data
+    toast.success('โหลดข้อมูลสำเร็จ')
   } catch (e) {
-    toast.error('ไม่สามารถโหลดข้อมูลตั้งค่าเว็บไซต์ปัจจุบันได้')
-    console.error('Fetch settings failed:', e)
+    toast.error('ไม่สามารถโหลดข้อมูลได้')
+    console.error('Failed to load settings:', e)
   } finally {
-    // 🟢 2. ต้องตั้ง loading.value = false เสมอ ไม่ว่าจะสำเร็จหรือล้มเหลว
     loading.value = false
   }
 }
@@ -311,16 +325,26 @@ const fetchWebsiteSettings = async () => {
 const saveWebsiteSettings = async () => {
   isSaving.value = true
   try {
-    // 💡 ฟังก์ชัน updateSettings จะใช้ PATCH /settings/1 ตามที่เรากำหนดใน Service
-    await updateSettings(websiteSettings.value)
-    toast.success('บันทึกการตั้งค่าเว็บไซต์สำเร็จ!')
+    if (editMode.value && websiteSettings.value.id) {
+      // โหมดแก้ไข: ใช้ PATCH /settings/:id
+      await updateSettings(websiteSettings.value.id, websiteSettings.value)
+      toast.success('อัพเดทการตั้งค่าเว็บไซต์สำเร็จ!')
+    } else {
+      // โหมดสร้างใหม่: ใช้ POST /settings
+      await createSettings(websiteSettings.value)
+      toast.success('สร้างการตั้งค่าเว็บไซต์สำเร็จ!')
+    }
   } catch (e: unknown) {
     console.error('Error saving website settings:', e)
-    toast.error('บันทึกการตั้งค่าล้มเหลว')
+    toast.error(editMode.value ? 'อัพเดทการตั้งค่าล้มเหลว' : 'สร้างการตั้งค่าล้มเหลว')
   } finally {
     isSaving.value = false
   }
 }
 
-onMounted(fetchWebsiteSettings)
+onMounted(() => {
+  if (editMode.value) {
+    loadSettingData()
+  }
+})
 </script>
