@@ -36,7 +36,7 @@ import WelcomeSplashPopup from '@/components/common/WelcomeSplashPopup.vue'
 // ------------------------------------
 // สถานะ: ควบคุมการแสดงผลเนื้อหาหลัก
 const isWebsiteLoaded = ref(false)
-const SPLASH_STORAGE_KEY = 'hasVisitedWebsite' // คีย์สำหรับ Local Storage
+const SPLASH_STORAGE_KEY = 'hasVisitedWebsite'
 
 // ฟังก์ชันสำหรับตั้งค่า isWebsiteLoaded จาก Local Storage
 const checkInitialLoad = () => {

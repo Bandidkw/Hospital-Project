@@ -186,6 +186,12 @@ const router = createRouter({
           component: () => import('@/views/dashboard/DashboardWebsiteSettingsView.vue'),
           meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
         },
+        // {
+        //   path: 'vision-edit',
+        //   name: 'dashboard-vision-edit',
+        //   component: () => import('@/views/dashboard/DashboardVisionEditView.vue'),
+        //   meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
+        // },
         {
           path: 'reports',
           name: 'dashboard-reports',

@@ -63,6 +63,4 @@ import { defineEmits } from 'vue'
 defineEmits(['load-website'])
 </script>
 
-<style>
-/* ... */
-</style>
+<style></style>

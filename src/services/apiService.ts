@@ -6,7 +6,8 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
   'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1'
 
 const apiService: AxiosInstance = axios.create({
@@ -20,8 +21,6 @@ const apiService: AxiosInstance = axios.create({
 function pickTokenFromStorage(): string | null {
   const raw = sessionStorage.getItem('token')
   if (!raw) return null
-
-  // กรณีบางโปรเจ็กต์เผลอเก็บเป็น JSON เช่น {"accessToken":"..."} หรือ {"token":"..."}
   try {
     const parsed = JSON.parse(raw) as Record<string, unknown>
     const maybe =
@@ -49,14 +48,11 @@ apiService.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const headers = (config.headers = AxiosHeaders.from(config.headers))
 
-    // ใส่ Authorization
     const auth = buildAuthHeader()
     if (auth) headers.set('Authorization', auth)
-
-    // จัดการ Content-Type ให้เหมาะกับ payload
     const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData
     if (isFormData) {
-      headers.delete('Content-Type') // ให้ axios ตั้ง boundary เอง
+      headers.delete('Content-Type')
     } else if (!headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json')
     }
@@ -78,9 +74,6 @@ apiService.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       console.warn('[api] 401 Unauthorized - token invalid or expired.')
-      // ถ้าอยากบังคับให้ออกจากระบบ ให้เปิดสองบรรทัดด้านล่าง
-      // localStorage.removeItem('token')
-      // window.location.assign('/login')
     }
     return Promise.reject(error)
   },

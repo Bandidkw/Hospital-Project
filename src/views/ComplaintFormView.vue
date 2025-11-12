@@ -1,85 +1,97 @@
 <template>
   <div class="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-xl">
-      <h1 class="text-3xl font-extrabold text-red-600 mb-4 flex items-center">
-        <i class="fas fa-exclamation-circle mr-3"></i> ยื่นข้อร้องเรียน
+    <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-2xl border-t-4 border-red-600">
+      <h1 class="text-3xl font-extrabold text-red-700 mb-2 flex items-center">
+        <i class="fas fa-comment-dots mr-3 text-3xl"></i> ยื่นข้อร้องเรียน
       </h1>
       <p class="text-gray-600 mb-8 border-b pb-4">
         กรุณากรอกข้อมูลและรายละเอียดข้อร้องเรียนของท่าน
         ทางโรงพยาบาลจะดำเนินการตรวจสอบและติดต่อกลับโดยเร็วที่สุด
       </p>
 
-      <form @submit.prevent="submitComplaint" class="space-y-6">
-        <div>
-          <label for="reporterName" class="block text-sm font-medium text-gray-700"
-            >ชื่อ-นามสกุล ผู้แจ้ง (ถ้าต้องการระบุ):</label
-          >
-          <input
-            type="text"
-            id="reporterName"
-            v-model="complaintData.reporterName"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-red-500 focus:border-red-500"
-            placeholder="เช่น นาย/นางสาว สมัคร ใจดี"
-          />
+      <form @submit.prevent="submitComplaint" class="space-y-8">
+        <div class="p-5 border border-gray-200 rounded-lg bg-gray-50 space-y-6">
+          <h2 class="text-xl font-bold text-gray-800 flex items-center mb-4">
+            <i class="fas fa-user-circle mr-2 text-red-500"></i> ข้อมูลผู้แจ้ง
+          </h2>
+
+          <div>
+            <label for="reporterName" class="block text-sm font-semibold text-gray-700"
+              >ชื่อ-นามสกุล ผู้แจ้ง (ถ้าต้องการระบุ):</label
+            >
+            <input
+              type="text"
+              id="reporterName"
+              v-model="complaintData.reporterName"
+              class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 transition duration-150"
+              placeholder="เช่น นาย/นางสาว สมัคร ใจดี"
+            />
+          </div>
+
+          <div>
+            <label for="reporterContact" class="block text-sm font-semibold text-gray-700"
+              >ข้อมูลติดต่อ (เบอร์โทรศัพท์ หรือ อีเมล):
+              <span class="text-red-600 font-bold">* จำเป็นต้องระบุ</span></label
+            >
+            <input
+              type="text"
+              id="reporterContact"
+              v-model="complaintData.reporterContact"
+              class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 transition duration-150"
+              required
+              placeholder="0XX-XXX-XXXX หรือ email@example.com"
+            />
+          </div>
         </div>
 
-        <div>
-          <label for="reporterContact" class="block text-sm font-medium text-gray-700"
-            >ข้อมูลติดต่อ (เช่น เบอร์โทรศัพท์ หรือ อีเมล):
-            <span class="text-red-500">*</span></label
-          >
-          <input
-            type="text"
-            id="reporterContact"
-            v-model="complaintData.reporterContact"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-red-500 focus:border-red-500"
-            required
-            placeholder="0XX-XXX-XXXX หรือ email@example.com"
-          />
-        </div>
+        <div class="p-5 border border-gray-200 rounded-lg bg-gray-50 space-y-6">
+          <h2 class="text-xl font-bold text-gray-800 flex items-center mb-4">
+            <i class="fas fa-file-alt mr-2 text-red-500"></i> รายละเอียดการร้องเรียน
+          </h2>
 
-        <div>
-          <label for="subject" class="block text-sm font-medium text-gray-700"
-            >หัวข้อเรื่องร้องเรียน: <span class="text-red-500">*</span></label
-          >
+          <div>
+            <label for="subject" class="block text-sm font-semibold text-gray-700"
+              >หัวข้อเรื่องร้องเรียน: <span class="text-red-600 font-bold">*</span></label
+            >
 
-          <select
-            id="subject"
-            v-model="complaintData.subject"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-red-500 focus:border-red-500"
-            required
-          >
-            <option value="" disabled>--- กรุณาเลือกหัวข้อร้องเรียน ---</option>
+            <select
+              id="subject"
+              v-model="complaintData.subject"
+              class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 bg-white focus:ring-red-500 focus:border-red-500 transition duration-150"
+              required
+            >
+              <option value="" disabled selected>--- กรุณาเลือกหัวข้อร้องเรียน ---</option>
 
-            <option v-for="subject in complaintSubjects" :key="subject" :value="subject">
-              {{ subject }}
-            </option>
-          </select>
-        </div>
+              <option v-for="subject in complaintSubjects" :key="subject" :value="subject">
+                {{ subject }}
+              </option>
+            </select>
+          </div>
 
-        <div>
-          <label for="detail" class="block text-sm font-medium text-gray-700"
-            >รายละเอียดข้อร้องเรียน: <span class="text-red-500">*</span></label
-          >
-          <textarea
-            id="detail"
-            rows="5"
-            v-model="complaintData.detail"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-red-500 focus:border-red-500"
-            required
-            placeholder="กรุณาให้ข้อมูลเท่าที่จำได้ เช่น วันที่/เวลาเกิดเหตุ, สถานที่, ชื่อเจ้าหน้าที่ (ถ้าทราบ)"
-          ></textarea>
+          <div>
+            <label for="detail" class="block text-sm font-semibold text-gray-700"
+              >รายละเอียดข้อร้องเรียน: <span class="text-red-600 font-bold">*</span></label
+            >
+            <textarea
+              id="detail"
+              rows="6"
+              v-model="complaintData.detail"
+              class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 transition duration-150"
+              required
+              placeholder="กรุณาให้ข้อมูลเท่าที่จำได้ เช่น วันที่/เวลาเกิดเหตุ, สถานที่, ชื่อเจ้าหน้าที่ (ถ้าทราบ) เพื่อให้ง่ายต่อการตรวจสอบ"
+            ></textarea>
+          </div>
         </div>
 
         <div class="pt-4">
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-red-600 text-white font-semibold py-3 rounded-md hover:bg-red-700 transition duration-300 disabled:bg-gray-400"
+            class="w-full bg-red-600 text-white font-bold text-lg py-4 rounded-lg hover:bg-red-700 transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           >
             <i class="fas fa-paper-plane mr-2" v-if="!loading"></i>
             <i class="fas fa-spinner fa-spin mr-2" v-else></i>
-            {{ loading ? 'กำลังส่ง...' : 'ส่งข้อร้องเรียน' }}
+            {{ loading ? 'กำลังส่งข้อร้องเรียน...' : 'ส่งข้อร้องเรียน' }}
           </button>
         </div>
       </form>
@@ -88,6 +100,7 @@
 </template>
 
 <script setup lang="ts">
+// ... (โค้ด Script เดิม)
 import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from 'axios'
@@ -163,7 +176,3 @@ const resetForm = () => {
   complaintData.value = { ...initialFormData }
 }
 </script>
-
-<style scoped>
-/* styles for form */
-</style>

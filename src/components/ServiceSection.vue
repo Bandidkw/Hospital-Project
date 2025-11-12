@@ -38,21 +38,21 @@ const services = ref([
   {
     id: 1,
     icon: 'fas fa-stethoscope', // ไอคอนสำหรับ OPD
-    title: 'OPD (ผู้ป่วยนอก)',
+    title: 'ผู้ป่วยนอก (OPD)',
     description: 'ผู้ป่วยนอก บริการตรวจรักษาโรคทั่วไป และให้คำปรึกษาปัญหาสุขภาพ',
     link: '/outpatient',
   },
   {
     id: 2,
     icon: 'fas fa-bed', // ไอคอนสำหรับ IPD
-    title: 'IPD (ผู้ป่วยใน)',
+    title: 'ผู้ป่วยใน (IPD)',
     description: 'บริการดูแลผู้ป่วยในอย่างใกล้ชิด ตลอด 24 ชั่วโมง พร้อมทีมแพทย์ผู้เชี่ยวชาญ',
     link: '/inpatient',
   },
   {
     id: 3,
     icon: 'fas fa-ambulance', // ไอคอนสำหรับ Emergency
-    title: 'Emergency (ฉุกเฉิน)',
+    title: 'ฉุกเฉิน (Emergency)',
     description: 'พร้อมให้บริการตลอด 24 ชั่วโมง สำหรับผู้ป่วยฉุกเฉินและอุบัติเหตุ',
     link: '/emergency',
   },

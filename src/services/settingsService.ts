@@ -1,12 +1,15 @@
 // ใน src/services/settingsService.ts
 
 import type { SettingsData } from '@/types/settings'
-// import apiService from '@/services/apiService'; // 💡 สำหรับใช้ API จริง
+import apiService from '@/services/apiService'
 
-// 💡 Mock Data ที่อ้างอิงจากรูป image_19a820.png
+const SETTINGS_ID = 1
+const GET_SETTINGS_URL = `/settings`
+const PATCH_SETTINGS_URL = `/settings/${SETTINGS_ID}`
+
 const mockSettings: SettingsData = {
   id: 'global-settings-1',
-  hospitalNameTh: 'โรงพยาบาลแม่แตง',
+  hospitalNameTh: 'โรงพยาบาลแม่แตง', // ระบุให้ชัดเจนว่าใช้ Mock
   hospitalNameEn: 'Maetaeng Hospital',
   address: '300 หมู่ 7 ตำบลสันมหาพน อำเภอแม่แตง จังหวัดเชียงใหม่',
   zipCode: '50150',
@@ -26,29 +29,36 @@ const mockSettings: SettingsData = {
 }
 
 /**
- * ดึงข้อมูลตั้งค่าเว็บไซต์ (ใช้ Mock Data)
+ * ดึงข้อมูลตั้งค่าเว็บไซต์
+ * 🟢 ลองใช้ API จริงก่อน และ Fallback ไปใช้ Mockup เมื่อเกิดข้อผิดพลาด
  */
 export async function fetchSettings(): Promise<SettingsData> {
-  // 💡 จำลองการหน่วงเวลาของ API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(mockSettings)
-    }, 300)
-  })
-  // หากเชื่อมต่อ API จริง:
-  // const response = await apiService.get('/api/settings');
-  // return response.data.data;
+  try {
+    // 1. ลองเรียก API จริง (GET /settings)
+    const response = await apiService.get<SettingsData>(GET_SETTINGS_URL) // 2. ตรวจสอบข้อมูลที่ได้มา หากถูกต้องให้ใช้ข้อมูลนั้น
+    if (response.data && response.data.id) {
+      return response.data
+    } // 3. หาก API ตอบกลับ 200 แต่ข้อมูลว่างหรือผิดพลาด ใช้วิธี Fallback
+    console.warn(
+      'API returned success status but data was empty or invalid. Using mock data as fallback.',
+    )
+    return mockSettings
+  } catch (error) {
+    // 🔴 4. หากเกิด Error ในการเชื่อมต่อ (Network Error, 4xx, 5xx) ใช้วิธี Fallback
+    console.error('API Error: Failed to fetch settings. Using mock data as fallback.', error) // 🟢 Fallback: ส่ง Mock Data กลับไปแทน
+    return mockSettings
+  }
 }
 
 /**
  * อัปเดตข้อมูลตั้งค่าเว็บไซต์ (สำหรับ Admin Dashboard)
+ * ใช้ PATCH /settings/id
  */
 export async function updateSettings(data: SettingsData): Promise<void> {
-  // 💡 Mock การอัปเดต
-  console.log('Mock Update Settings:', data)
-  return new Promise((resolve) => {
-    setTimeout(resolve, 300)
-  })
-  // หากเชื่อมต่อ API จริง:
-  // await apiService.patch('/api/settings/global-settings-1', data);
+  try {
+    await apiService.patch(PATCH_SETTINGS_URL, data)
+  } catch (error) {
+    console.error('API Error: Failed to update settings', error)
+    throw error
+  }
 }

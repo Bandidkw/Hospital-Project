@@ -41,7 +41,7 @@ const MOCK_CORE_VALUES_CONTENT = `
 `
 
 const mockVisionData: VisionData = {
-  id: 1,
+  id: '1',
   vision: 'โรงพยาบาลแม่แตงเป็นโรงพยาบาลคุณภาพ ผู้รับบริการปลอดภัย ผู้ให้บริการมีความสุข',
   missionHtml: MOCK_MISSION_CONTENT,
   coreValuesHtml: MOCK_CORE_VALUES_CONTENT,

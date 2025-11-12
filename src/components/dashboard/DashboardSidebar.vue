@@ -84,7 +84,7 @@
           </RouterLink>
         </li>
         <!-- 🟢 แก้ไขวิสัยทัศน์ เฉพาะ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/vision-edit"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -93,7 +93,7 @@
             <i class="fas fa-lightbulb mr-3 text-indigo-500"></i>
             <span class="text-gray-300">แก้ไขวิสัยทัศน์</span>
           </RouterLink>
-        </li>
+        </li> -->
         <!-- โครงสร้างองค์กร - เฉพาะ Admin และ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink

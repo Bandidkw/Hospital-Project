@@ -20,12 +20,12 @@
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label for="hospitalName" class="block text-sm font-semibold text-gray-700"
+            <label for="hospitalNameTh" class="block text-sm font-semibold text-gray-700"
               >ชื่อโรงพยาบาล (เต็ม):</label
             >
             <input
               type="text"
-              id="hospitalName"
+              id="hospitalNameTh"
               v-model="websiteSettings.hospitalNameTh"
               required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
@@ -33,12 +33,12 @@
             />
           </div>
           <div>
-            <label for="hospitalShortName" class="block text-sm font-semibold text-gray-700"
+            <label for="hospitalNameEn" class="block text-sm font-semibold text-gray-700"
               >ชื่อโรงพยาบาล (English/ชื่อย่อ):</label
             >
             <input
               type="text"
-              id="hospitalShortName"
+              id="hospitalNameEn"
               v-model="websiteSettings.hospitalNameEn"
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Maetaeng Hospital"
@@ -86,24 +86,24 @@
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label for="phoneMain" class="block text-sm font-semibold text-gray-700"
+            <label for="telMain" class="block text-sm font-semibold text-gray-700"
               >เบอร์โทรศัพท์หลัก:</label
             >
             <input
               type="tel"
-              id="phoneMain"
+              id="telMain"
               v-model="websiteSettings.telMain"
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="053-XXX-XXXX"
             />
           </div>
           <div>
-            <label for="phoneEmergency" class="block text-sm font-semibold text-gray-700"
-              >เบอร์โทรสาร (หรือฉุกเฉิน):</label
+            <label for="fax" class="block text-sm font-semibold text-gray-700"
+              >เบอร์โทรสาร (FAX):</label
             >
             <input
               type="tel"
-              id="phoneEmergency"
+              id="fax"
               v-model="websiteSettings.fax"
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="053-YYY-YYYY"
@@ -154,12 +154,38 @@
               placeholder="@yourlineid"
             />
           </div>
+
+          <div>
+            <label for="youtubeUrl" class="block text-sm font-semibold text-gray-700"
+              >Youtube URL:</label
+            >
+            <input
+              type="url"
+              id="youtubeUrl"
+              v-model="websiteSettings.youtubeUrl"
+              class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="https://www.youtube.com/..."
+            />
+          </div>
+          <div>
+            <label for="twitterUrl" class="block text-sm font-semibold text-gray-700"
+              >Twitter (X) URL:</label
+            >
+            <input
+              type="url"
+              id="twitterUrl"
+              v-model="websiteSettings.twitterUrl"
+              class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="https://twitter.com/..."
+            />
+          </div>
+
           <div class="col-span-full">
-            <label for="googleMapsEmbed" class="block text-sm font-semibold text-gray-700"
+            <label for="googleMapIframe" class="block text-sm font-semibold text-gray-700"
               >Google Maps Embed Code (iFrame):</label
             >
             <textarea
-              id="googleMapsEmbed"
+              id="googleMapIframe"
               v-model="websiteSettings.googleMapIframe"
               rows="4"
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 font-mono text-xs placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
@@ -189,7 +215,7 @@
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             ></textarea>
             <p class="text-xs text-gray-500 mt-1">
-              {{ websiteSettings.metaDescription.length || 0 }} / 160 อักขระ
+              {{ websiteSettings.metaDescription?.length || 0 }} / 160 อักขระ
             </p>
           </div>
 
@@ -226,9 +252,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
+// 💡 เราใช้ Service ที่คุณปรับปรุงล่าสุดซึ่งเชื่อมต่อ API จริงแล้ว
 import { fetchSettings, updateSettings } from '@/services/settingsService'
 import type { SettingsData } from '@/types/settings'
-// 💡 เราจะใช้ type ที่มีอยู่ใน src/types/settings.ts ที่เราได้สร้างไว้
 
 const toast = useToast()
 
@@ -236,35 +262,35 @@ const toast = useToast()
 // 1. STATE MANAGEMENT
 // ------------------------------------------------------------------
 
-// 🟢 ปรับโครงสร้าง State ให้ใช้ Properties ที่มีใน SettingsData
+// 🟢 โครงสร้าง State ที่สมบูรณ์และสอดคล้องกับ SettingsData
 const websiteSettings = ref<SettingsData>({
-  id: 'global-settings-1', // ID ของ Global Settings
-  hospitalNameTh: '', // เดิม: hospitalName
-  hospitalNameEn: '', // เดิม: hospitalShortName
+  id: 'global-settings-1',
+  hospitalNameTh: '',
+  hospitalNameEn: '',
   address: '',
   zipCode: '',
   province: '',
-  telMain: '', // เดิม: phoneMain
-  fax: '', // เดิม: phoneEmergency
+  telMain: '',
+  fax: '',
   emailMain: '',
-  // 💡 field นี้ถูกลบไปในโค้ดเดิม แต่ถ้าจะใช้ต้องเพิ่มใน Type: contactFormEmail: '',
   facebookUrl: '',
   lineId: '',
-  youtubeUrl: '',
-  twitterUrl: '',
-  googleMapIframe: '', // เดิม: googleMapsEmbed
+  youtubeUrl: '', // 🟢 เพิ่ม field ที่หายไป
+  twitterUrl: '', // 🟢 เพิ่ม field ที่หายไป
+  googleMapIframe: '',
   metaDescription: '',
   keywords: '',
 })
 
-const loading = ref(true) // สำหรับโหลดข้อมูลเริ่มต้น
-const isSaving = ref(false) // สำหรับสถานะการบันทึก
+const loading = ref(true)
+const isSaving = ref(false)
 
 // ------------------------------------------------------------------
 // 2. LIFECYCLE & DATA FETCHING
 // ------------------------------------------------------------------
 
 const fetchWebsiteSettings = async () => {
+  // 1. เริ่มโหลด (loading.value ถูกตั้งเป็น true ก่อนเข้า try/catch)
   loading.value = true
   try {
     const data = await fetchSettings()
@@ -273,6 +299,7 @@ const fetchWebsiteSettings = async () => {
     toast.error('ไม่สามารถโหลดข้อมูลตั้งค่าเว็บไซต์ปัจจุบันได้')
     console.error('Fetch settings failed:', e)
   } finally {
+    // 🟢 2. ต้องตั้ง loading.value = false เสมอ ไม่ว่าจะสำเร็จหรือล้มเหลว
     loading.value = false
   }
 }
@@ -284,6 +311,7 @@ const fetchWebsiteSettings = async () => {
 const saveWebsiteSettings = async () => {
   isSaving.value = true
   try {
+    // 💡 ฟังก์ชัน updateSettings จะใช้ PATCH /settings/1 ตามที่เรากำหนดใน Service
     await updateSettings(websiteSettings.value)
     toast.success('บันทึกการตั้งค่าเว็บไซต์สำเร็จ!')
   } catch (e: unknown) {
