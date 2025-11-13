@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // ใน src/services/settingsService.ts
 
 import type { SettingsData } from '@/types/settings'
@@ -5,6 +6,7 @@ import apiService from '@/services/apiService'
 
 const SETTINGS_ID = 1
 const GET_SETTINGS_URL = `/settings`
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PATCH_SETTINGS_URL = `/settings/${SETTINGS_ID}`
 
 const mockSettings: SettingsData = {
@@ -58,20 +60,20 @@ export async function fetchSettings(): Promise<SettingsData> {
 export async function fetchAllSettings(): Promise<SettingsData[]> {
   try {
     const response = await apiService.get<any>('/settings')
-    
+
     // ข้อมูลจริงอยู่ที่ response.data.data (API wrapper format)
     const actualData = response.data?.data || response.data
-    
+
     // กรณีที่ข้อมูลเป็น array
     if (actualData && Array.isArray(actualData)) {
       return actualData
     }
-    
+
     // กรณีที่ข้อมูลเป็น object เดี่ยว ให้แปลงเป็น array
     if (actualData && typeof actualData === 'object' && 'id' in actualData) {
       return [actualData as SettingsData]
     }
-    
+
     console.warn('API returned success but data format is unexpected.')
     return []
   } catch (error) {
@@ -101,17 +103,17 @@ export async function fetchSettingsById(id: string): Promise<SettingsData> {
   try {
     // ใช้ GET /settings เพราะ API ไม่รองรับ GET /settings/:id
     const response = await apiService.get<any>('/settings')
-    
+
     // ข้อมูลจริงอยู่ที่ response.data.data (API wrapper format)
     const actualData = response.data?.data || response.data
-    
+
     // ถ้าข้อมูลเป็น object เดี่ยวและมี id ตรงกัน
     if (actualData && typeof actualData === 'object' && !Array.isArray(actualData)) {
       if (actualData.id === id || !id) {
         return actualData as SettingsData
       }
     }
-    
+
     // ถ้าข้อมูลเป็น array ให้หา id ที่ตรงกัน
     if (Array.isArray(actualData)) {
       const found = actualData.find((item: any) => item.id === id)
@@ -119,13 +121,13 @@ export async function fetchSettingsById(id: string): Promise<SettingsData> {
         return found as SettingsData
       }
     }
-    
+
     // ถ้าไม่เจอ ให้ส่งข้อมูลแรกที่มี (fallback)
     if (actualData && typeof actualData === 'object' && 'id' in actualData) {
       console.warn(`Settings with id ${id} not found, using available data`)
       return actualData as SettingsData
     }
-    
+
     throw new Error('Settings not found')
   } catch (error) {
     console.error('API Error: Failed to fetch settings by ID', error)
