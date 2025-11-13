@@ -1,117 +1,50 @@
 <template>
   <div class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-      <i class="fas fa-users-cog mr-3 text-yellow-300"></i> จัดการผู้ใช้งาน
+    <h2 class="text-3xl font-extrabold text-gray-900 mb-2 flex items-center">
+      <i class="fas fa-user-shield mr-3 text-indigo-600"></i> การจัดการบัญชีและสิทธิ์
     </h2>
-    <p class="text-gray-700 mb-6">
-      หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบข้อมูลผู้ใช้งานระบบ (เจ้าหน้าที่).
+    <p class="text-gray-600 mb-8">
+      ดูแล เพิ่ม แก้ไข และกำหนดบทบาท (Role) ให้กับผู้ใช้งานระบบทั้งหมด
     </p>
 
-    <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">
-        {{ editingUser ? 'แก้ไขผู้ใช้งาน' : 'เพิ่มผู้ใช้งานใหม่' }}
-      </h3>
-      <form @submit.prevent="saveUser" class="space-y-4">
-        <div>
-          <label for="username" class="block text-sm font-medium text-gray-700"
-            >ชื่อผู้ใช้งาน:</label
-          >
-          <input
-            type="text"
-            id="username"
-            v-model="currentUser.username"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-            :disabled="editingUser"
-          />
-        </div>
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">รหัสผ่าน:</label>
-          <input
-            type="password"
-            id="password"
-            v-model="currentUser.password"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            :required="!editingUser"
-          />
-          <p v-if="editingUser" class="text-xs text-gray-500 mt-1">
-            เว้นว่างไว้หากไม่ต้องการเปลี่ยนรหัสผ่าน
-          </p>
-        </div>
-        <div>
-          <label for="role" class="block text-sm font-medium text-gray-700">บทบาท:</label>
-          <select
-            id="role"
-            v-model="currentUser.role"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-          >
-            <option value="viewer">Opd</option>
-            <option value="editor">Admin</option>
-            <option value="admin">Superadmin</option>
-          </select>
-        </div>
-        <div class="flex justify-end space-x-3">
-          <button
-            type="submit"
-            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300"
-          >
-            <i class="fas fa-save mr-2"></i> {{ editingUser ? 'บันทึกการแก้ไข' : 'เพิ่มผู้ใช้งาน' }}
-          </button>
-          <button
-            v-if="editingUser"
-            type="button"
-            @click="cancelEdit"
-            class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300"
-          >
-            <i class="fas fa-times mr-2"></i> ยกเลิก
-          </button>
-        </div>
-      </form>
+    <div class="mb-8 pt-4 border-t border-gray-100 text-right">
+      <button
+        @click="showAddUserModal"
+        class="bg-indigo-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 transform hover:scale-105"
+      >
+        <i class="fas fa-plus mr-2"></i> เพิ่มผู้ใช้งานใหม่
+      </button>
     </div>
 
-    <div class="card bg-white p-6 rounded-lg shadow-md">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการผู้ใช้งาน</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-          <thead>
-            <tr class="bg-gray-100 text-left text-gray-600 uppercase text-sm leading-normal">
-              <th class="py-3 px-6 text-left">#</th>
-              <th class="py-3 px-6 text-left">ชื่อผู้ใช้งาน</th>
-              <th class="py-3 px-6 text-left">บทบาท</th>
-              <th class="py-3 px-6 text-center">การจัดการ</th>
-            </tr>
-          </thead>
-          <tbody class="text-gray-600 text-sm font-light">
-            <tr
-              v-for="(user, index) in usersList"
-              :key="user.id"
-              class="border-b border-gray-200 hover:bg-gray-50"
-            >
-              <td class="py-3 px-6 text-left">{{ index + 1 }}</td>
-              <td class="py-3 px-6 text-left">{{ user.username }}</td>
-              <td class="py-3 px-6 text-left">{{ user.role }}</td>
-              <td class="py-3 px-6 text-left">{{ user.management }}</td>
-              <td class="py-3 px-6 text-center">
-                <button
-                  @click="editUser(user)"
-                  class="bg-yellow-500 text-white px-3 py-1 rounded-md text-xs hover:bg-yellow-600 transition duration-300 mr-2"
-                >
-                  <i class="fas fa-edit"></i> แก้ไข
-                </button>
-                <button
-                  @click="confirmDeleteUser(user.id)"
-                  class="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
-                >
-                  <i class="fas fa-trash-alt"></i> ลบ
-                </button>
-              </td>
-            </tr>
-            <tr v-if="usersList.length === 0">
-              <td colspan="5" class="py-8 text-center text-gray-500">ยังไม่มีผู้ใช้งานในระบบ.</td>
-            </tr>
-          </tbody>
-        </table>
+    <UsersList
+      :users-list="usersList"
+      :role-mapping="ROLE_MAPPING"
+      @edit-user="editUser"
+      @confirm-delete-user="confirmDeleteUser"
+    />
+
+    <div
+      v-if="showFormModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
+    >
+      <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
+        <div class="p-5 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="text-xl font-bold text-gray-800">
+            {{ opduser ? 'แก้ไขผู้ใช้งาน' : 'เพิ่มผู้ใช้งานใหม่' }}
+          </h3>
+          <button @click="closeFormModal" class="text-gray-400 hover:text-gray-600">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <div class="p-5">
+          <UserForm
+            :current-user="currentUser"
+            :opd-user="opduser"
+            @save-user="saveAndCloseModal"
+            @cancel-edit="closeFormModal"
+          />
+        </div>
       </div>
     </div>
 
@@ -143,58 +76,104 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useToast } from 'vue-toastification' // นำเข้า useToast
+import { useToast } from 'vue-toastification'
+import UserForm from '@/components/users/UserForm.vue'
+import UsersList from '@/components/users/UsersList.vue'
 
-const toast = useToast() // สร้าง instance ของ toast
+const toast = useToast()
+
+// 💡 ROLE MAPPING
+const ROLE_MAPPING: { [key: number]: string } = {
+  10: 'user',
+  20: 'opd',
+  50: 'admin',
+  90: 'superadmin',
+}
 
 interface User {
   id: number
   username: string
   password?: string
-  role: string
+  role: number
   management?: string
 }
 
-const usersList = ref<User[]>([
-  { id: 1, username: 'admin', role: 'admin', management: 'all' },
-  { id: 2, username: 'editor', role: 'editor', management: 'limited' },
-])
-
-const currentUser = ref<User>({
+const initialUser: User = {
   id: 0,
   username: '',
+  management: '',
   password: '',
-  role: 'viewer',
-})
-const editingUser = ref(false)
+  role: 20, // ค่าเริ่มต้น OPD
+}
+
+// ------------------------------------------------------------------
+// 1. STATE MANAGEMENT (Mock Data)
+// ------------------------------------------------------------------
+const usersList = ref<User[]>([
+  { id: 1, username: 'superadmin', role: 90, management: 'all' },
+  { id: 2, username: 'admin_user', role: 50, management: 'limited' },
+  { id: 3, username: 'opd_staff', role: 20, management: '' },
+])
+
+const currentUser = ref<User>({ ...initialUser })
+const opduser = ref(false) // สถานะโหมดแก้ไข
 const userToDeleteId = ref<number | null>(null)
 const showConfirmModal = ref(false)
+const showFormModal = ref(false)
 
-const saveUser = () => {
-  if (editingUser.value) {
-    const index = usersList.value.findIndex((u) => u.id === currentUser.value.id)
-    if (index !== -1) {
-      const { password: _password, ...rest } = currentUser.value
-      usersList.value[index] = { ...rest }
-    }
-    toast.success('แก้ไขผู้ใช้งานสำเร็จ!')
-  } else {
-    currentUser.value.id =
-      usersList.value.length > 0 ? Math.max(...usersList.value.map((u) => u.id)) + 1 : 1
-    usersList.value.push({ ...currentUser.value })
-    toast.success('เพิ่มผู้ใช้งานสำเร็จ!')
-  }
+// ------------------------------------------------------------------
+// 2. MODAL CONTROLS
+// ------------------------------------------------------------------
+
+const showAddUserModal = () => {
   resetForm()
+  showFormModal.value = true
+}
+
+const closeFormModal = () => {
+  showFormModal.value = false
+  resetForm()
+}
+
+// ------------------------------------------------------------------
+// 3. FORM ACTIONS (Mock Logic)
+// ------------------------------------------------------------------
+
+const saveUser = (user: User) => {
+  // ในการทำงานจริง Logic นี้ควรเรียกใช้ API Service
+  if (opduser.value) {
+    // โหมดแก้ไข
+    const index = usersList.value.findIndex((u) => u.id === user.id)
+    if (index !== -1) {
+      // ✅ แก้ไขปัญหา ESLint โดยใช้ _password และปิดกฎ no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _password, ...rest } = user
+
+      usersList.value[index] = { ...usersList.value[index], ...rest }
+    }
+    toast.success('แก้ไขข้อมูลผู้ใช้งานสำเร็จ!')
+  } else {
+    // โหมดสร้างใหม่
+    const newId = usersList.value.length > 0 ? Math.max(...usersList.value.map((u) => u.id)) + 1 : 1
+    usersList.value.push({ ...user, id: newId })
+    toast.success('เพิ่มผู้ใช้งานใหม่สำเร็จ!')
+  }
+}
+
+const saveAndCloseModal = (user: User) => {
+  saveUser(user)
+  closeFormModal()
 }
 
 const editUser = (user: User) => {
-  currentUser.value = { ...user, password: '' } // Clear password when editing
-  editingUser.value = true
+  currentUser.value = { ...user, password: '' }
+  opduser.value = true
+  showFormModal.value = true
 }
 
-const cancelEdit = () => {
-  resetForm()
-}
+// ------------------------------------------------------------------
+// 4. DELETE ACTIONS (ยังคงเดิม)
+// ------------------------------------------------------------------
 
 const confirmDeleteUser = (id: number) => {
   userToDeleteId.value = id
@@ -204,7 +183,7 @@ const confirmDeleteUser = (id: number) => {
 const deleteUser = () => {
   if (userToDeleteId.value !== null) {
     usersList.value = usersList.value.filter((u) => u.id !== userToDeleteId.value)
-    toast.success('ลบผู้ใช้งานสำเร็จ!') // เปลี่ยนจาก alert เป็น toast.success
+    toast.success('ลบผู้ใช้งานสำเร็จ!')
   }
   resetDeleteConfirm()
 }
@@ -213,9 +192,13 @@ const cancelDelete = () => {
   resetDeleteConfirm()
 }
 
+// ------------------------------------------------------------------
+// 5. UTILITY (ยังคงเดิม)
+// ------------------------------------------------------------------
+
 const resetForm = () => {
-  currentUser.value = { id: 0, username: '', management: '', password: '', role: 'viewer' }
-  editingUser.value = false
+  currentUser.value = { ...initialUser }
+  opduser.value = false
 }
 
 const resetDeleteConfirm = () => {
@@ -223,5 +206,3 @@ const resetDeleteConfirm = () => {
   showConfirmModal.value = false
 }
 </script>
-
-<style scoped></style>

@@ -149,7 +149,7 @@
         <!-- ตั้งค่าเว็บไซต์ - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
-            to="/dashboard/website-settings"
+            to="/dashboard/website-settings-list"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
             active-class="bg-blue-600"
           >
@@ -212,6 +212,17 @@
             <span class="text-gray-300">โปรไฟล์</span>
           </RouterLink>
         </li>
+        <!-- จัดการผู้ใช้ - เฉพาะ SuperAdmin -->
+        <li class="mb-2" v-if="authStore.isSuperAdmin">
+          <RouterLink
+            to="/dashboard/users"
+            class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
+            active-class="bg-blue-600"
+          >
+            <i class="fas fa-user-shield mr-3 text-yellow-300"></i>
+            <span class="text-gray-300">จัดการผู้ใช้</span>
+          </RouterLink>
+        </li>
         <!-- ดูเว็บไซต์ - ทุกคนเห็นได้ -->
         <li class="mb-2">
           <a
@@ -223,17 +234,6 @@
             <i class="fas fa-globe mr-3 text-green-400"></i>
             <span class="text-gray-300">ดูเว็บไซต์</span>
           </a>
-        </li>
-        <!-- จัดการผู้ใช้ - เฉพาะ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
-          <RouterLink
-            to="/dashboard/users"
-            class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
-            active-class="bg-blue-600"
-          >
-            <i class="fas fa-user-shield mr-3 text-yellow-300"></i>
-            <span class="text-gray-300">จัดการผู้ใช้</span>
-          </RouterLink>
         </li>
       </ul>
     </nav>

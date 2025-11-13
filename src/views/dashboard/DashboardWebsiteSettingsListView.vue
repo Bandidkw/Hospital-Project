@@ -10,7 +10,9 @@
           <span v-if="allSettings.length > 0" class="ml-2">
             (เปิดใช้งาน:
             <span
-              :class="activeCount === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'"
+              :class="
+                activeCount === 1 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'
+              "
             >
               {{ activeCount }}
             </span>
@@ -61,15 +63,13 @@
               <span
                 :class="[
                   'text-xs font-semibold px-2 py-1 rounded',
-                  setting.isActive
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-600',
+                  setting.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600',
                 ]"
               >
                 {{ setting.isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}
               </span>
             </div>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div class="flex items-center text-gray-600">
                 <i class="fas fa-hospital-alt w-5 mr-2 text-blue-500"></i>
@@ -89,9 +89,9 @@
               </div>
             </div>
 
-            <div class="mt-3 text-xs text-gray-500">
+            <!-- <div class="mt-3 text-xs text-gray-500">
               <span>ID: {{ setting.id }}</span>
-            </div>
+            </div> -->
           </div>
 
           <div class="flex gap-2 ml-4">
@@ -147,7 +147,7 @@ const loadAllSettings = async () => {
   try {
     const data = await fetchAllSettings()
     allSettings.value = data
-    toast.success(`โหลดข้อมูลสำเร็จ (${data.length} รายการ)`)
+    // toast.success(`โหลดข้อมูลสำเร็จ (${data.length} รายการ)`)
   } catch (e) {
     toast.error('ไม่สามารถโหลดข้อมูลได้')
     console.error('Fetch all settings failed:', e)
@@ -163,22 +163,22 @@ const viewDetail = (setting: SettingsData) => {
 
 const toggleSetting = async (id: string) => {
   const setting = allSettings.value.find((s) => s.id === id)
-  
+
   // ถ้ากำลังจะเปิดใช้งาน (จาก false -> true)
   if (setting && !setting.isActive) {
     const activeCount = allSettings.value.filter((s) => s.isActive).length
-    
+
     if (activeCount >= 1) {
       toast.warning('สามารถเปิดใช้งานได้เพียง 1 การตั้งค่าเท่านั้น กรุณาปิดการตั้งค่าอื่นก่อน')
       return
     }
-    
+
     const confirmed = confirm(
       `คุณต้องการเปิดใช้งานการตั้งค่า "${setting.hospitalNameTh}" หรือไม่?\n\nการตั้งค่านี้จะถูกใช้แสดงผลบนเว็บไซต์`,
     )
     if (!confirmed) return
   }
-  
+
   // ถ้ากำลังจะปิดใช้งาน (จาก true -> false)
   if (setting && setting.isActive) {
     const confirmed = confirm(
@@ -186,7 +186,7 @@ const toggleSetting = async (id: string) => {
     )
     if (!confirmed) return
   }
-  
+
   try {
     await toggleSettings(id)
     toast.success('เปลี่ยนสถานะการใช้งานสำเร็จ')
@@ -204,18 +204,18 @@ const editSetting = (setting: SettingsData) => {
 
 const deleteSetting = async (id: string) => {
   const setting = allSettings.value.find((s) => s.id === id)
-  
+
   // ตรวจสอบว่าเป็นการตั้งค่าที่กำลังใช้งานอยู่หรือไม่
   if (setting?.isActive) {
     toast.error('ไม่สามารถลบการตั้งค่าที่กำลังใช้งานอยู่ได้ กรุณาปิดการใช้งานก่อน')
     return
   }
-  
+
   const confirmed = confirm(
     `คุณต้องการลบการตั้งค่า "${setting?.hospitalNameTh}" หรือไม่?\n\nการดำเนินการนี้ไม่สามารถย้อนกลับได้`,
   )
   if (!confirmed) return
-  
+
   try {
     await deleteSettings(id)
     toast.success('ลบการตั้งค่าสำเร็จ')

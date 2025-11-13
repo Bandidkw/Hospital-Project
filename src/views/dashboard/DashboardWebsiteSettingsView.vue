@@ -212,7 +212,7 @@
         </div>
       </div>
 
-      <div class="card bg-gray-50 p-6 rounded-xl shadow-lg border-t-4 border-yellow-500">
+      <div class="card bg-gray-200 p-6 rounded-xl shadow-lg border-t-4 border-yellow-500">
         <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
           <i class="fas fa-search mr-2 text-yellow-600"></i> SEO (การค้นหา)
         </h3>
@@ -265,12 +265,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { createSettings, fetchSettingsById, updateSettings } from '@/services/settingsService'
 import type { SettingsData } from '@/types/settings'
 
 const route = useRoute()
+const router = useRouter()
 const toast = useToast()
 
 // ------------------------------------------------------------------
@@ -313,7 +314,7 @@ const loadSettingData = async () => {
   try {
     const data = await fetchSettingsById(id)
     websiteSettings.value = data
-    toast.success('โหลดข้อมูลสำเร็จ')
+    // toast.success('โหลดข้อมูลสำเร็จ')
   } catch (e) {
     toast.error('ไม่สามารถโหลดข้อมูลได้')
     console.error('Failed to load settings:', e)
@@ -380,21 +381,20 @@ const validateForm = (): boolean => {
 // ------------------------------------------------------------------
 
 const saveWebsiteSettings = async () => {
-  // ตรวจสอบข้อมูลก่อนบันทึก
   if (!validateForm()) {
     return
   }
-
   isSaving.value = true
   try {
     if (editMode.value && websiteSettings.value.id) {
-      // โหมดแก้ไข: ใช้ PATCH /settings/:id
       await updateSettings(websiteSettings.value.id, websiteSettings.value)
       toast.success('อัพเดทการตั้งค่าเว็บไซต์สำเร็จ!')
+      router.push('/dashboard/website-settings-list')
     } else {
       // โหมดสร้างใหม่: ใช้ POST /settings
       await createSettings(websiteSettings.value)
       toast.success('สร้างการตั้งค่าเว็บไซต์สำเร็จ!')
+      router.push('/dashboard/website-settings-list')
     }
   } catch (e: unknown) {
     console.error('Error saving website settings:', e)
