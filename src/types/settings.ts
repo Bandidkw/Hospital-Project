@@ -17,4 +17,5 @@ export interface SettingsData {
   googleMapIframe: string
   metaDescription: string
   keywords: string
+  isActive?: boolean
 }

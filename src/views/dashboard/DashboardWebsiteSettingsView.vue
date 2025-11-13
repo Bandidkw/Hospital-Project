@@ -1,19 +1,24 @@
 <template>
   <div class="p-6 bg-white rounded-xl shadow-2xl transition duration-500">
     <h2 class="text-3xl font-extrabold text-gray-800 mb-2 flex items-center">
-      <i class="fas fa-globe mr-4 text-cyan-600"></i> ตั้งค่าเว็บไซต์
+      <i class="fas fa-globe mr-4 text-cyan-600"></i>
+      {{ editMode ? 'แก้ไขตั้งค่าเว็บไซต์' : 'สร้างตั้งค่าเว็บไซต์ใหม่' }}
     </h2>
-    <p class="text-gray-600 mb-6 border-b pb-4">
-      จัดการข้อมูลพื้นฐานของเว็บไซต์ เช่น ชื่อโรงพยาบาล, ที่อยู่, เบอร์โทรศัพท์,
-      และช่องทางติดต่ออื่นๆ ที่จะแสดงผลบนหน้าเว็บไซต์.
-    </p>
-
-    <div v-if="loading" class="text-center py-12">
-      <i class="fas fa-spinner fa-spin text-6xl text-blue-500"></i>
-      <p class="mt-4 text-lg text-gray-600">กำลังโหลดข้อมูลตั้งค่า...</p>
+    <div class="flex justify-between items-center mb-4 border-b pb-4">
+      <p class="text-gray-600">
+        {{ editMode ? 'แก้ไขข้อมูลการตั้งค่าเว็บไซต์' : 'สร้างข้อมูลการตั้งค่าเว็บไซต์ใหม่' }}
+        เช่น ชื่อโรงพยาบาล, ที่อยู่, เบอร์โทรศัพท์, และช่องทางติดต่ออื่นๆ
+      </p>
+      <router-link
+        to="/dashboard/website-settings-list"
+        class="flex items-center bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition duration-300 shadow-md whitespace-nowrap"
+      >
+        <i class="fas fa-list mr-2"></i>
+        ดูข้อมูลทั้งหมด
+      </router-link>
     </div>
 
-    <form v-else @submit.prevent="saveWebsiteSettings" class="space-y-8">
+    <form @submit.prevent="saveWebsiteSettings" class="space-y-8">
       <div class="card bg-gray-200 p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
         <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
           <i class="fas fa-info-circle mr-2 text-blue-500"></i> ข้อมูลทั่วไป
@@ -21,7 +26,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="hospitalNameTh" class="block text-sm font-semibold text-gray-700"
-              >ชื่อโรงพยาบาล (เต็ม):</label
+              >ชื่อโรงพยาบาล (เต็ม): <span class="text-red-500">*</span></label
             >
             <input
               type="text"
@@ -34,12 +39,13 @@
           </div>
           <div>
             <label for="hospitalNameEn" class="block text-sm font-semibold text-gray-700"
-              >ชื่อโรงพยาบาล (English/ชื่อย่อ):</label
+              >ชื่อโรงพยาบาล (English/ชื่อย่อ): <span class="text-red-500">*</span></label
             >
             <input
               type="text"
               id="hospitalNameEn"
               v-model="websiteSettings.hospitalNameEn"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Maetaeng Hospital"
             />
@@ -47,33 +53,38 @@
 
           <div class="col-span-full">
             <label for="address" class="block text-sm font-semibold text-gray-700"
-              >ที่อยู่โรงพยาบาล:</label
+              >ที่อยู่โรงพยาบาล: <span class="text-red-500">*</span></label
             >
             <textarea
               id="address"
               v-model="websiteSettings.address"
               rows="3"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             ></textarea>
           </div>
 
           <div>
             <label for="zipCode" class="block text-sm font-semibold text-gray-700"
-              >รหัสไปรษณีย์:</label
+              >รหัสไปรษณีย์: <span class="text-red-500">*</span></label
             >
             <input
               type="text"
               id="zipCode"
               v-model="websiteSettings.zipCode"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <div>
-            <label for="province" class="block text-sm font-semibold text-gray-700">จังหวัด:</label>
+            <label for="province" class="block text-sm font-semibold text-gray-700"
+              >จังหวัด: <span class="text-red-500">*</span></label
+            >
             <input
               type="text"
               id="province"
               v-model="websiteSettings.province"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -87,24 +98,26 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="telMain" class="block text-sm font-semibold text-gray-700"
-              >เบอร์โทรศัพท์หลัก:</label
+              >เบอร์โทรศัพท์หลัก: <span class="text-red-500">*</span></label
             >
             <input
               type="tel"
               id="telMain"
               v-model="websiteSettings.telMain"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="053-XXX-XXXX"
             />
           </div>
           <div>
             <label for="fax" class="block text-sm font-semibold text-gray-700"
-              >เบอร์โทรสาร (FAX):</label
+              >เบอร์โทรสาร (FAX): <span class="text-red-500">*</span></label
             >
             <input
               type="tel"
               id="fax"
               v-model="websiteSettings.fax"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="053-YYY-YYYY"
             />
@@ -112,12 +125,13 @@
 
           <div class="col-span-full">
             <label for="emailMain" class="block text-sm font-semibold text-gray-700"
-              >อีเมลหลัก:</label
+              >อีเมลหลัก: <span class="text-red-500">*</span></label
             >
             <input
               type="email"
               id="emailMain"
               v-model="websiteSettings.emailMain"
+              required
               class="mt-1 block w-full border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
               placeholder="info@yourhospital.com"
             />
@@ -242,7 +256,7 @@
         >
           <i class="fas fa-spinner fa-spin mr-2" v-if="isSaving"></i>
           <i class="fas fa-save mr-2" v-else></i>
-          {{ isSaving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า' }}
+          {{ isSaving ? 'กำลังบันทึก...' : editMode ? 'อัพเดทการตั้งค่า' : 'สร้างการตั้งค่า' }}
         </button>
       </div>
     </form>
@@ -250,21 +264,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
-// 💡 เราใช้ Service ที่คุณปรับปรุงล่าสุดซึ่งเชื่อมต่อ API จริงแล้ว
-import { fetchSettings, updateSettings } from '@/services/settingsService'
+import { createSettings, fetchSettingsById, updateSettings } from '@/services/settingsService'
 import type { SettingsData } from '@/types/settings'
 
+const route = useRoute()
 const toast = useToast()
 
 // ------------------------------------------------------------------
 // 1. STATE MANAGEMENT
 // ------------------------------------------------------------------
 
-// 🟢 โครงสร้าง State ที่สมบูรณ์และสอดคล้องกับ SettingsData
 const websiteSettings = ref<SettingsData>({
-  id: 'global-settings-1',
+  id: '',
   hospitalNameTh: '',
   hospitalNameEn: '',
   address: '',
@@ -275,51 +289,118 @@ const websiteSettings = ref<SettingsData>({
   emailMain: '',
   facebookUrl: '',
   lineId: '',
-  youtubeUrl: '', // 🟢 เพิ่ม field ที่หายไป
-  twitterUrl: '', // 🟢 เพิ่ม field ที่หายไป
+  youtubeUrl: '',
+  twitterUrl: '',
   googleMapIframe: '',
   metaDescription: '',
   keywords: '',
+  isActive: false,
 })
 
-const loading = ref(true)
+const loading = ref(false)
 const isSaving = ref(false)
+const editMode = computed(() => !!route.query.id)
 
 // ------------------------------------------------------------------
 // 2. LIFECYCLE & DATA FETCHING
 // ------------------------------------------------------------------
 
-const fetchWebsiteSettings = async () => {
-  // 1. เริ่มโหลด (loading.value ถูกตั้งเป็น true ก่อนเข้า try/catch)
+const loadSettingData = async () => {
+  const id = route.query.id as string
+  if (!id) return
+
   loading.value = true
   try {
-    const data = await fetchSettings()
+    const data = await fetchSettingsById(id)
     websiteSettings.value = data
+    toast.success('โหลดข้อมูลสำเร็จ')
   } catch (e) {
-    toast.error('ไม่สามารถโหลดข้อมูลตั้งค่าเว็บไซต์ปัจจุบันได้')
-    console.error('Fetch settings failed:', e)
+    toast.error('ไม่สามารถโหลดข้อมูลได้')
+    console.error('Failed to load settings:', e)
   } finally {
-    // 🟢 2. ต้องตั้ง loading.value = false เสมอ ไม่ว่าจะสำเร็จหรือล้มเหลว
     loading.value = false
   }
 }
 
 // ------------------------------------------------------------------
-// 3. SAVE LOGIC
+// 3. VALIDATION
+// ------------------------------------------------------------------
+
+const validateForm = (): boolean => {
+  const settings = websiteSettings.value
+
+  // ตรวจสอบข้อมูลทั่วไป
+  if (!settings.hospitalNameTh?.trim()) {
+    toast.error('กรุณากรอกชื่อโรงพยาบาล (ภาษาไทย)')
+    return false
+  }
+  if (!settings.hospitalNameEn?.trim()) {
+    toast.error('กรุณากรอกชื่อโรงพยาบาล (ภาษาอังกฤษ)')
+    return false
+  }
+  if (!settings.address?.trim()) {
+    toast.error('กรุณากรอกที่อยู่โรงพยาบาล')
+    return false
+  }
+  if (!settings.zipCode?.trim()) {
+    toast.error('กรุณากรอกรหัสไปรษณีย์')
+    return false
+  }
+  if (!settings.province?.trim()) {
+    toast.error('กรุณากรอกจังหวัด')
+    return false
+  }
+
+  // ตรวจสอบข้อมูลการติดต่อ
+  if (!settings.telMain?.trim()) {
+    toast.error('กรุณากรอกเบอร์โทรศัพท์หลัก')
+    return false
+  }
+  if (!settings.fax?.trim()) {
+    toast.error('กรุณากรอกเบอร์โทรสาร (FAX)')
+    return false
+  }
+  if (!settings.emailMain?.trim()) {
+    toast.error('กรุณากรอกอีเมลหลัก')
+    return false
+  }
+
+  // ตรวจสอบรูปแบบอีเมล
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(settings.emailMain)) {
+    toast.error('รูปแบบอีเมลไม่ถูกต้อง')
+    return false
+  }
+
+  return true
+}
+
+// ------------------------------------------------------------------
+// 4. SAVE LOGIC
 // ------------------------------------------------------------------
 
 const saveWebsiteSettings = async () => {
+  // ตรวจสอบข้อมูลก่อนบันทึก
+  if (!validateForm()) {
+    return
+  }
+
   isSaving.value = true
   try {
+    // 💡 ฟังก์ชัน updateSettings จะใช้ PATCH /settings/1 ตามที่เรากำหนดใน Service
     await updateSettings(websiteSettings.value)
     toast.success('บันทึกการตั้งค่าเว็บไซต์สำเร็จ!')
   } catch (e: unknown) {
     console.error('Error saving website settings:', e)
-    toast.error('บันทึกการตั้งค่าล้มเหลว')
+    toast.error(editMode.value ? 'อัพเดทการตั้งค่าล้มเหลว' : 'สร้างการตั้งค่าล้มเหลว')
   } finally {
     isSaving.value = false
   }
 }
 
-onMounted(fetchWebsiteSettings)
+onMounted(() => {
+  if (editMode.value) {
+    loadSettingData()
+  }
+})
 </script>
