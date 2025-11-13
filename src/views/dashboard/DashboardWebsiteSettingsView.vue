@@ -387,9 +387,15 @@ const saveWebsiteSettings = async () => {
 
   isSaving.value = true
   try {
-    // 💡 ฟังก์ชัน updateSettings จะใช้ PATCH /settings/1 ตามที่เรากำหนดใน Service
-    await updateSettings(websiteSettings.value)
-    toast.success('บันทึกการตั้งค่าเว็บไซต์สำเร็จ!')
+    if (editMode.value && websiteSettings.value.id) {
+      // โหมดแก้ไข: ใช้ PATCH /settings/:id
+      await updateSettings(websiteSettings.value.id, websiteSettings.value)
+      toast.success('อัพเดทการตั้งค่าเว็บไซต์สำเร็จ!')
+    } else {
+      // โหมดสร้างใหม่: ใช้ POST /settings
+      await createSettings(websiteSettings.value)
+      toast.success('สร้างการตั้งค่าเว็บไซต์สำเร็จ!')
+    }
   } catch (e: unknown) {
     console.error('Error saving website settings:', e)
     toast.error(editMode.value ? 'อัพเดทการตั้งค่าล้มเหลว' : 'สร้างการตั้งค่าล้มเหลว')
