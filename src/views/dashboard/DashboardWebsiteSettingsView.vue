@@ -311,7 +311,6 @@ const fetchWebsiteSettings = async () => {
 const saveWebsiteSettings = async () => {
   isSaving.value = true
   try {
-    // 💡 ฟังก์ชัน updateSettings จะใช้ PATCH /settings/1 ตามที่เรากำหนดใน Service
     await updateSettings(websiteSettings.value)
     toast.success('บันทึกการตั้งค่าเว็บไซต์สำเร็จ!')
   } catch (e: unknown) {
