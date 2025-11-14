@@ -11,6 +11,7 @@
           <p v-if="settingsStore.settings?.address" class="text-gray-600 mb-2">
             <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i>
             {{ settingsStore.settings.address }}
+            {{ settingsStore.settings?.zipCode }}
           </p>
 
           <p v-if="settingsStore.settings?.telMain" class="text-gray-600 mb-2">
@@ -86,7 +87,6 @@ import { onMounted } from 'vue'
 
 const settingsStore = useSettingsStore()
 
-// 🟢 โหลดข้อมูลการตั้งค่าเมื่อ Component นี้ถูกสร้าง
 onMounted(() => {
   settingsStore.loadSettings()
 })

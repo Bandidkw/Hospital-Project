@@ -70,8 +70,8 @@ function buildAssetUrl(u?: string | null): string {
 
   // ไม่ encode URL เพราะ backend ต้องการชื่อไฟล์ตามที่เป็นอยู่
   const result = `${root}/${path}`
-  console.log('[buildAssetUrl] input:', u)
-  console.log('[buildAssetUrl] result:', result)
+  // console.log('[buildAssetUrl] input:', u)
+  // console.log('[buildAssetUrl] result:', result)
 
   return result
 }

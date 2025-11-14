@@ -1,132 +1,150 @@
 <template>
-  <div class="p-6 bg-white rounded-lg shadow-md">
-    <h2 class="text-3xl font-extrabold text-gray-900 mb-2 flex items-center">
-      <i class="fas fa-user-shield mr-3 text-indigo-600"></i> การจัดการบัญชีและสิทธิ์
-    </h2>
-    <p class="text-gray-600 mb-8">
-      ดูแล เพิ่ม แก้ไข และกำหนดบทบาท (Role) ให้กับผู้ใช้งานระบบทั้งหมด
-    </p>
+  <div class="p-6 bg-white rounded-lg shadow-xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+      <i class="fas fa-users-cog mr-3 text-indigo-600"></i>
+      จัดการผู้ใช้งาน
+    </h1>
 
-    <div class="mb-8 pt-4 border-t border-gray-100 text-right">
+    <div class="mb-6 flex justify-end">
       <button
         @click="showAddUserModal"
-        class="bg-indigo-600 text-white font-semibold px-6 py-2.5 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 transform hover:scale-105"
+        class="bg-green-600 text-white font-semibold px-6 py-2 rounded-lg shadow-md hover:bg-green-700 transition duration-300 transform hover:scale-105"
       >
-        <i class="fas fa-plus mr-2"></i> เพิ่มผู้ใช้งานใหม่
+        <i class="fas fa-plus-circle mr-2"></i> เพิ่มผู้ใช้งาน
       </button>
     </div>
 
     <UsersList
-      :users-list="usersList"
+      :users="usersList"
       :role-mapping="ROLE_MAPPING"
-      @edit-user="editUser"
-      @confirm-delete-user="confirmDeleteUser"
+      @edit="editUser"
+      @delete="confirmDeleteUser"
     />
 
-    <div
-      v-if="showFormModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
-    >
-      <div class="bg-white rounded-lg shadow-2xl w-full max-w-lg">
-        <div class="p-5 border-b border-gray-200 flex justify-between items-center">
-          <h3 class="text-xl font-bold text-gray-800">
-            {{ opduser ? 'แก้ไขผู้ใช้งาน' : 'เพิ่มผู้ใช้งานใหม่' }}
-          </h3>
-          <button @click="closeFormModal" class="text-gray-400 hover:text-gray-600">
-            <i class="fas fa-times text-xl"></i>
-          </button>
-        </div>
-
-        <div class="p-5">
-          <UserForm
-            :current-user="currentUser"
-            :opd-user="opduser"
-            @save-user="saveAndCloseModal"
-            @cancel-edit="closeFormModal"
-          />
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="showConfirmModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
-        <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบ</h3>
-        <p class="text-gray-700 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งานนี้?</p>
-        <div class="flex justify-center space-x-4">
-          <button
-            @click="deleteUser"
-            class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-300"
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="showFormModal"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
+          @click.self="closeFormModal"
+        >
+          <div
+            class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg transition-all transform duration-300 scale-100 opacity-100"
           >
-            <i class="fas fa-trash-alt mr-2"></i> ลบ
-          </button>
-          <button
-            @click="cancelDelete"
-            class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300"
-          >
-            <i class="fas fa-times mr-2"></i> ยกเลิก
-          </button>
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+              <h3 class="text-xl font-bold text-gray-800">
+                {{ opduser ? 'แก้ไขผู้ใช้งาน' : 'เพิ่มผู้ใช้งานใหม่' }}
+              </h3>
+              <button @click="closeFormModal" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+
+            <UserForm
+              :current-user="currentUser"
+              :opd-user="opduser"
+              @save-user="saveAndCloseModal"
+              @cancel-edit="closeFormModal"
+            />
+          </div>
         </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="showConfirmModal"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
+          @click.self="cancelDelete"
+        >
+          <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-sm text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+            <h3 class="text-lg font-bold mb-2">ยืนยันการลบผู้ใช้งาน</h3>
+            <p class="text-gray-600 mb-6">คุณแน่ใจหรือไม่ที่จะลบผู้ใช้งานคนนี้?</p>
+            <div class="flex justify-center space-x-4">
+              <button
+                @click="deleteUser"
+                class="bg-red-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-red-700 transition"
+              >
+                ยืนยันการลบ
+              </button>
+              <button
+                @click="cancelDelete"
+                class="bg-gray-300 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-400 transition"
+              >
+                ยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import UserForm from '@/components/users/UserForm.vue'
 import UsersList from '@/components/users/UsersList.vue'
+import type { User } from '@/types/user'
+
+// 💡 Import Service Layer ที่เชื่อมต่อ API จริง
+import {
+  fetchAllUsers,
+  createUser,
+  updateUserDetails,
+  deleteUserById,
+  fetchUserById,
+} from '@/services/userService'
 
 const toast = useToast()
 
-// 💡 ROLE MAPPING
-const ROLE_MAPPING: { [key: number]: string } = {
-  10: 'user',
-  20: 'opd',
-  50: 'admin',
-  90: 'superadmin',
+const ROLE_MAPPING: { [key: string]: string } = {
+  '20': 'OPD',
+  '50': 'Admin',
+  '90': 'Superadmin',
 }
 
-interface User {
-  id: number
-  username: string
-  password?: string
-  role: number
-  management?: string
-}
-
+// 💡 ใช้ User Interface ที่ Import มา
 const initialUser: User = {
-  id: 0,
+  id: '',
   username: '',
+  role: '20',
   management: '',
-  password: '',
-  role: 20, // ค่าเริ่มต้น OPD
 }
 
 // ------------------------------------------------------------------
-// 1. STATE MANAGEMENT (Mock Data)
+// STATE MANAGEMENT
 // ------------------------------------------------------------------
-const usersList = ref<User[]>([
-  { id: 1, username: 'superadmin', role: 90, management: 'all' },
-  { id: 2, username: 'admin_user', role: 50, management: 'limited' },
-  { id: 3, username: 'opd_staff', role: 20, management: '' },
-])
-
+const usersList = ref<User[]>([])
 const currentUser = ref<User>({ ...initialUser })
-const opduser = ref(false) // สถานะโหมดแก้ไข
-const userToDeleteId = ref<number | null>(null)
+const opduser = ref(false)
 const showConfirmModal = ref(false)
 const showFormModal = ref(false)
+const userToDeleteId = ref<string | null>(null) // ID เป็น string GUID
 
 // ------------------------------------------------------------------
-// 2. MODAL CONTROLS
+// DATA FETCHING
+// ------------------------------------------------------------------
+
+const fetchUsers = async () => {
+  try {
+    usersList.value = await fetchAllUsers()
+  } catch (error) {
+    toast.error('ไม่สามารถดึงข้อมูลผู้ใช้งานได้')
+    console.error(error)
+  }
+}
+
+// ------------------------------------------------------------------
+// MODAL & FORM ACTIONS
 // ------------------------------------------------------------------
 
 const showAddUserModal = () => {
-  resetForm()
+  currentUser.value = { ...initialUser }
+  opduser.value = false
   showFormModal.value = true
 }
 
@@ -135,28 +153,35 @@ const closeFormModal = () => {
   resetForm()
 }
 
-// ------------------------------------------------------------------
-// 3. FORM ACTIONS (Mock Logic)
-// ------------------------------------------------------------------
+const editUser = async (user: User) => {
+  try {
+    // 💡 ดึงข้อมูลผู้ใช้งานล่าสุดจาก API ด้วย ID
+    const fetchedUser = await fetchUserById(user.id)
 
-const saveUser = (user: User) => {
-  // ในการทำงานจริง Logic นี้ควรเรียกใช้ API Service
-  if (opduser.value) {
-    // โหมดแก้ไข
-    const index = usersList.value.findIndex((u) => u.id === user.id)
-    if (index !== -1) {
-      // ✅ แก้ไขปัญหา ESLint โดยใช้ _password และปิดกฎ no-unused-vars
+    currentUser.value = { ...fetchedUser }
+    opduser.value = true
+    showFormModal.value = true
+  } catch (error) {
+    toast.error('ไม่สามารถโหลดข้อมูลผู้ใช้งานเพื่อแก้ไขได้')
+    console.error(error)
+  }
+}
+
+const saveUser = async (user: User) => {
+  try {
+    if (opduser.value) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _password, ...rest } = user
-
-      usersList.value[index] = { ...usersList.value[index], ...rest }
+      const { id, username: _username, password, ...dataToUpdate } = user
+      await updateUserDetails(id, dataToUpdate)
+      toast.success('แก้ไขข้อมูลผู้ใช้งานสำเร็จ!')
+    } else {
+      await createUser(user)
+      toast.success('เพิ่มผู้ใช้งานใหม่สำเร็จ!')
     }
-    toast.success('แก้ไขข้อมูลผู้ใช้งานสำเร็จ!')
-  } else {
-    // โหมดสร้างใหม่
-    const newId = usersList.value.length > 0 ? Math.max(...usersList.value.map((u) => u.id)) + 1 : 1
-    usersList.value.push({ ...user, id: newId })
-    toast.success('เพิ่มผู้ใช้งานใหม่สำเร็จ!')
+    await fetchUsers()
+  } catch (error) {
+    toast.error('บันทึกข้อมูลไม่สำเร็จ')
+    console.error(error)
   }
 }
 
@@ -165,37 +190,36 @@ const saveAndCloseModal = (user: User) => {
   closeFormModal()
 }
 
-const editUser = (user: User) => {
-  currentUser.value = { ...user, password: '' }
-  opduser.value = true
-  showFormModal.value = true
-}
-
 // ------------------------------------------------------------------
-// 4. DELETE ACTIONS (ยังคงเดิม)
+// DELETE ACTIONS
 // ------------------------------------------------------------------
 
-const confirmDeleteUser = (id: number) => {
+const confirmDeleteUser = (id: string) => {
   userToDeleteId.value = id
   showConfirmModal.value = true
-}
-
-const deleteUser = () => {
-  if (userToDeleteId.value !== null) {
-    usersList.value = usersList.value.filter((u) => u.id !== userToDeleteId.value)
-    toast.success('ลบผู้ใช้งานสำเร็จ!')
-  }
-  resetDeleteConfirm()
 }
 
 const cancelDelete = () => {
   resetDeleteConfirm()
 }
 
-// ------------------------------------------------------------------
-// 5. UTILITY (ยังคงเดิม)
-// ------------------------------------------------------------------
+const deleteUser = async () => {
+  if (userToDeleteId.value !== null) {
+    try {
+      await deleteUserById(userToDeleteId.value)
+      toast.success('ลบผู้ใช้งานสำเร็จ!')
+      await fetchUsers()
+    } catch (error) {
+      toast.error('ลบผู้ใช้งานไม่สำเร็จ')
+      console.error(error)
+    }
+  }
+  resetDeleteConfirm()
+}
 
+// ------------------------------------------------------------------
+// UTILITY & LIFECYCLE
+// ------------------------------------------------------------------
 const resetForm = () => {
   currentUser.value = { ...initialUser }
   opduser.value = false
@@ -205,4 +229,19 @@ const resetDeleteConfirm = () => {
   userToDeleteId.value = null
   showConfirmModal.value = false
 }
+
+onMounted(() => {
+  fetchUsers()
+})
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
