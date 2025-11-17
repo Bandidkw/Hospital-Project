@@ -68,6 +68,26 @@ const MOCK_ADMIN_DATA: PersonnelItem[] = [
 ]
 
 // ----------------------------------------------------------------------
+// 🟢 Helper Function: Build Asset URL
+// ----------------------------------------------------------------------
+
+function buildAssetUrl(u?: string | null): string {
+  if (!u) return ''
+  if (/^https?:\/\//i.test(u)) return u
+
+  const fromEnv = (import.meta.env.VITE_API_BASE_URL || '').trim()
+  const fromAxios = (apiService.defaults.baseURL || '').trim()
+  let base = fromEnv || fromAxios
+  if (!base && typeof window !== 'undefined') base = window.location.origin
+
+  const root = base.replace(/\/+$/, '')
+  const path = String(u).replace(/^\/+/, '')
+
+  // ไม่ encode URL เพราะ backend ต้องการชื่อไฟล์ตามที่เป็นอยู่
+  return `${root}/${path}`
+}
+
+// ----------------------------------------------------------------------
 // 🟢 Helper Function: Map Raw Data to PersonnelItem
 // ----------------------------------------------------------------------
 
@@ -80,7 +100,7 @@ function mapRawToPersonnel(rawList: RawPersonnelItem[]): PersonnelItem[] {
       name: item.name,
       position: item.position || 'ไม่ระบุตำแหน่ง',
       specialty: item.specialty || undefined,
-      imageUrl: item.imageUrl || undefined,
+      imageUrl: buildAssetUrl(item.imageUrl),
       tel: item.tel || undefined,
       isDirector: isDirectorValue,
     }
