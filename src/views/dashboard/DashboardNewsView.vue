@@ -1,3 +1,4 @@
+<!-- src/views/dashboard/DashboardNewsView.vue -->
 <template>
   <div class="p-6 bg-white rounded-lg shadow-md">
     <header class="mb-6">

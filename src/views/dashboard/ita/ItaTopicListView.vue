@@ -257,8 +257,12 @@ const fetchTopicsForYear = async () => {
 
     // ✅ จัดเรียงหัวข้อ MOIT ตามเลขท้าย
     topics.value = (res.moits ?? []).sort((a, b) => {
-      const numA = parseInt(a.moit_name.replace(/\D/g, ''), 10) || 0
-      const numB = parseInt(b.moit_name.replace(/\D/g, ''), 10) || 0
+      const moitNameA = a.moit_name ?? ''
+      const moitNameB = b.moit_name ?? ''
+
+      const numA = parseInt(moitNameA.replace(/\D/g, ''), 10) || 0
+      const numB = parseInt(moitNameB.replace(/\D/g, ''), 10) || 0
+
       return numA - numB
     })
   } catch (e: unknown) {
