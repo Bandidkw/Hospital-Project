@@ -1,12 +1,21 @@
-<!-- src/views/dashboard/DashboardNewsView.vue -->
 <template>
   <div class="p-6 bg-white rounded-lg shadow-md">
-    <header class="mb-6">
-      <h2 class="text-2xl font-bold text-gray-800 mb-2 flex items-center">
-        <i class="fas fa-newspaper mr-3 text-blue-500"></i>
-        จัดการข่าวสาร (News Management)
-      </h2>
-      <p class="text-gray-600">เพิ่ม / แก้ไข / สลับสถานะเผยแพร่ข่าวสาร</p>
+    <header class="mb-6 flex justify-between items-center">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2 flex items-center">
+          <i class="fas fa-newspaper mr-3 text-blue-500"></i>
+          จัดการข่าวสาร (News Management)
+        </h2>
+        <p class="text-gray-600">เพิ่ม / แก้ไข / สลับสถานะเผยแพร่ข่าวสาร</p>
+      </div>
+      <button
+        type="button"
+        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center shadow-md disabled:opacity-50"
+        @click="openCreateModal"
+        :disabled="loading"
+      >
+        <i class="fas fa-plus mr-2"></i> เพิ่มข่าวสารใหม่
+      </button>
     </header>
 
     <div
@@ -24,227 +33,6 @@
         ลองใหม่
       </button>
     </div>
-
-    <section class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-semibold text-gray-800">เพิ่มข่าวสารใหม่</h3>
-        <button
-          type="button"
-          class="text-sm px-3 py-1.5 rounded-md border border-gray-300 hover:bg-white transition"
-          @click="resetForm"
-          :disabled="saving"
-          title="ล้างฟอร์ม"
-        >
-          <i class="fas fa-undo-alt mr-2"></i> เคลียร์
-        </button>
-      </div>
-
-      <form @submit.prevent="onSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-4">
-          <div>
-            <label for="newsTitle" class="block text-sm font-medium text-gray-700"
-              >หัวข้อข่าวสาร <span class="text-red-500">*</span></label
-            >
-            <div class="mt-1 relative">
-              <input
-                type="text"
-                id="newsTitle"
-                v-model.trim="currentNews.title"
-                @blur="touch('title')"
-                :class="inputClass('title')"
-                placeholder="เช่น ประกาศวันหยุดราชการ"
-                maxlength="120"
-                required
-              />
-              <div class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-                {{ currentNews.title.length }}/120
-              </div>
-            </div>
-            <p v-if="touched.title && errors.title" class="mt-1 text-sm text-red-600">
-              {{ errors.title }}
-            </p>
-          </div>
-          <div>
-            <label for="newsCategory" class="block text-sm font-medium text-gray-700"
-              >หมวดหมู่ข่าวสาร <span class="text-red-500">*</span></label
-            >
-            <select
-              id="newsCategory"
-              v-model="currentNews.category"
-              @change="touch('category')"
-              required
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option disabled value="">-- กรุณาเลือกหมวดหมู่ --</option>
-              <option v-for="cat in CATEGORY_LIST" :key="cat.key" :value="cat.key">
-                {{ cat.label }}
-              </option>
-            </select>
-            <p v-if="touched.category && errors.category" class="mt-1 text-sm text-red-600">
-              {{ errors.category }}
-            </p>
-          </div>
-          <div>
-            <label for="newsContent" class="block text-sm font-medium text-gray-700"
-              >เนื้อหาข่าวสาร <span class="text-red-500">*</span></label
-            >
-            <textarea
-              id="newsContent"
-              v-model.trim="currentNews.content"
-              @blur="touch('content')"
-              :class="textareaClass('content')"
-              rows="6"
-              placeholder="เนื้อหาข่าวโดยย่อ…"
-              maxlength="2000"
-              required
-            ></textarea>
-            <div class="flex justify-between mt-1">
-              <p v-if="touched.content && errors.content" class="text-sm text-red-600">
-                {{ errors.content }}
-              </p>
-              <span class="text-xs text-gray-400">{{ currentNews.content.length }}/2000</span>
-            </div>
-          </div>
-          <div>
-            <label for="newsExcerpt" class="block text-sm font-medium text-gray-700"
-              >คำโปรย (ถ้าเว้นว่าง ระบบจะสร้างให้อัตโนมัติ)</label
-            >
-            <input
-              id="newsExcerpt"
-              type="text"
-              v-model.trim="currentNews.excerpt"
-              :class="inputBase"
-              placeholder="ข้อความสั้น ๆ สรุปข่าว"
-              maxlength="200"
-            />
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label for="newsDate" class="block text-sm font-medium text-gray-700"
-                >วันที่เผยแพร่ <span class="text-red-500">*</span></label
-              >
-              <input
-                type="date"
-                id="newsDate"
-                v-model="currentNews.date"
-                @change="touch('date')"
-                :class="inputClass('date')"
-                :min="minDate"
-                required
-              />
-              <p v-if="touched.date && errors.date" class="mt-1 text-sm text-red-600">
-                {{ errors.date }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">สถานะการเผยแพร่</label>
-              <button
-                type="button"
-                class="inline-flex items-center px-3 py-2 rounded-md border transition select-none"
-                :class="
-                  currentNews.isPublished
-                    ? 'bg-green-50 border-green-300 text-green-800'
-                    : 'bg-gray-50 border-gray-300 text-gray-700'
-                "
-                @click="currentNews.isPublished = !currentNews.isPublished"
-              >
-                <i
-                  class="fas mr-2"
-                  :class="currentNews.isPublished ? 'fa-toggle-on' : 'fa-toggle-off'"
-                ></i>
-                {{ currentNews.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
-              </button>
-            </div>
-          </div>
-          <div v-if="showImageUpload">
-            <label for="newsImageFile" class="block text-sm font-medium text-gray-700"
-              >รูปภาพประกอบ</label
-            >
-            <input
-              id="newsImageFile"
-              type="file"
-              accept="image/*"
-              @change="onFileChange"
-              class="mt-1 block w-full text-sm"
-            />
-          </div>
-          <div v-if="showPdfUpload">
-            <label for="newsPdfFile" class="block text-sm font-medium text-gray-700"
-              >ไฟล์เอกสารแนบ (PDF)</label
-            >
-            <input
-              id="newsPdfFile"
-              type="file"
-              accept=".pdf, application/pdf"
-              @change="onPdfFileChange"
-              class="mt-1 block w-full text-sm"
-            />
-            <p v-if="pdfFile" class="mt-1 text-xs text-gray-500">
-              ไฟล์ที่เลือก: {{ pdfFile.name }}
-            </p>
-          </div>
-          <div class="flex justify-end gap-3 pt-2">
-            <button
-              type="submit"
-              class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
-              :disabled="!isValid || saving"
-            >
-              <i class="fas fa-save mr-2"></i>เพิ่มข่าวสาร
-            </button>
-            <button
-              v-if="editingNews"
-              type="button"
-              @click="cancelEdit"
-              class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition"
-            >
-              <i class="fas fa-times mr-2"></i> ยกเลิก
-            </button>
-          </div>
-        </div>
-        <aside class="lg:col-span-1">
-          <div class="bg-white border rounded-lg p-4 shadow-sm">
-            <h4 class="font-semibold text-gray-800 mb-3">พรีวิว</h4>
-            <div class="space-y-2">
-              <div
-                class="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
-              >
-                <img
-                  v-if="previewSrc"
-                  :src="previewSrc"
-                  :alt="currentNews.title || 'รูปภาพพรีวิวข่าว'"
-                  class="w-full h-full object-cover"
-                  @error="onImgError"
-                />
-                <div v-else class="text-gray-400 text-sm flex flex-col items-center">
-                  <i class="far fa-image text-3xl mb-2"></i> ไม่มีรูปภาพ
-                </div>
-              </div>
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-gray-500">{{ prettyDate(currentNews.date) }}</span>
-                  <span
-                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
-                    :class="
-                      currentNews.isPublished
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-200 text-gray-700'
-                    "
-                  >
-                    {{ currentNews.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
-                  </span>
-                </div>
-                <h5 class="font-semibold mt-1 text-gray-800 line-clamp-2">
-                  {{ currentNews.title || 'หัวข้อข่าว…' }}
-                </h5>
-                <p class="text-gray-600 text-sm mt-1 line-clamp-3">
-                  {{ currentNews.content || 'พิมพ์เนื้อหาข่าวสั้น ๆ เพื่อพรีวิวได้ทันที…' }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </form>
-    </section>
 
     <section class="card bg-white p-6 rounded-lg shadow-md">
       <div class="flex items-center justify-between mb-5">
@@ -309,21 +97,18 @@
                     class="w-10 h-10 rounded object-cover border"
                     @error="onImgError"
                   />
-
                   <div
                     v-else-if="news.pdfUrl"
                     class="w-10 h-10 flex items-center justify-center bg-red-50 rounded text-red-600 border border-red-200"
                   >
                     <i class="fas fa-file-pdf text-xl"></i>
                   </div>
-
                   <div
                     v-else
                     class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded text-gray-400 border"
                   >
                     <i class="far fa-image"></i>
                   </div>
-
                   <span class="font-medium ...">{{ news.title }}</span>
                 </div>
               </td>
@@ -403,6 +188,38 @@
         </div>
       </div>
     </section>
+
+    <div
+      v-if="showCreateModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="createNewsTitle"
+      @keydown.esc="closeCreateModal"
+      @click.self="closeCreateModal"
+    >
+      <div
+        class="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 animate-[fadeIn_.18s_ease-out]"
+      >
+        <header class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b px-6 py-4">
+          <div class="flex items-center justify-between">
+            <h3 id="createNewsTitle" class="text-xl font-bold text-gray-900 truncate">
+              เพิ่มข่าวสารใหม่
+            </h3>
+            <button
+              class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              @click="closeCreateModal"
+              aria-label="ปิดหน้าต่างสร้างข่าวสาร"
+            >
+              <i class="fas fa-times text-gray-700"></i>
+            </button>
+          </div>
+        </header>
+        <div class="max-h-[75vh] overflow-y-auto px-6 py-6">
+          <NewsCreateForm @newsSaved="handleNewsSaved" />
+        </div>
+      </div>
+    </div>
 
     <div
       v-if="showConfirmModal"
@@ -700,16 +517,16 @@ import { useToast } from 'vue-toastification'
 import { isAxiosError } from 'axios'
 import {
   getAllNews,
-  createNews,
   updateNews,
   togglePublish,
   deleteNews as apiDeleteNews,
   type NewsItem as ServiceNewsItem,
 } from '@/services/newsService'
 import { CATEGORY_LIST, attachCategory } from '@/features/news/categories'
+import NewsCreateForm from '@/components/news/NewsCreateForm.vue' // <-- Import Component เดิม
 
 /* =========================================================================
- * Types
+ * Types (คงไว้)
  * ========================================================================= */
 type NewsItem = ServiceNewsItem
 type NewsForm = {
@@ -728,7 +545,7 @@ type ApiErrorResponse = {
 }
 
 /* =========================================================================
- * Constants & Utils
+ * Constants & Utils (คงไว้)
  * ========================================================================= */
 const toast = useToast()
 const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
@@ -776,32 +593,16 @@ function sortByUpdatedDesc<T extends { updatedAt?: string; createdAt?: string; d
 }
 
 /* =========================================================================
- * Reactive State
+ * Reactive State (ปรับเพิ่ม showCreateModal)
  * ========================================================================= */
 const newsList = ref<NewsItem[]>([])
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
-const editingNews = ref(false)
-const saving = ref(false)
 
-// Create Form State
-const currentNews = ref<NewsForm>({
-  id: '',
-  title: '',
-  content: '',
-  category: '',
-  excerpt: '',
-  date: new Date().toISOString().split('T')[0],
-  imageUrl: '',
-  pdfUrl: '',
-  isPublished: false,
-})
-const imageFile = ref<File | null>(null)
-const pdfFile = ref<File | null>(null)
-const previewUrl = ref<string | null>(null)
-let lastObjectUrl: string | null = null
+// ADDED: Create Modal State
+const showCreateModal = ref(false)
 
-// Edit Modal State
+// Edit Modal State (คงไว้)
 const showEditModal = ref(false)
 const savingEdit = ref(false)
 const editForm = ref<NewsForm>({
@@ -820,37 +621,25 @@ const editPdfFile = ref<File | null>(null)
 const editPreviewUrl = ref<string | null>(null)
 let editLastObjectUrl: string | null = null
 
-// Delete Modal State
+// Delete Modal State (คงไว้)
 const newsToDeleteId = ref<string | null>(null)
 const showConfirmModal = ref(false)
 
 /* =========================================================================
- * Computed Properties
+ * Computed Properties (คงไว้)
  * ========================================================================= */
-const isValid = computed(() => {
-  const v = currentNews.value
-  return !!(v.title.trim() && v.content.trim() && v.date && v.category)
-})
-const previewSrc = computed(() => {
-  if (previewUrl.value) return previewUrl.value
-  return currentNews.value.imageUrl ? absoluteImage(currentNews.value.imageUrl) : ''
-})
 const editPreviewSrc = computed(() => {
   if (editPreviewUrl.value) return editPreviewUrl.value
   return editForm.value.imageUrl ? absoluteImage(editForm.value.imageUrl) : ''
 })
 
-// Conditional Upload Logic
-const showPdfUpload = computed(() => PDF_CATEGORIES.includes(currentNews.value.category))
-const showImageUpload = computed(
-  () => IMAGE_CATEGORIES.includes(currentNews.value.category) || !currentNews.value.category,
-)
+// Conditional Upload Logic for Edit Modal
 const showEditPdfUpload = computed(() => PDF_CATEGORIES.includes(editForm.value.category))
 const showEditImageUpload = computed(
   () => IMAGE_CATEGORIES.includes(editForm.value.category) || !editForm.value.category,
 )
 
-// Table Pagination & Sorting
+// Table Pagination & Sorting (คงไว้)
 const query = ref('')
 const sortKey = ref<'updated' | 'date' | 'title' | 'status'>('updated')
 const sortAsc = ref(false)
@@ -876,19 +665,12 @@ const pagedSortedNews = computed(() => {
 })
 
 /* =========================================================================
- * Watchers
+ * Watchers (คงไว้)
  * ========================================================================= */
 watch([query, sortKey, sortAsc], () => {
   page.value = 1
 })
 
-watch(
-  () => currentNews.value.category,
-  (newCategory) => {
-    if (PDF_CATEGORIES.includes(newCategory)) imageFile.value = null
-    if (IMAGE_CATEGORIES.includes(newCategory)) pdfFile.value = null
-  },
-)
 watch(
   () => editForm.value.category,
   (newCategory) => {
@@ -898,36 +680,21 @@ watch(
 )
 
 /* =========================================================================
- * Validation
+ * Methods (ปรับเพิ่ม Create Modal Handlers)
  * ========================================================================= */
-const errors = ref<Record<'title' | 'content' | 'date' | 'category', string | null>>({
-  title: null,
-  content: null,
-  date: null,
-  category: null,
-})
-const touched = ref<Record<'title' | 'content' | 'date' | 'category', boolean>>({
-  title: false,
-  content: false,
-  date: false,
-  category: false,
-})
-function validateField(field: keyof typeof errors.value) {
-  const v = currentNews.value
-  if (field === 'title') errors.value.title = !v.title.trim() ? 'กรุณากรอกหัวข้อ' : null
-  else if (field === 'content') errors.value.content = !v.content.trim() ? 'กรุณากรอกเนื้อหา' : null
-  else if (field === 'date') errors.value.date = !v.date ? 'กรุณาเลือกวันที่' : null
-  else if (field === 'category') errors.value.category = !v.category ? 'กรุณาเลือกหมวดหมู่' : null
+// ADDED: Create Modal Handlers
+function openCreateModal() {
+  showCreateModal.value = true
 }
-function touch(field: keyof typeof errors.value) {
-  touched.value[field] = true
-  validateField(field)
+function closeCreateModal() {
+  showCreateModal.value = false
+}
+function handleNewsSaved() {
+  fetchNews() // Reloads the news list
+  closeCreateModal() // Closes the modal after successful creation (reset is handled inside NewsCreateForm)
 }
 
-/* =========================================================================
- * Methods
- * ========================================================================= */
-// File Handlers
+// File Handlers (คงไว้)
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement
   if (!el) return
@@ -937,24 +704,6 @@ function onImgError(e: Event) {
       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#4b5563">Image unavailable</text></svg>`,
     )
   if (el.src !== fallback) el.src = fallback
-}
-function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0] ?? null
-  imageFile.value = file
-  if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl)
-  if (file) {
-    const url = URL.createObjectURL(file)
-    previewUrl.value = url
-    lastObjectUrl = url
-    currentNews.value.imageUrl = ''
-  } else {
-    previewUrl.value = null
-  }
-}
-function onPdfFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  pdfFile.value = input.files?.[0] ?? null
 }
 function onEditFileChange(e: Event) {
   const input = e.target as HTMLInputElement
@@ -974,7 +723,7 @@ function onEditPdfFileChange(e: Event) {
   editPdfFile.value = input.files?.[0] ?? null
 }
 
-// CRUD Operations
+// CRUD Operations (คงไว้)
 async function fetchNews() {
   loading.value = true
   errorMsg.value = null
@@ -1004,51 +753,8 @@ function toForm(n: NewsItem): NewsForm {
     isPublished: n.isPublished,
   }
 }
-async function onSubmit() {
-  Object.keys(errors.value).forEach((f) => touch(f as keyof typeof errors.value))
-  if (!isValid.value || saving.value) return
-  saving.value = true
-  try {
-    const base = {
-      title: currentNews.value.title.trim(),
-      content: currentNews.value.content.trim(),
-      category: currentNews.value.category,
-      excerpt: (
-        currentNews.value.excerpt?.trim() ||
-        makeExcerpt(currentNews.value.title, currentNews.value.content)
-      ).slice(0, 200),
-      date: currentNews.value.date,
-    }
-    const created = await createNews({ ...base, image: imageFile.value, pdf: pdfFile.value })
 
-    if (currentNews.value.isPublished) {
-      try {
-        const published = await togglePublish(created.id, true)
-        Object.assign(created, {
-          isPublished: published.isPublished,
-          updatedAt: published.updatedAt ?? created.updatedAt,
-        })
-        toast.success('เผยแพร่ข่าวแล้ว')
-      } catch {
-        toast.error('สร้างสำเร็จ แต่เผยแพร่ไม่สำเร็จ')
-      }
-    } else {
-      toast.success('เพิ่มข่าวสารใหม่สำเร็จ!')
-    }
-    newsList.value.unshift(created)
-    resetForm()
-  } catch (e) {
-    if (isAxiosError<ApiErrorResponse>(e)) {
-      toast.error(e.response?.data?.message ?? 'บันทึกข่าวสารไม่สำเร็จ')
-    } else {
-      toast.error('บันทึกข่าวสารไม่สำเร็จ')
-    }
-  } finally {
-    saving.value = false
-  }
-}
-
-// Modal Handlers
+// Edit Modal Handlers (คงไว้)
 function openEditModal(n: NewsItem) {
   if (editLastObjectUrl) URL.revokeObjectURL(editLastObjectUrl)
   editPreviewUrl.value = null
@@ -1063,13 +769,6 @@ function closeEditModal() {
   editPreviewUrl.value = null
   editImageFile.value = null
   editPdfFile.value = null
-}
-function cancelEdit() {
-  if (showEditModal.value) {
-    closeEditModal()
-  } else {
-    resetForm()
-  }
 }
 async function submitEdit() {
   if (savingEdit.value) return
@@ -1158,34 +857,7 @@ async function togglePublishStatus(news: NewsItem) {
   }
 }
 
-// Resets & UI Helpers
-function resetForm() {
-  if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl)
-  previewUrl.value = null
-  currentNews.value = {
-    id: '',
-    title: '',
-    content: '',
-    category: '',
-    excerpt: '',
-    date: new Date().toISOString().split('T')[0],
-    imageUrl: '',
-    pdfUrl: '',
-    isPublished: false,
-  }
-  imageFile.value = null
-  pdfFile.value = null
-  editingNews.value = false
-
-  // ✨ แก้ไขส่วนนี้ให้ Type-Safe ✨
-  Object.keys(touched.value).forEach((key) => {
-    touched.value[key as keyof typeof touched.value] = false
-  })
-  Object.keys(errors.value).forEach((key) => {
-    errors.value[key as keyof typeof errors.value] = null
-  })
-}
-
+// Resets & UI Helpers (คงไว้)
 function resetDeleteConfirm() {
   newsToDeleteId.value = null
   showConfirmModal.value = false
@@ -1193,22 +865,13 @@ function resetDeleteConfirm() {
 function cancelDelete() {
   resetDeleteConfirm()
 }
-const inputBase =
-  'mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500'
-function inputClass(field: 'title' | 'date') {
-  const hasError = touched.value[field] && !!errors.value[field]
-  return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
-}
-function textareaClass(field: 'content') {
-  const hasError = touched.value[field] && !!errors.value[field]
-  return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
-}
 
-// Lifecycle Hooks
+// Lifecycle Hooks (คงไว้)
 onMounted(fetchNews)
 </script>
 
 <style scoped>
+/* Styles (คงไว้) */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
