@@ -71,19 +71,19 @@
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
               <button
                 @click="editTopic(topic.id)"
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700"
+                class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 transition duration-150"
               >
                 <i class="fas fa-folder-open mr-2"></i>จัดการเอกสาร
               </button>
               <button
                 @click="openEditTopicModal(topic)"
-                class="inline-flex items-center px-4 py-2 bg-yellow-400 text-gray-800 text-sm font-medium rounded-md hover:bg-yellow-500"
+                class="inline-flex items-center px-4 py-2 bg-yellow-400 text-gray-800 text-sm font-medium rounded-md hover:bg-yellow-500 transition duration-150"
               >
                 <i class="fas fa-pencil-alt mr-2"></i>แก้ไข
               </button>
               <button
                 @click="openDeleteConfirmModal(topic)"
-                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700"
+                class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 transition duration-150"
               >
                 <i class="fas fa-trash-alt mr-2"></i>ลบ
               </button>
@@ -93,130 +93,52 @@
       </table>
     </div>
 
-    <div
-      v-if="isModalOpen"
-      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">
-          {{ isEditing ? 'แก้ไขหัวข้อ' : `สร้างหัวข้อใหม่สำหรับปี ${yearData?.year}` }}
-        </h2>
-        <form @submit.prevent="handleFormSubmit" class="space-y-6">
-          <div v-if="!isEditing">
-            <label for="moit-template" class="block text-gray-700 font-bold mb-2"
-              >เลือกแม่แบบหัวข้อ (MOIT):</label
-            >
-            <select
-              id="moit-template"
-              v-model="formData.templateValue"
-              class="shadow border rounded-lg w-full py-3 px-4 text-gray-700"
-              required
-            >
-              <option disabled value="">-- กรุณาเลือกหัวข้อ --</option>
-              <option
-                v-for="template in moitTemplates"
-                :key="template.value"
-                :value="template.value"
-              >
-                {{ template.value }}: {{ template.text.substring(0, 100) }}...
-              </option>
-            </select>
-          </div>
-          <div v-else class="space-y-4">
-            <div>
-              <label for="moit_name" class="block text-gray-700 font-bold mb-2">MOIT:</label>
-              <input
-                id="moit_name"
-                type="text"
-                v-model="formData.moit_name"
-                class="shadow rounded-lg w-full py-3 px-4 text-gray-700"
-                required
-              />
-            </div>
-            <div>
-              <label for="title" class="block text-gray-700 font-bold mb-2">ชื่อหัวข้อ:</label>
-              <input
-                id="title"
-                type="text"
-                v-model="formData.title"
-                class="shadow rounded-lg w-full py-3 px-4 text-gray-700"
-                required
-              />
-            </div>
-            <div>
-              <label for="description" class="block text-gray-700 font-bold mb-2">คำอธิบาย:</label>
-              <textarea
-                id="description"
-                v-model="formData.description"
-                rows="3"
-                class="shadow rounded-lg w-full py-3 px-4 text-gray-700"
-              ></textarea>
-            </div>
-          </div>
-          <div class="flex justify-end space-x-4 pt-4 border-t">
-            <button
-              type="button"
-              @click="closeModal"
-              class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full"
-            >
-              บันทึก
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ItaTopicFormModal
+      :isOpen="isModalOpen"
+      :isEditing="isEditing"
+      :year="Number(yearData?.year ?? 0)"
+      :formData="formData"
+      :moitTemplates="moitTemplates"
+      @close="closeModal"
+      @save="handleFormSubmit"
+    />
 
-    <div
-      v-if="isDeleteModalOpen"
-      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <h3 class="text-2xl font-bold text-red-700 mb-4 flex items-center">
-          <i class="fas fa-exclamation-triangle mr-3"></i>ยืนยันการลบ
-        </h3>
-        <p class="text-gray-700 mb-6 text-lg">
-          คุณแน่ใจหรือไม่ว่าต้องการลบหัวข้อ <br />
-          <strong class="text-black">"{{ topicToDelete?.title }}"</strong>?
-          <br />
-          <span class="text-sm text-red-600">การกระทำนี้ไม่สามารถกู้คืนได้</span>
-        </p>
-        <div class="flex justify-end space-x-4">
-          <button
-            @click="closeDeleteConfirmModal"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-5 rounded-full"
-          >
-            ยกเลิก
-          </button>
-          <button
-            @click="handleConfirmDelete"
-            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-5 rounded-full"
-          >
-            ยืนยันการลบ
-          </button>
-        </div>
-      </div>
-    </div>
+    <DeleteConfirmModal
+      :isOpen="isDeleteModalOpen"
+      :itemTitle="topicToDelete?.title ?? 'รายการนี้'"
+      @close="closeDeleteConfirmModal"
+      @confirm="handleConfirmDelete"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+// สมมติว่า itaService ถูก Import ถูกต้อง
 import { itaService } from '@/services/itaService'
+// สมมติว่า Type ถูก Import ถูกต้อง
 import type { YearIta, Moit } from '@/types/ita'
 import { useToast } from 'vue-toastification'
+
+// 💡 Import Components ใหม่
+import ItaTopicFormModal from '@/components/ita/ItaTopicFormModal.vue'
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
-// ✅ อ่าน yearId ให้ปลอดภัย (รองรับทั้ง :yearId และ :id)
+// 💡 [Interface สำหรับ Form Data]
+interface TopicFormData {
+  id: string
+  templateValue: string
+  moit_name: string
+  title: string
+  description: string
+}
+
+// ✅ อ่าน yearId ให้ปลอดภัย
 const yearId = computed(() => (route.params.yearId ?? route.params.id) as string | undefined)
 
 const yearData = ref<YearIta | null>(null)
@@ -227,7 +149,7 @@ const error = ref<string | null>(null)
 // --- State ของ Modal สร้าง/แก้ไข ---
 const isModalOpen = ref(false)
 const isEditing = ref(false)
-const formData = ref({
+const formData = ref<TopicFormData>({
   id: '',
   templateValue: '',
   moit_name: '',
@@ -239,7 +161,7 @@ const formData = ref({
 const isDeleteModalOpen = ref(false)
 const topicToDelete = ref<Moit | null>(null)
 
-// "แม่แบบ" ของหัวข้อ MOIT ทั้งหมดสำหรับให้ User เลือก
+// "แม่แบบ" ของหัวข้อ MOIT ทั้งหมด (ย้ายมาอยู่ที่นี่เพื่อให้ Parent ส่งให้ Child)
 const moitTemplates = [
   {
     value: 'MOIT 1',
@@ -267,10 +189,7 @@ const moitTemplates = [
     value: 'MOIT 8',
     text: 'หน่วยงานมีการอบรมให้ความรู้แก่เจ้าหน้าที่ภายในหน่วยงานเกี่ยวกับการเสริมสร้างและพัฒนาทางด้านจริยธรรม และการรักษาวินัยรวมทั้งการป้องกันมิให้กระทำผิดวินัย',
   },
-  {
-    value: 'MOIT 9',
-    text: 'หน่วยงานมีแนวปฏิบัติการจัดการเรื่องร้องเรียน และช่องทางการร้องเรียน',
-  },
+  { value: 'MOIT 9', text: 'หน่วยงานมีแนวปฏิบัติการจัดการเรื่องร้องเรียน และช่องทางการร้องเรียน' },
   {
     value: 'MOIT 10',
     text: 'หน่วยงานมีสรุปผลการดำเนินงานเรื่องรัองเรียนการปฏิบัติงานหรือการให้บริการของเจ้าหน้าที่ภายในหน่วยงาน และเรื่องร้องเรียนการทุจริตและประพฤติมิชอบ',
@@ -322,6 +241,9 @@ const moitTemplates = [
   },
 ]
 
+// ------------------------------------------------------------------
+// READ (Fetch Data)
+// ------------------------------------------------------------------
 const fetchTopicsForYear = async () => {
   loading.value = true
   error.value = null
@@ -351,20 +273,26 @@ const fetchTopicsForYear = async () => {
   }
 }
 
+// ------------------------------------------------------------------
+// CREATE / UPDATE (Modal Logic)
+// ------------------------------------------------------------------
+
 const openCreateTopicModal = () => {
   isEditing.value = false
+  // Reset formData สำหรับโหมดสร้าง
   formData.value = { id: '', templateValue: '', moit_name: '', title: '', description: '' }
   isModalOpen.value = true
 }
 
 const openEditTopicModal = (topicToEdit: Moit) => {
   isEditing.value = true
+  // Populate formData สำหรับโหมดแก้ไข
   formData.value = {
     id: topicToEdit.id,
+    templateValue: '',
     moit_name: topicToEdit.moit_name,
     title: topicToEdit.title,
     description: topicToEdit.description || '',
-    templateValue: '',
   }
   isModalOpen.value = true
 }
@@ -373,32 +301,34 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 
-const handleFormSubmit = async () => {
+// 💡 [Event Handler จาก Child Component]
+const handleFormSubmit = async (data: TopicFormData) => {
   try {
-    if (isEditing.value) {
+    if (data.id) {
+      // โหมด UPDATE
       const payload = {
-        moit_name: formData.value.moit_name,
-        title: formData.value.title,
-        description: formData.value.description,
+        moit_name: data.moit_name,
+        title: data.title,
+        description: data.description,
       }
       toast.info(`กำลังอัปเดตข้อมูล "${payload.moit_name}"...`)
-      await itaService.updateTopic(formData.value.id, payload)
+      await itaService.updateTopic(data.id, payload)
       toast.success(`อัปเดตข้อมูลสำเร็จ!`)
     } else {
-      const selectedTemplate = moitTemplates.find((t) => t.value === formData.value.templateValue)
-      if (!selectedTemplate) {
-        toast.error('กรุณาเลือกหัวข้อ')
-        return
-      }
+      // โหมด CREATE
       if (!yearId.value) {
         toast.error('ไม่พบรหัสปี (yearId)')
         return
       }
+      if (!data.moit_name) {
+        toast.error('กรุณาเลือกหัวข้อแม่แบบ')
+        return
+      }
       const payload = {
-        year_ita_id: yearId.value, // ✅ ใช้ yearId ที่ถูกต้อง
-        moit_name: selectedTemplate.value,
-        title: selectedTemplate.text,
-        description: `รายละเอียดของ ${selectedTemplate.value}`,
+        year_ita_id: yearId.value,
+        moit_name: data.moit_name,
+        title: data.title,
+        description: data.description,
       }
       toast.info(`กำลังสร้างหัวข้อ: "${payload.moit_name}"...`)
       await itaService.createTopic(payload)
@@ -407,13 +337,18 @@ const handleFormSubmit = async () => {
     closeModal()
     await fetchTopicsForYear()
   } catch (err: unknown) {
-    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดที่ไม่คาดคิด')
+    toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล')
   }
 }
 
 const editTopic = (topicId: string | number) => {
+  // นำทางไปหน้าจัดการเอกสาร
   router.push(`/dashboard/ita/topic/${topicId}/edit`)
 }
+
+// ------------------------------------------------------------------
+// DELETE (Modal Logic)
+// ------------------------------------------------------------------
 
 const openDeleteConfirmModal = (topic: Moit) => {
   topicToDelete.value = topic
