@@ -17,10 +17,6 @@
     </div>
 
     <div v-else-if="personnelList.length > 0">
-      <!-- <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">
-        คณะผู้บริหารโรงพยาบาลแม่แตง
-      </h2> -->
-
       <div v-if="directorList.length === 1" class="flex justify-center mb-12">
         <PersonnelCard
           :personnel="directorList[0]"
@@ -35,11 +31,6 @@
         <PersonnelCard v-for="p in directorList" :key="p.id" :personnel="p" :is-director="true" />
       </div>
       <div v-else class="text-center py-5 text-gray-500 mb-8">ไม่พบข้อมูลคณะผู้บริหาร</div>
-
-      <!-- <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-blue-100 pb-2 mb-6">
-        หัวหน้ากลุ่มงาน
-      </h2> -->
-
       <div
         v-if="staffList.length > 0"
         class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
@@ -71,7 +62,7 @@ const errorMsg = ref<string | null>(null)
 
 const directorList = computed(() => {
   return personnelList.value
-    .filter((p) => p.isDirector) // กรองเฉพาะคนที่ isDirector เป็น true
+    .filter((p) => p.isDirector)
     .sort((a, b) => {
       // Logic การจัดเรียง: ให้คนที่เป็น "ผู้อำนวยการ" ขึ้นก่อน "รองผู้อำนวยการ" หรือตำแหน่งอื่นๆ
       const posA = a.position.toLowerCase()

@@ -48,15 +48,25 @@ const props = withDefaults(defineProps<Props>(), {
   isDirector: false,
 })
 
-// ภาพสำรองเมื่อโหลดไม่ได้
 const defaultImage = 'https://placehold.co/100x100/cccccc/ffffff?text=No+Photo'
 
 function absoluteImage(u?: string | null): string {
   if (!u) return ''
+  // ถ้าเป็น Absolute URL อยู่แล้ว ก็ใช้เลย
   if (/^https?:\/\//i.test(u)) return u
+
+  // 1. Base URL (e.g., 'http://localhost:8080/api/v1')
   const base = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '')
+
+  // 2. Root URL ของ Server Assets (e.g., 'http://localhost:8080')
+  // ลบ /api หรือ /api/vX ทิ้งไป
   const root = base.replace(/\/api(\/v\d+)?$/i, '')
-  return `${root}/${String(u).replace(/^\/+/, '')}`
+
+  // 3. Path รูปภาพ (e.g., 'uploads/...')
+  const cleanPath = String(u).replace(/^\/+/, '')
+
+  // 4. เชื่อมต่อ (e.g., 'http://localhost:8080/uploads/...')
+  return `${root}/${cleanPath}`
 }
 
 function onImgError(event: Event) {

@@ -5,94 +5,20 @@
     </h2>
     <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบข้อมูลบุคลากรของโรงพยาบาล.</p>
 
-    <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">
-        {{ editingPersonnel ? 'แก้ไขข้อมูลบุคลากร' : 'เพิ่มบุคลากรใหม่' }}
-      </h3>
-      <form @submit.prevent="savePersonnel" class="space-y-4">
-        <div>
-          <label for="personnelName" class="block text-sm font-medium text-gray-700"
-            >ชื่อ-นามสกุล:</label
-          >
-          <input
-            type="text"
-            id="personnelName"
-            v-model="currentPersonnel.name"
-            class="input-field"
-            required
-          />
-        </div>
-        <div>
-          <label for="position" class="block text-sm font-medium text-gray-700"
-            >ตำแหน่งราชการ:</label
-          >
-          <input
-            type="text"
-            id="position"
-            v-model="currentPersonnel.position"
-            class="input-field"
-            required
-          />
-        </div>
-        <div>
-          <label for="specialty" class="block text-sm font-medium text-gray-700"
-            >ความเชี่ยวชาญ/หัวหน้ากลุ่มงาน:</label
-          >
-          <input
-            type="text"
-            id="specialty"
-            v-model="currentPersonnel.specialty"
-            class="input-field"
-          />
-        </div>
-        <div>
-          <label for="tel" class="block text-sm font-medium text-gray-700">เบอร์โทรภายใน:</label>
-          <input type="text" id="tel" v-model="currentPersonnel.tel" class="input-field" />
-        </div>
-        <div class="flex items-center space-x-4">
-          <input
-            type="checkbox"
-            id="isDirector"
-            v-model="currentPersonnel.isDirector"
-            class="h-4 w-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-          />
-          <label for="isDirector" class="text-sm font-medium text-gray-700"
-            >เป็นผู้บริหาร/ผู้อำนวยการ</label
-          >
-        </div>
-        <div>
-          <label for="personnelImage" class="block text-sm font-medium text-gray-700"
-            >รูปภาพบุคลากร:</label
-          >
-          <input
-            type="file"
-            id="personnelImage"
-            @change="handleImageUpload"
-            accept="image/*"
-            class="mt-1 block w-full text-gray-700"
-            :required="!editingPersonnel && !currentPersonnel.imageUrl"
-          />
-          <p v-if="currentPersonnel.imageUrl" class="text-sm text-gray-500 mt-2">
-            รูปภาพปัจจุบัน:
-            <a
-              :href="absoluteImage(currentPersonnel.imageUrl)"
-              target="_blank"
-              class="text-blue-500 hover:underline"
-              >ดูรูป</a
-            >
-          </p>
-        </div>
-        <div class="flex justify-end space-x-3">
-          <button type="submit" class="btn-primary">
-            <i class="fas fa-save mr-2"></i>
-            {{ editingPersonnel ? 'บันทึกการแก้ไข' : 'เพิ่มบุคลากร' }}
-          </button>
-          <button v-if="editingPersonnel" type="button" @click="cancelEdit" class="btn-secondary">
-            <i class="fas fa-times mr-2"></i> ยกเลิก
-          </button>
-        </div>
-      </form>
+    <div class="mb-6 flex justify-end">
+      <button @click="openCreateModal" class="btn-primary">
+        <i class="fas fa-plus mr-2"></i> เพิ่มบุคลากรใหม่
+      </button>
     </div>
+
+    <PersonnelFormModal
+      :is-open="showFormModal"
+      :personnel-data="currentPersonnel"
+      :editing="editingPersonnel"
+      :is-saving="isSaving"
+      @close="closeFormModal"
+      @save="savePersonnel"
+    />
 
     <div class="card bg-white p-6 rounded-lg shadow-md">
       <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการบุคลากร</h3>
@@ -130,7 +56,11 @@
               <td class="py-3 px-6 text-left">{{ index + 1 }}</td>
               <td class="py-3 px-6 text-left">
                 <img
-                  :src="absoluteImage(personnel.imageUrl)"
+                  :src="
+                    personnel.imageUrl
+                      ? absoluteImage(personnel.imageUrl)
+                      : 'https://placehold.co/50x50/e0e0e0/333333?text=N/A'
+                  "
                   alt="Personnel Image"
                   class="w-12 h-12 object-cover rounded-full"
                 />
@@ -188,6 +118,7 @@ import {
   deletePersonnel as deletePersonnelApi,
 } from '@/services/personnelService'
 import { isAxiosError } from '@/services/apiService'
+import PersonnelFormModal from '@/components/dashboard/PersonnelFormModal.vue'
 
 const toast = useToast()
 
@@ -195,7 +126,14 @@ const personnelList = ref<PersonnelItem[]>([])
 const loading = ref(true)
 const errorMsg = ref<string | null>(null)
 
-const initialPersonnel: PersonnelItem & { imageFile?: File | null } = {
+const showFormModal = ref(false)
+const isSaving = ref(false)
+
+// 💡 Type สำหรับ Form Data
+type PersonnelFormType = PersonnelItem & { imageFile: File | null }
+
+const initialPersonnel: PersonnelFormType = {
+  // 💡 แก้ Type ให้เป็น PersonnelFormType
   id: '',
   name: '',
   position: '',
@@ -203,10 +141,10 @@ const initialPersonnel: PersonnelItem & { imageFile?: File | null } = {
   tel: undefined,
   imageUrl: null,
   isDirector: false,
-  imageFile: null,
+  imageFile: null, // ✅ กำหนดให้ชัดเจน
 }
 
-const currentPersonnel = ref<PersonnelItem & { imageFile?: File | null }>({ ...initialPersonnel })
+const currentPersonnel = ref<PersonnelFormType>({ ...initialPersonnel }) // 💡 แก้ Type ให้เป็น PersonnelFormType
 const editingPersonnel = ref(false)
 
 const personnelToDeleteId = ref<string | null>(null)
@@ -233,33 +171,62 @@ const fetchPersonnel = async () => {
 onMounted(fetchPersonnel)
 
 // ------------------------------------------------------------------
-// CREATE / UPDATE (Save)
+// MODAL MANAGEMENT / CREATE / UPDATE (Save)
 // ------------------------------------------------------------------
 
-const savePersonnel = async () => {
+const openCreateModal = () => {
+  currentPersonnel.value = { ...initialPersonnel }
+  editingPersonnel.value = false
+  showFormModal.value = true
+}
+
+const editPersonnel = (personnel: PersonnelItem) => {
+  currentPersonnel.value = {
+    ...personnel,
+    imageFile: null, // ต้องรีเซ็ตไฟล์เมื่อเปิด Modal
+  } as PersonnelFormType
+  editingPersonnel.value = true
+  showFormModal.value = true
+}
+
+const savePersonnel = async (data: PersonnelFormType) => {
+  isSaving.value = true
+
   try {
     if (editingPersonnel.value) {
       // UPDATE
-      if (!currentPersonnel.value.id) throw new Error('Personnel ID is missing for update.')
-      await updatePersonnel(currentPersonnel.value.id, currentPersonnel.value)
+      if (!data.id) throw new Error('Personnel ID is missing for update.')
+      // 💡 ส่ง data ที่มาจาก Modal ไป update
+      await updatePersonnel(data.id, data)
       toast.success('แก้ไขข้อมูลบุคลากรสำเร็จ!')
     } else {
       // CREATE
-      await createPersonnel(currentPersonnel.value)
+      // 💡 ส่ง data ที่มาจาก Modal ไป create
+      await createPersonnel(data)
       toast.success('เพิ่มบุคลากรสำเร็จ!')
     }
+
     await fetchPersonnel()
-    resetForm()
+    closeFormModal()
   } catch (e) {
     let message = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล'
     if (isAxiosError(e) && e.response?.data) {
       const errorData = e.response.data as { message?: string }
       message = errorData.message || 'การบันทึกข้อมูลล้มเหลว'
     }
-
     toast.error(message)
     console.error('Save failed:', e)
+  } finally {
+    isSaving.value = false
   }
+}
+
+const closeFormModal = () => {
+  showFormModal.value = false
+  // 5. ล้างค่าใน input type="file" (ใช้ DOM API เพราะเราย้าย component ออกไปแล้ว)
+  const fileInput = document.getElementById('personnelImage') as HTMLInputElement
+  if (fileInput) fileInput.value = ''
+  resetFormState()
 }
 
 // ------------------------------------------------------------------
@@ -287,8 +254,6 @@ const deletePersonnel = async () => {
       const errorData = e.response.data as { message?: string }
       message = errorData.message || 'การลบข้อมูลล้มเหลว'
     }
-
-    // 🟢 ใช้ตัวแปร message ที่ถูกกำหนดค่าแล้ว
     toast.error(message)
     console.error('Delete failed:', e)
   } finally {
@@ -297,25 +262,13 @@ const deletePersonnel = async () => {
 }
 
 // ------------------------------------------------------------------
-// UTILITIES / FORM MANAGEMENT
+// UTILITIES / STATE RESET
 // ------------------------------------------------------------------
 
-const editPersonnel = (personnel: PersonnelItem) => {
-  // ใช้ deep copy เพื่อไม่ให้แก้ไขใน list ทันที
-  currentPersonnel.value = { ...personnel }
-  editingPersonnel.value = true
-}
-
-const cancelEdit = () => {
-  resetForm()
-}
-
-const resetForm = () => {
+const resetFormState = () => {
+  // 💡 เปลี่ยนชื่อจาก resetForm เป็น resetFormState
   currentPersonnel.value = { ...initialPersonnel }
   editingPersonnel.value = false
-  // ล้างค่าใน input type="file"
-  const fileInput = document.getElementById('personnelImage') as HTMLInputElement
-  if (fileInput) fileInput.value = ''
 }
 
 const resetDeleteConfirm = () => {
@@ -324,11 +277,10 @@ const resetDeleteConfirm = () => {
 }
 
 const cancelDelete = () => {
-  // 🟢 ฟังก์ชันที่เรียกใช้เมื่อกดปุ่ม "ยกเลิก" ใน Modal
   resetDeleteConfirm()
 }
 
-// ฟังก์ชันแปลง URL รูปภาพ (สำคัญสำหรับการแสดงภาพจาก Backend)
+// 💡 นำฟังก์ชัน absoluteImage กลับมาไว้ที่นี่ สำหรับใช้ในการแสดงผลตาราง
 function absoluteImage(u?: string | null): string {
   if (!u) return 'https://placehold.co/100x100/e0e0e0/333333?text=N/A'
   if (/^https?:\/\//i.test(u)) return u
@@ -337,25 +289,12 @@ function absoluteImage(u?: string | null): string {
   return `${root}/${String(u).replace(/^\/+/, '')}`
 }
 
-const handleImageUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (input.files && input.files[0]) {
-    const file = input.files[0]
-    currentPersonnel.value.imageFile = file
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      currentPersonnel.value.imageUrl = e.target?.result as string
-    }
-    reader.readAsDataURL(file)
-  } else {
-    currentPersonnel.value.imageFile = null
-    currentPersonnel.value.imageUrl = null
-  }
-}
+// ❌ ลบ handleImageUpload
+// ❌ ลบ cancelEdit, resetForm (ใช้ resetFormState, closeFormModal แทน)
 </script>
 
 <style scoped>
-/* Tailwind CSS Helper Classes */
+/* Tailwind CSS Helper Classes (คงไว้เหมือนเดิม) */
 .input-field {
   @apply mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-purple-500 focus:border-purple-500;
 }
