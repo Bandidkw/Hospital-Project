@@ -4,7 +4,7 @@
       <h3 class="text-xl font-semibold text-gray-800">เพิ่มข่าวสารใหม่</h3>
       <button
         type="button"
-        class="text-sm px-3 py-1.5 rounded-md border border-gray-300 hover:bg-white transition"
+        class="text-sm px-3 py-1.5 rounded-md border border-black hover:bg-red-700 transition bg-red-600 hover:text-white"
         @click="resetForm"
         :disabled="saving"
         title="ล้างฟอร์ม"

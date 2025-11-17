@@ -3,7 +3,6 @@
     <div
       v-if="isOpen"
       class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 transition-opacity"
-      @click.self="emit('close')"
     >
       <div class="bg-white p-6 rounded-xl shadow-xl max-w-2xl w-full mx-4" @click.stop>
         <div class="flex justify-between items-center border-b pb-3 mb-4">

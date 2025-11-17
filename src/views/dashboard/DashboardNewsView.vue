@@ -196,7 +196,6 @@
       aria-modal="true"
       aria-labelledby="createNewsTitle"
       @keydown.esc="closeCreateModal"
-      @click.self="closeCreateModal"
     >
       <div
         class="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 animate-[fadeIn_.18s_ease-out]"
