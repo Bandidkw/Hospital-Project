@@ -1,5 +1,5 @@
 <template>
-  <div v-if="settingsStore.settings" class="bg-blue-700 text-white text-sm py-2">
+  <div v-if="settingsStore.settings" class="bg-teal-700 text-white text-sm py-2">
     <div class="container mx-auto flex justify-between items-center px-4">
       <div class="flex items-center space-x-4">
         <span v-if="settingsStore.settings.telMain"> 📞 {{ settingsStore.settings.telMain }} </span>

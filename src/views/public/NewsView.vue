@@ -4,36 +4,36 @@
       <h1
         class="text-3xl md:text-4xl font-extrabold text-gray-900 flex items-center justify-center md:justify-start gap-3"
       >
-        <i class="fas fa-bullhorn text-blue-600"></i>
+        <i class="fas fa-bullhorn text-teal-600"></i>
         <span>ข่าวสารและประกาศ</span>
-        <span v-if="activeCategoryLabel" class="text-2xl text-blue-600 font-medium">
+        <span v-if="activeCategoryLabel" class="text-2xl text-teal-600 font-medium">
           - {{ activeCategoryLabel }}
         </span>
       </h1>
       <p class="text-gray-600 mt-1">อัปเดตข่าวสารล่าสุดของโรงพยาบาล</p>
     </header>
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-10">
       <div class="relative w-full sm:max-w-xs">
         <input
           type="search"
           v-model.trim="query"
           placeholder="ค้นหาหัวข้อข่าว..."
-          class="w-full pl-10 pr-3 py-2 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
+          class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-300 focus:ring-4 focus:ring-teal-100 focus:border-teal-500 shadow-lg transition-all"
         />
         <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
       </div>
       <div class="flex items-center gap-2">
-        <label class="text-sm text-gray-600">เรียงตาม</label>
+        <label class="text-sm font-medium text-gray-700">เรียงตาม</label>
         <select
           v-model="sortKey"
-          class="border rounded-md text-sm py-2 px-3 focus:ring-blue-500 focus:border-blue-500"
+          class="border rounded-xl text-sm py-2.5 px-4 focus:ring-4 focus:ring-teal-100 focus:border-teal-500 shadow-sm transition-all"
         >
           <option value="date">วันที่</option>
           <option value="title">หัวข้อ</option>
         </select>
         <button
-          class="p-2 border rounded-md hover:bg-gray-100 transition"
+          class="p-2 border border-gray-300 rounded-xl bg-white hover:bg-teal-50 hover:border-teal-500 transition-all text-gray-600 hover:text-teal-600 shadow-sm"
           @click="sortAsc = !sortAsc"
           :title="sortAsc ? 'เรียง น้อย→มาก' : 'เรียง มาก→น้อย'"
         >
@@ -44,7 +44,7 @@
 
     <div
       v-if="errorMsg"
-      class="mb-8 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 flex items-center justify-between"
+      class="mb-8 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700 flex items-center justify-between shadow-lg"
       role="alert"
     >
       <div class="flex items-center gap-2">
@@ -53,41 +53,41 @@
       </div>
       <button
         @click="fetchNews"
-        class="px-4 py-1.5 rounded-md border border-red-300 hover:bg-white text-sm font-medium"
+        class="px-4 py-1.5 rounded-lg border border-red-300 bg-white hover:bg-red-100 text-sm font-medium transition-colors shadow-sm"
       >
         ลองใหม่
       </button>
     </div>
 
     <section :aria-busy="loading ? 'true' : 'false'">
-      <div v-if="loading" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-if="loading" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <div
           v-for="i in 6"
           :key="i"
-          class="rounded-xl border overflow-hidden bg-white shadow-sm"
+          class="rounded-xl border border-gray-200 overflow-hidden bg-white shadow-lg animate-pulse"
           aria-hidden="true"
         >
-          <div class="animate-pulse h-56 bg-gray-200"></div>
-          <div class="p-4 space-y-2">
-            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-3 bg-gray-200 rounded w-full"></div>
-            <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+          <div class="h-56 bg-gray-100"></div>
+          <div class="p-5 space-y-3">
+            <div class="h-5 bg-gray-200 rounded w-4/5"></div>
+            <div class="h-3 bg-gray-100 rounded w-full"></div>
+            <div class="h-3 bg-gray-100 rounded w-5/6"></div>
           </div>
         </div>
       </div>
 
-      <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <article
           v-for="n in pagedSortedNews"
           :key="n.id"
-          class="group rounded-2xl border overflow-hidden bg-white shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+          class="group rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-xl hover:shadow-2xl hover:border-teal-400 hover:scale-[1.01] transition-all duration-300 ease-in-out transform relative z-0"
         >
-          <div class="relative h-56 md:h-64 bg-gray-100 overflow-hidden">
+          <div class="relative h-56 md:h-64 bg-gray-100 overflow-hidden rounded-t-2xl">
             <img
               v-if="n.imageUrl && !isPdf(n.imageUrl)"
               :src="absoluteImage(n.imageUrl)"
               :alt="n.title"
-              class="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+              class="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-500"
               @error="onImgError"
             />
             <a
@@ -96,18 +96,18 @@
               target="_blank"
               class="w-full h-full flex items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
             >
-              <i class="far fa-file-pdf text-5xl"></i>
-              <!-- <span class="mt-2 text-sm font-semibold">เปิดไฟล์ PDF</span> -->
+              <i class="far fa-file-pdf text-6xl"></i>
+              <span class="sr-only">เปิดไฟล์ PDF</span>
             </a>
             <div v-else class="w-full h-full flex items-center justify-center text-gray-400">
-              <i class="far fa-image text-3xl"></i>
+              <i class="far fa-image text-4xl"></i>
             </div>
             <div
-              class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent"
+              class="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent"
             ></div>
             <div class="absolute left-3 bottom-3">
               <span
-                class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-white/90 text-gray-800 backdrop-blur"
+                class="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-white/95 text-gray-800 backdrop-blur-sm shadow-md"
               >
                 <i class="far fa-calendar"></i>{{ prettyDate(n.date) }}
               </span>
@@ -116,190 +116,79 @@
 
           <div class="p-5">
             <h2
-              class="font-semibold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors"
+              class="text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-teal-600 transition-colors"
               :title="n.title"
             >
               {{ n.title }}
             </h2>
-            <p class="text-sm text-gray-600 mt-2 line-clamp-3">{{ n.excerpt || n.content }}</p>
-            <div class="mt-4 flex items-center justify-between">
+            <p class="text-sm text-gray-600 mt-2 line-clamp-3 leading-relaxed">
+              {{ n.excerpt || n.content }}
+            </p>
+            <div class="mt-5 pt-3 border-t border-gray-100 flex items-center justify-end">
               <a
                 v-if="n.imageUrl && isPdf(n.imageUrl)"
                 :href="absoluteImage(n.imageUrl)"
                 target="_blank"
-                class="text-blue-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
+                class="text-teal-600 text-sm font-semibold inline-flex items-center gap-1 hover:text-teal-700 transition-colors"
               >
-                เปิดไฟล์แนบ <i class="fas fa-external-link-alt text-[11px]"></i>
+                เปิดไฟล์แนบ <i class="fas fa-file-download text-[11px]"></i>
               </a>
               <RouterLink
                 v-else
                 :to="{ name: 'news-detail', params: { id: n.id } }"
-                class="text-blue-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
+                class="text-teal-600 text-sm font-semibold inline-flex items-center gap-1 hover:text-teal-700 transition-colors"
               >
-                อ่านต่อ <i class="fas fa-arrow-right text-[11px]"></i>
+                อ่านต่อ
+                <i class="fas fa-arrow-right text-[11px] group-hover:translate-x-1 transition"></i>
               </RouterLink>
             </div>
           </div>
         </article>
+
         <div
           v-if="!pagedSortedNews.length && !loading"
-          class="col-span-full text-center py-20 text-gray-400"
+          class="col-span-full text-center py-20 text-gray-400 border border-dashed rounded-xl bg-gray-50"
         >
-          <i class="fas fa-info-circle text-2xl mb-2"></i>
-          <p>ไม่พบข่าวสารที่ตรงกับเงื่อนไข</p>
+          <i class="fas fa-inbox text-4xl mb-3"></i>
+          <p class="text-lg">ไม่พบข่าวสารที่ตรงกับเงื่อนไข</p>
+          <p class="text-sm mt-1">ลองใช้คำค้นหาอื่น หรือเลือกหมวดหมู่ใหม่</p>
         </div>
       </div>
     </section>
 
     <div
-      class="flex items-center justify-between mt-10 text-sm text-gray-600"
+      class="flex items-center justify-center sm:justify-between mt-12 text-sm text-gray-600 flex-wrap gap-4"
       v-if="sortedNews.length > pageSize"
     >
-      <p>
-        แสดง {{ (page - 1) * pageSize + 1 }} –
-        {{ Math.min(page * pageSize, sortedNews.length) }} จาก {{ sortedNews.length }} รายการ
+      <p class="hidden sm:block">
+        แสดง <span class="font-bold text-gray-800">{{ (page - 1) * pageSize + 1 }}</span> –
+        <span class="font-bold text-gray-800">{{
+          Math.min(page * pageSize, sortedNews.length)
+        }}</span>
+        จากทั้งหมด <span class="font-bold text-teal-600">{{ sortedNews.length }}</span> รายการ
       </p>
       <div class="flex items-center gap-2">
         <button
-          class="px-3 py-1.5 rounded-full border hover:bg-gray-100 disabled:opacity-50"
+          class="px-4 py-2 rounded-full border border-gray-300 bg-white hover:bg-teal-50 hover:border-teal-500 disabled:opacity-50 disabled:bg-gray-100 transition-colors shadow-sm text-sm font-medium"
           :disabled="page <= 1"
           @click="page--"
         >
-          ก่อนหน้า
+          <i class="fas fa-chevron-left mr-1 text-[10px]"></i> ก่อนหน้า
         </button>
-        <span class="font-medium">หน้า {{ page }}</span>
+        <span
+          class="font-bold text-teal-600 px-3 py-1.5 rounded-full bg-teal-50 shadow-inner text-xs"
+        >
+          หน้า {{ page }}
+        </span>
         <button
-          class="px-3 py-1.5 rounded-full border hover:bg-gray-100 disabled:opacity-50"
+          class="px-4 py-2 rounded-full border border-gray-300 bg-white hover:bg-teal-50 hover:border-teal-500 disabled:opacity-50 disabled:bg-gray-100 transition-colors shadow-sm text-sm font-medium"
           :disabled="page * pageSize >= sortedNews.length"
           @click="page++"
         >
-          ถัดไป
+          ถัดไป <i class="fas fa-chevron-right ml-1 text-[10px]"></i>
         </button>
       </div>
     </div>
-
-    <!-- <div
-      v-if="quickView"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-label="รายละเอียดข่าว"
-      @keydown.esc="quickView = null"
-    >
-      <div
-        class="w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5"
-      >
-        <div class="relative">
-          <div class="relative h-[42vh] md:h-[55vh] bg-gray-100">
-            <img
-              v-if="quickView.imageUrl"
-              :src="absoluteImage(quickView.imageUrl)"
-              :alt="quickView.title"
-              class="absolute inset-0 w-full h-full object-cover"
-              @error="onImgError"
-            />
-            <div
-              v-else
-              class="absolute inset-0 flex items-center justify-center text-gray-400"
-              aria-hidden="true"
-            >
-              <i class="far fa-image text-4xl"></i>
-            </div>
-            <div
-              class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/65 to-transparent"
-            ></div>
-          </div>
-          <div class="absolute top-4 right-4 flex gap-2">
-            <button
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow"
-              @click="shareNews(quickView)"
-              title="แชร์ข่าวนี้"
-            >
-              <i class="fas fa-share-alt text-gray-700"></i>
-            </button>
-            <button
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow"
-              @click="copyLink(quickView)"
-              :title="copied ? 'คัดลอกแล้ว!' : 'คัดลอกลิงก์'"
-            >
-              <i
-                :class="copied ? 'fas fa-check text-emerald-600' : 'fas fa-link text-gray-700'"
-              ></i>
-            </button>
-            <button
-              class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow"
-              @click="quickView = null"
-              aria-label="ปิดหน้าต่าง"
-              title="ปิด"
-            >
-              <i class="fas fa-times text-gray-700"></i>
-            </button>
-          </div>
-          <div class="absolute inset-x-0 -bottom-3 px-4 sm:px-6">
-            <div
-              class="mx-auto max-w-5xl rounded-xl bg-white/95 backdrop-blur px-4 sm:px-5 py-3 shadow ring-1 ring-black/5"
-            >
-              <div class="flex items-center gap-3 text-[13px] text-gray-600">
-                <span
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-gray-700"
-                >
-                  <i class="far fa-calendar"></i>
-                  {{ prettyDate(quickView.date) }}
-                </span>
-              </div>
-              <h2
-                class="mt-2 text-xl md:text-2xl font-extrabold tracking-tight text-gray-900 leading-snug"
-              >
-                {{ quickView.title }}
-              </h2>
-            </div>
-          </div>
-        </div>
-        <div class="px-4 sm:px-6 pt-6 pb-7 max-h-[30vh] overflow-y-auto">
-          <div class="grid md:grid-cols-5 gap-6">
-            <aside class="md:col-span-2 order-2 md:order-1">
-              <div class="rounded-lg border bg-gray-50 p-4 space-y-3">
-                <div class="text-xs uppercase tracking-wide text-gray-500">การกระทำด่วน</div>
-                <div class="flex gap-2">
-                  <button
-                    class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md border hover:bg-gray-100"
-                    @click="copyLink(quickView)"
-                  >
-                    <i
-                      :class="
-                        copied ? 'fas fa-check text-emerald-600' : 'fas fa-link text-gray-700'
-                      "
-                    ></i>
-                    {{ copied ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกลิงก์' }}
-                  </button>
-                  <RouterLink
-                    :to="{ path: '/news', query: route.query }"
-                    class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium rounded-md border border-blue-500 text-blue-600 hover:bg-blue-50"
-                    @click="quickView = null"
-                  >
-                    <i class="fas fa-list"></i>
-                    ดูทั้งหมด
-                  </RouterLink>
-                </div>
-              </div>
-            </aside>
-            <article class="md:col-span-3 order-1 md:order-2">
-              <div class="prose prose-sm sm:prose md:prose-lg max-w-none text-gray-800">
-                <p
-                  v-for="(p, i) in normalizeParagraphs(
-                    quickView.content || quickView.excerpt || '',
-                  )"
-                  :key="i"
-                  class="leading-relaxed"
-                >
-                  {{ p }}
-                </p>
-              </div>
-            </article>
-          </div>
-        </div>
-      </div>
-    </div> -->
   </main>
 </template>
 

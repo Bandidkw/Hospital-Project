@@ -16,27 +16,27 @@
           </h2>
 
           <div>
-            <label for="reporterName" class="block text-sm font-semibold text-gray-700"
+            <label for="fullName" class="block text-sm font-semibold text-gray-700"
               >ชื่อ-นามสกุล ผู้แจ้ง (ถ้าต้องการระบุ):</label
             >
             <input
               type="text"
-              id="reporterName"
-              v-model="complaintData.reporterName"
+              id="fullName"
+              v-model="complaintData.fullName"
               class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 transition duration-150"
               placeholder="เช่น นาย/นางสาว สมัคร ใจดี"
             />
           </div>
 
           <div>
-            <label for="reporterContact" class="block text-sm font-semibold text-gray-700"
+            <label for="contactInfo" class="block text-sm font-semibold text-gray-700"
               >ข้อมูลติดต่อ (เบอร์โทรศัพท์ หรือ อีเมล):
               <span class="text-red-600 font-bold">* จำเป็นต้องระบุ</span></label
             >
             <input
               type="text"
-              id="reporterContact"
-              v-model="complaintData.reporterContact"
+              id="contactInfo"
+              v-model="complaintData.contactInfo"
               class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 transition duration-150"
               required
               placeholder="0XX-XXX-XXXX หรือ email@example.com"
@@ -69,13 +69,13 @@
           </div>
 
           <div>
-            <label for="detail" class="block text-sm font-semibold text-gray-700"
+            <label for="description" class="block text-sm font-semibold text-gray-700"
               >รายละเอียดข้อร้องเรียน: <span class="text-red-600 font-bold">*</span></label
             >
             <textarea
-              id="detail"
+              id="description"
               rows="6"
-              v-model="complaintData.detail"
+              v-model="complaintData.description"
               class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 placeholder-gray-400 focus:ring-red-500 focus:border-red-500 transition duration-150"
               required
               placeholder="กรุณาให้ข้อมูลเท่าที่จำได้ เช่น วันที่/เวลาเกิดเหตุ, สถานที่, ชื่อเจ้าหน้าที่ (ถ้าทราบ) เพื่อให้ง่ายต่อการตรวจสอบ"
@@ -100,11 +100,10 @@
 </template>
 
 <script setup lang="ts">
-// ... (โค้ด Script เดิม)
 import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from 'axios'
-import { createComplaint } from '@/services/complaintService' // 💡 ต้องสร้างฟังก์ชันนี้ใน Service
+import { createComplaint } from '@/services/complaintService'
 
 const complaintSubjects = [
   'พฤติกรรม/การบริการของบุคลากร',
@@ -120,21 +119,23 @@ const complaintSubjects = [
 const toast = useToast()
 
 // ------------------------------------------------------------------
-// 1. Type & State
+// 1. Type & State (🟢 แก้ไข Interface ให้ตรงกับ API Payload)
 // ------------------------------------------------------------------
 
 interface ComplaintFormData {
   subject: string
-  detail: string
-  reporterName: string
-  reporterContact: string // ข้อมูลติดต่อ
+  description: string
+  fullName: string // 🟢 แก้ไข: เปลี่ยนจาก complainantName เป็น fullName
+  contactInfo: string
+  status: string // 🟢 เพิ่ม: ตามที่ API Payload กำหนด
 }
 
 const initialFormData: ComplaintFormData = {
   subject: '',
-  detail: '',
-  reporterName: '',
-  reporterContact: '',
+  description: '',
+  fullName: '', // 🟢 ใช้ fullName
+  contactInfo: '',
+  status: 'รอดำเนินการ', // 🟢 เพิ่ม status
 }
 
 const complaintData = ref<ComplaintFormData>({ ...initialFormData })
@@ -147,8 +148,8 @@ const loading = ref(false)
 const submitComplaint = async () => {
   if (
     !complaintData.value.subject ||
-    !complaintData.value.detail ||
-    !complaintData.value.reporterContact
+    !complaintData.value.description ||
+    !complaintData.value.contactInfo
   ) {
     toast.error('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน')
     return
@@ -156,7 +157,7 @@ const submitComplaint = async () => {
 
   loading.value = true
   try {
-    // 💡 สมมติว่า createComplaint(data) ถูกสร้างใน complaintService.ts
+    // Payload ที่ส่งไปจะตรงกับ ComplaintFormData: { subject, description, fullName, contactInfo, status }
     await createComplaint(complaintData.value)
 
     toast.success('ส่งข้อร้องเรียนสำเร็จ! ทางโรงพยาบาลจะดำเนินการตรวจสอบและติดต่อกลับ')

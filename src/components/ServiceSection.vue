@@ -12,14 +12,14 @@
           :key="service.id"
           class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 flex flex-col items-center"
         >
-          <div class="text-blue-500 text-5xl mb-4">
+          <div class="text-teal-600 text-5xl mb-4">
             <i :class="service.icon"></i>
           </div>
           <h3 class="text-xl font-semibold text-gray-800 mb-2">{{ service.title }}</h3>
           <p class="text-gray-600 text-sm mb-4 flex-grow">{{ service.description }}</p>
           <RouterLink
             :to="service.link"
-            class="mt-auto inline-block bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-colors duration-300 text-sm"
+            class="mt-auto inline-block bg-teal-600 text-white px-6 py-2 rounded-full hover:bg-teal-600 transition-colors duration-300 text-sm"
           >
             ดูเพิ่มเติม
           </RouterLink>

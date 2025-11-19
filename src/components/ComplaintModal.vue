@@ -2,19 +2,21 @@
   <Teleport to="body">
     <div
       v-if="show"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300"
     >
-      <div class="bg-white p-8 rounded-lg shadow-2xl max-w-xl w-full">
+      <div
+        class="bg-white p-8 rounded-lg shadow-2xl max-w-xl w-full transform transition-all duration-300"
+      >
         <h3 class="text-2xl font-bold text-red-700 mb-4 flex items-center">
-          <i class="fas fa-comment-dots mr-3"></i> รายละเอียดข้อร้องเรียน
+          <i class="fas fa-comment-dots mr-3"></i> รายละเอียดข้อร้องเรียน (ID: {{ complaint.code }})
         </h3>
 
         <div class="border p-4 rounded-md bg-gray-50 mb-6">
           <p class="mb-2"><span class="font-semibold">หัวข้อ:</span> {{ complaint.subject }}</p>
           <p class="mb-2 text-sm text-gray-500">
             <span class="font-semibold">ผู้แจ้ง:</span>
-            {{ complaint.reporterName || 'ไม่ระบุ' }} (ติดต่อ:
-            {{ complaint.reporterContact || '-' }})
+            {{ complaint.complainantName || 'ไม่ระบุ' }} (ติดต่อ:
+            {{ complaint.contactInfo || '-' }})
           </p>
           <p class="mb-4 text-xs text-gray-500">
             <span class="font-semibold">วันที่แจ้ง:</span> {{ formatDateTime(complaint.createdAt) }}
@@ -22,14 +24,14 @@
 
           <div class="p-3 border rounded-md bg-white">
             <p class="font-semibold text-gray-700 mb-1">รายละเอียด:</p>
-            <p class="whitespace-pre-wrap text-gray-800">{{ complaint.detail }}</p>
+            <p class="whitespace-pre-wrap text-gray-800">{{ complaint.description }}</p>
           </div>
         </div>
 
-        <div v-if="complaint.adminNotes" class="mb-6">
-          <p class="font-semibold text-gray-700 mb-2">บันทึกของแอดมิน (เดิม):</p>
+        <div v-if="complaint.resolutionDetail" class="mb-6">
+          <p class="font-semibold text-gray-700 mb-2">รายละเอียดการแก้ไข (เดิม):</p>
           <div class="p-3 border border-gray-300 rounded-md bg-gray-100">
-            <p class="whitespace-pre-wrap text-gray-800">{{ complaint.adminNotes }}</p>
+            <p class="whitespace-pre-wrap text-gray-800">{{ complaint.resolutionDetail }}</p>
           </div>
         </div>
 
@@ -41,20 +43,20 @@
               v-model="newStatus"
               class="block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500"
             >
-              <option value="PENDING">รอดำเนินการ</option>
-              <option value="IN_PROGRESS">อยู่ระหว่างตรวจสอบ</option>
-              <option value="RESOLVED">แก้ไขแล้ว</option>
-              <option value="CLOSED">ปิดเคสแล้ว</option>
+              <option value="pending">รอดำเนินการ</option>
+              <option value="in_progress">อยู่ระหว่างตรวจสอบ</option>
+              <option value="resolved">แก้ไขแล้ว</option>
+              <option value="rejected">ปิดเคสแล้ว</option>
             </select>
           </div>
 
           <div>
-            <label for="admin-notes" class="font-semibold text-gray-700 block mb-1"
-              >บันทึกของแอดมิน:</label
+            <label for="resolution-notes" class="font-semibold text-gray-700 block mb-1"
+              >รายละเอียดการแก้ไข:</label
             >
             <textarea
-              id="admin-notes"
-              v-model="adminNotes"
+              id="resolution-notes"
+              v-model="resolutionNotes"
               rows="4"
               placeholder="ระบุเหตุผล/มาตรการที่ใช้ในการจัดการข้อร้องเรียนนี้"
               class="block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-red-500 focus:border-red-500"
@@ -84,21 +86,16 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-
-// ----------------------------------------------------------------------
-// ✅ แก้ไขที่นี่: ลบการประกาศ Type ซ้ำซ้อน และใช้ Import จากไฟล์หลัก
-// ----------------------------------------------------------------------
 import type { ComplaintItem, ComplaintStatus } from '@/types/complaint'
 
 const props = defineProps<{
   show: boolean
-  complaint: ComplaintItem // ใช้ ComplaintItem ที่ Import มา
+  complaint: ComplaintItem
 }>()
 
-// ✅ updateStatus ต้องส่ง status และ adminNotes กลับไป
 const emit = defineEmits<{
+  (e: 'update-status', data: { status: ComplaintStatus; resolutionDetail: string }): void
   (e: 'close'): void
-  (e: 'updateStatus', data: { status: ComplaintStatus; adminNotes: string }): void
 }>()
 
 // ----------------------------------------------------------------------
@@ -106,25 +103,21 @@ const emit = defineEmits<{
 // ----------------------------------------------------------------------
 
 const newStatus = ref<ComplaintStatus>(props.complaint.status)
-const adminNotes = ref<string>(props.complaint.adminNotes || '')
-
-// Computed property เพื่อเช็คว่ามีการเปลี่ยนแปลงหรือไม่
+const resolutionNotes = ref<string>(props.complaint.resolutionDetail || '')
 const isStatusChanged = computed(() => {
-  // ต้องเปลี่ยนสถานะ หรือมีการเปลี่ยน Admin Notes อย่างน้อยหนึ่งอย่าง
   return (
     newStatus.value !== props.complaint.status ||
-    adminNotes.value !== (props.complaint.adminNotes || '')
+    resolutionNotes.value !== (props.complaint.resolutionDetail || '')
   )
 })
 
-// 💡 Sync newStatus และ adminNotes เมื่อ complaint prop เปลี่ยน (เช่น เปิด modal ใหม่)
 watch(
   () => props.complaint,
   (newComplaint) => {
     newStatus.value = newComplaint.status
-    adminNotes.value = newComplaint.adminNotes || ''
+    resolutionNotes.value = newComplaint.resolutionDetail || ''
   },
-  { deep: true, immediate: true },
+  { immediate: true },
 )
 
 const formatDateTime = (isoString: string): string => {
@@ -140,15 +133,12 @@ const formatDateTime = (isoString: string): string => {
 
 const updateStatusHandler = () => {
   if (isStatusChanged.value) {
-    // 🟢 ส่ง Event กลับไปพร้อมสถานะใหม่และ Admin Notes
-    emit('updateStatus', {
+    emit('update-status', {
       status: newStatus.value,
-      adminNotes: adminNotes.value,
+      resolutionDetail: resolutionNotes.value, // ✅ Key ที่ถูกต้อง
     })
   }
 }
 </script>
 
-<style scoped>
-/* Modal styles here if needed */
-</style>
+<style scoped></style>

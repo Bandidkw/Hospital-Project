@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto p-8 bg-white my-8 rounded-xl shadow-lg">
-    <h1 class="text-4xl font-extrabold text-blue-800 mb-2">คณะผู้บริหารโรงพยาบาลแม่แตง</h1>
+    <h1 class="text-4xl font-extrabold text-teal-800 mb-2">คณะผู้บริหารโรงพยาบาลแม่แตง</h1>
     <p class="text-gray-700 leading-relaxed mb-8 border-b pb-4">
       โรงพยาบาลแม่แตงภาคภูมิใจในทีมบุคลากรทางการแพทย์และเจ้าหน้าที่ผู้เชี่ยวชาญ
       ซึ่งเป็นหัวใจสำคัญในการให้บริการดูแลสุขภาพแก่ประชาชนทุกคน...

@@ -10,7 +10,7 @@
     <button
       v-if="isVisible"
       @click="scrollToTop"
-      class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white font-bold w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-50"
+      class="fixed bottom-8 right-8 bg-teal-600 hover:bg-teal-700 text-white font-bold w-12 h-12 rounded-full shadow-lg flex items-center justify-center z-50"
       aria-label="Go to top"
     >
       <i class="fas fa-arrow-up"></i>

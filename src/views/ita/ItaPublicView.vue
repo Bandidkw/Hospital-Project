@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl font-extrabold text-my-custom-blue mb-8 text-center">
+    <h1 class="text-4xl font-extrabold text-my-custom-teal mb-8 text-center">
       การประเมินคุณธรรมและความโปร่งใส <br />(MOPH ITA)
     </h1>
 
@@ -10,7 +10,7 @@
       <select
         id="yearFilter"
         v-model="selectedYear"
-        class="p-3 border rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-lg"
+        class="p-3 border rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 text-lg"
       >
         <option v-for="year in availableYears" :key="year" :value="year">
           ปีงบประมาณ {{ year }}
@@ -20,7 +20,7 @@
 
     <!-- สถานะโหลด/เออเรอร์ -->
     <div v-if="loading" class="text-center py-20">
-      <i class="fas fa-spinner fa-spin text-5xl text-blue-500"></i>
+      <i class="fas fa-spinner fa-spin text-5xl text-teal-500"></i>
       <p class="mt-6 text-xl text-gray-600">กำลังโหลดข้อมูล ITA...</p>
     </div>
 
@@ -76,7 +76,7 @@
                     <a
                       v-if="doc.fileUrl"
                       href="#"
-                      class="text-blue-600 hover:underline"
+                      class="text-teal-600 hover:underline"
                       @click.prevent="openFile(doc.fileUrl, doc.title)"
                     >
                       {{ doc.title }}
@@ -122,7 +122,7 @@ const selectedYear = ref<string | null>(null)
 const expandedQuarters = ref<Record<string, boolean>>({})
 
 // Development mode check
-const isDev = computed(() => import.meta.env.DEV)
+// const isDev = computed(() => import.meta.env.DEV)
 
 /* ------------------------------------
  * Computed

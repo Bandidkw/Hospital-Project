@@ -1,10 +1,10 @@
 <template>
   <div class="flex items-center justify-center min-h-screen bg-white p-6">
     <div
-      class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-12 md:p-20 text-center border-b-8 border-green-600 ring-2 ring-gray-100 transition duration-500 hover:shadow-3xl"
+      class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl p-12 md:p-20 text-center border-b-8 border-teal-600 ring-2 ring-gray-100 transition duration-500 hover:shadow-3xl"
     >
       <div class="mb-10">
-        <div class="text-green-700 mb-6">
+        <div class="text-teal-700 mb-6">
           <i class="fas fa-rocket fa-6x animate-bounce-custom drop-shadow-lg"></i>
         </div>
 
@@ -13,20 +13,20 @@
 
       <h1 class="text-5xl font-extrabold text-gray-900 mb-4 tracking-tight leading-snug">
         เตรียมพบกับ...
-        <span class="text-green-600 block mt-2">คุณสมบัติใหม่เร็ว ๆ นี้!</span>
+        <span class="text-teal-600 block mt-2">คุณสมบัติใหม่เร็ว ๆ นี้!</span>
       </h1>
 
       <p class="text-xl text-gray-600 mb-12 max-w-lg mx-auto leading-relaxed">
         เรากำลังพัฒนาระบบนี้เพื่อเพิ่มความสะดวกสบายในการเข้าถึงข้อมูลและการบริการด้านสุขภาพของท่าน
       </p>
 
-      <div class="bg-green-50 p-7 rounded-xl mb-10 border border-green-200 shadow-inner">
-        <h3 class="text-lg font-bold text-green-700 mb-3 flex items-center justify-center">
+      <div class="bg-teal-50 p-7 rounded-xl mb-10 border border-teal-200 shadow-inner">
+        <h3 class="text-lg font-bold text-teal-700 mb-3 flex items-center justify-center">
           <i class="fas fa-calendar-alt mr-3"></i> คาดการณ์การเปิดตัว
         </h3>
 
-        <p class="text-4xl font-extrabold text-green-800 tracking-wider">
-          <span class="inline-block px-4 py-1 bg-green-200 rounded-lg">เร็ว ๆ นี้</span>
+        <p class="text-4xl font-extrabold text-teal-800 tracking-wider">
+          <span class="inline-block px-4 py-1 bg-teal-200 rounded-lg">เร็ว ๆ นี้</span>
         </p>
       </div>
 

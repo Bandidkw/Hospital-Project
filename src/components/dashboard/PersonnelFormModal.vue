@@ -183,13 +183,52 @@ const submitForm = () => {
 
 <style scoped>
 .input-field {
-  @apply mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-purple-500 focus:border-purple-500;
+  /* mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 */
+  margin-top: 0.25rem;
+  display: block;
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #d1d5db;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
 }
+.input-field:focus {
+  outline: none;
+  /* focus:ring-purple-500 focus:border-purple-500 */
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  border-color: #7c3aed;
+}
+
 .btn-primary {
-  @apply bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition duration-300;
+  /* bg-purple-600 text-white px-6 py-2 rounded-md hover:bg-purple-700 transition duration-300 */
+  background-color: #7c3aed;
+  color: #ffffff;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.3s;
 }
+.btn-primary:hover {
+  background-color: #6d28d9;
+}
+
 .btn-secondary {
-  @apply bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300;
+  /* bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300 */
+  background-color: #9ca3af;
+  color: #ffffff;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.3s;
+}
+.btn-secondary:hover {
+  background-color: #6b7280;
 }
 
 /* ------------------------------------------- */

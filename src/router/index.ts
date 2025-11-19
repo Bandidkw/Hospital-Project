@@ -61,8 +61,8 @@ const router = createRouter({
     {
       path: '/status',
       name: 'status',
-      // component: () => import('@/views/StatusTracker.vue'),
-      component: () => import('@/views/UnderDevelopmentView.vue'),
+      component: () => import('@/views/StatusTracker.vue'),
+      // component: () => import('@/views/UnderDevelopmentView.vue'),
     },
     {
       path: '/emergency',
@@ -72,8 +72,8 @@ const router = createRouter({
     {
       path: '/patient-referral',
       name: 'patient-referral',
-      // component: () => import('@/views/services/PatientReferralView.vue'),
-      component: () => import('@/views/UnderDevelopmentView.vue'),
+      component: () => import('@/views/services/PatientReferralView.vue'),
+      // component: () => import('@/views/UnderDevelopmentView.vue'),
     },
     {
       path: '/news',

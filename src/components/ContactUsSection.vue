@@ -9,18 +9,18 @@
           </h3>
 
           <p v-if="settingsStore.settings?.address" class="text-gray-600 mb-2">
-            <i class="fas fa-map-marker-alt mr-2 text-blue-500"></i>
+            <i class="fas fa-map-marker-alt mr-2 text-teal-600"></i>
             {{ settingsStore.settings.address }}
             {{ settingsStore.settings?.zipCode }}
           </p>
 
           <p v-if="settingsStore.settings?.telMain" class="text-gray-600 mb-2">
-            <i class="fas fa-phone mr-2 text-blue-500"></i>
+            <i class="fas fa-phone mr-2 text-teal-600"></i>
             โทร: {{ settingsStore.settings.telMain }}
           </p>
 
           <p v-if="settingsStore.settings?.emailMain" class="text-gray-600 mb-4">
-            <i class="fas fa-envelope mr-2 text-blue-500"></i>
+            <i class="fas fa-envelope mr-2 text-teal-600"></i>
             อีเมล: {{ settingsStore.settings.emailMain }}
           </p>
 
@@ -70,7 +70,7 @@
             </div>
             <button
               type="submit"
-              class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              class="bg-teal-500 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             >
               ส่งข้อความ
             </button>

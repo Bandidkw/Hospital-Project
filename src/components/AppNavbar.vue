@@ -12,7 +12,7 @@
       <div class="hidden md:flex h-full items-center">
         <RouterLink
           to="/"
-          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition"
+          class="space-x-2 flex items-center px-4 py-2 hover:text-teal-600 transition"
         >
           <i class="fas fa-home"></i>
           <span class="md:text-sm lg:text-base">หน้าแรก</span>
@@ -21,7 +21,7 @@
         <div v-for="menu in menuItems" :key="menu.key" class="relative h-full flex items-center">
           <button
             @click="toggleDropdown(menu.key)"
-            class="flex items-center space-x-2 px-4 py-2 hover:text-blue-600 transition"
+            class="flex items-center space-x-2 px-4 py-2 hover:text-teal-600 transition"
             :aria-expanded="isDropdownOpen[menu.key]"
           >
             <i :class="menu.icon"></i>
@@ -51,7 +51,7 @@
 
         <RouterLink
           to="/ita-documents-public"
-          class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition"
+          class="space-x-2 flex items-center px-4 py-2 hover:text-teal-600 transition"
         >
           <i class="fas fa-award"></i>
           <span class="md:text-sm lg:text-base">ITA</span>
@@ -60,7 +60,7 @@
         <div class="relative h-full flex items-center">
           <button
             @click="toggleDropdown('staff')"
-            class="space-x-2 flex items-center px-4 py-2 hover:text-blue-600 transition cursor-pointer focus:outline-none"
+            class="space-x-2 flex items-center px-4 py-2 hover:text-teal-600 transition cursor-pointer focus:outline-none"
             :aria-expanded="isDropdownOpen.staff"
           >
             <i class="fas fa-user-circle"></i>
@@ -271,7 +271,7 @@ const menuItems: MenuItem[] = [
       { label: 'ข่าวทั้งหมด', icon: 'far fa-newspaper', to: { name: 'public-news' } },
       ...CATEGORY_LIST.filter((cat) => cat.key !== 'general').map((cat) => ({
         label: cat.label,
-        icon: 'far fa-circle',
+        icon: 'fas fa-tag',
         to: { name: 'public-news', query: { category: cat.key } },
       })),
     ],

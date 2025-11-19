@@ -9,7 +9,7 @@ export type CategoryKey =
 
 export const CATEGORY_LIST: { key: CategoryKey; label: string }[] = [
   { key: 'activity', label: 'กิจกรรมโรงพยาบาล' },
-  { key: 'procurement', label: 'ประกวดราคา/จัดซื้อ/จัดจ้าง' },
+  { key: 'procurement', label: 'ประกวดจัดซื้อ/จัดจ้าง' },
   { key: 'recruitment', label: 'ข่าวรับสมัคร' },
   { key: 'forms', label: 'แบบฟอร์ม/คู่มือบริการ' },
   { key: 'staff', label: 'ข่าวสำหรับบุคลากร รพ.' },

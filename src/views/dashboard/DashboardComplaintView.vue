@@ -20,10 +20,10 @@
         class="p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-red-500 focus:border-red-500 transition duration-150"
       >
         <option value="ALL">— ทั้งหมด —</option>
-        <option value="PENDING">รอดำเนินการ</option>
-        <option value="IN_PROGRESS">กำลังดำเนินการ</option>
-        <option value="RESOLVED">แก้ไขแล้ว</option>
-        <option value="CLOSED">ปิดเคสแล้ว</option>
+        <option value="pending">รอดำเนินการ</option>
+        <option value="in_progress">กำลังดำเนินการ</option>
+        <option value="resolved">แก้ไขแล้ว</option>
+        <option value="rejected">ปิดเคสแล้ว</option>
       </select>
 
       <div class="relative flex-grow">
@@ -75,12 +75,12 @@
               :key="complaint.id"
               class="border-b border-gray-200 hover:bg-red-50 transition duration-150"
             >
-              <td class="py-3 px-4 text-left font-semibold">{{ complaint.id }}</td>
+              <td class="py-3 px-4 text-left font-semibold">{{ complaint.code }}</td>
               <td class="py-3 px-4 text-left text-xs">{{ formatDateTime(complaint.createdAt) }}</td>
               <td class="py-3 px-4 text-left font-medium max-w-xs truncate">
                 {{ complaint.subject }}
               </td>
-              <td class="py-3 px-4 text-left">{{ complaint.reporterName || 'ไม่ระบุ' }}</td>
+              <td class="py-3 px-4 text-left">{{ complaint.complainantName || 'ไม่ระบุ' }}</td>
               <td class="py-3 px-4 text-center">
                 <span :class="getStatusClass(complaint.status)">
                   {{ getStatusText(complaint.status) }}
@@ -115,7 +115,7 @@
     <ComplaintModal
       v-if="currentComplaint"
       :show="isModalOpen"
-      :complaint="currentComplaint!"
+      :complaint="currentComplaint"
       @close="closeModal"
       @update-status="handleStatusUpdate"
     />
@@ -156,17 +156,17 @@ import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from 'axios'
 
-import type { ComplaintItem, ComplaintStatus } from '@/types/complaint'
+import type { ComplaintItem, ComplaintStatus, ComplaintUpdatePayload } from '@/types/complaint' // 🟢 Import ComplaintUpdatePayload
 import ComplaintModal from '@/components/ComplaintModal.vue'
 import {
-  getComplaintList,
-  updateComplaintStatus,
-  deleteComplaintApi,
+  getAllComplaints,
+  updateComplaint,
+  deleteComplaint as apiDeleteComplaint,
 } from '@/services/complaintService'
 
 const toast = useToast()
 
-// [--- STATE, DATA FETCHING, FILTER/SEARCH LOGIC (UNCHANGED) ---]
+// [--- STATE, DATA FETCHING, FILTER/SEARCH LOGIC ---]
 
 const complaintsList = ref<ComplaintItem[]>([])
 const currentComplaint = ref<ComplaintItem | null>(null)
@@ -176,6 +176,7 @@ const complaintToDeleteId = ref<string | null>(null)
 const loading = ref(true)
 const errorMsg = ref<string | null>(null)
 
+// 🟢 เปลี่ยน Type ของ ref เพื่อให้ตรงกับ value ใน select option
 const filterStatus = ref<ComplaintStatus | 'ALL'>('ALL')
 const searchQuery = ref('')
 
@@ -183,7 +184,8 @@ const fetchComplaints = async () => {
   loading.value = true
   errorMsg.value = null
   try {
-    const data = await getComplaintList()
+    // 🟢 ใช้ฟังก์ชัน getAllComplaints
+    const data = await getAllComplaints()
     complaintsList.value = data
   } catch (e) {
     errorMsg.value = 'ไม่สามารถโหลดรายการข้อร้องเรียนได้ (ลองตรวจสอบ Service Log)'
@@ -193,19 +195,25 @@ const fetchComplaints = async () => {
   }
 }
 onMounted(fetchComplaints)
+
 const filteredComplaints = computed(() => {
   let list = complaintsList.value
+
   if (filterStatus.value !== 'ALL') {
     list = list.filter((c) => c.status === filterStatus.value)
   }
+
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     list = list.filter(
       (c) =>
         c.subject.toLowerCase().includes(query) ||
-        c.detail.toLowerCase().includes(query) ||
-        c.reporterName?.toLowerCase().includes(query) ||
-        c.reporterContact.toLowerCase().includes(query),
+        // 🟢 เปลี่ยนจาก detail เป็น description
+        c.description.toLowerCase().includes(query) ||
+        // 🟢 เปลี่ยนจาก reporterName เป็น complainantName
+        c.complainantName?.toLowerCase().includes(query) ||
+        // 🟢 เปลี่ยนจาก reporterContact เป็น contactInfo
+        c.contactInfo.toLowerCase().includes(query),
     )
   }
   list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -213,10 +221,11 @@ const filteredComplaints = computed(() => {
 })
 
 // ------------------------------------------------------------------
-// 4. Status Display & Formatting (มีการปรับสีภายใน)
+// Status Display & Formatting (ปรับให้ใช้ค่า lowercase ที่มาจาก API)
 // ------------------------------------------------------------------
 
 const formatDateTime = (isoString: string): string => {
+  if (!isoString) return '-'
   return new Date(isoString).toLocaleDateString('th-TH', {
     year: 'numeric',
     month: 'short',
@@ -226,17 +235,16 @@ const formatDateTime = (isoString: string): string => {
   })
 }
 
-// 🔴 ปรับ getStatusClass ให้ใช้สีแดงสำหรับสถานะ In Progress
+// 🟢 ปรับให้ใช้ค่า lowercase
 const getStatusClass = (status: ComplaintStatus): string => {
   switch (status) {
-    case 'PENDING':
+    case 'pending':
       return 'inline-block px-3 py-1 text-xs font-semibold leading-none rounded-full text-yellow-800 bg-yellow-200'
-    case 'IN_PROGRESS':
-      // 🔴 เปลี่ยนจาก Blue เป็น Red/Orange เพื่อสื่อถึงความเร่งด่วน/การดำเนินการ
+    case 'in_progress':
       return 'inline-block px-3 py-1 text-xs font-semibold leading-none rounded-full text-red-800 bg-red-200'
-    case 'RESOLVED':
+    case 'resolved':
       return 'inline-block px-3 py-1 text-xs font-semibold leading-none rounded-full text-green-800 bg-green-200'
-    case 'CLOSED':
+    case 'rejected':
       return 'inline-block px-3 py-1 text-xs font-semibold leading-none rounded-full text-gray-800 bg-gray-300'
     default:
       return ''
@@ -245,39 +253,49 @@ const getStatusClass = (status: ComplaintStatus): string => {
 
 const getStatusText = (status: ComplaintStatus): string => {
   switch (status) {
-    case 'PENDING':
+    case 'pending':
       return 'รอดำเนินการ'
-    case 'IN_PROGRESS':
+    case 'in_progress':
       return 'อยู่ระหว่างตรวจสอบ'
-    case 'RESOLVED':
+    case 'resolved':
       return 'แก้ไขแล้ว'
-    case 'CLOSED':
+    case 'rejected':
       return 'ปิดเคสแล้ว'
     default:
       return 'ไม่ระบุสถานะ'
   }
 }
 
-// [--- ACTIONS LOGIC (UNCHANGED) ---]
+// [--- ACTIONS LOGIC ---]
 
 const viewComplaint = (complaint: ComplaintItem) => {
-  currentComplaint.value = JSON.parse(JSON.stringify(complaint)) as ComplaintItem
+  currentComplaint.value = { ...complaint }
   isModalOpen.value = true
 }
 const closeModal = () => {
   isModalOpen.value = false
   currentComplaint.value = null
 }
-const handleStatusUpdate = async (updatedData: { status: ComplaintStatus; adminNotes: string }) => {
+
+// 🟢 ปรับ type ของ updatedData ให้ใช้ resolutionDetail แทน adminNotes
+const handleStatusUpdate = async (updatedData: {
+  status: ComplaintStatus
+  resolutionDetail: string
+}) => {
   if (!currentComplaint.value) return
   const id = currentComplaint.value.id
   try {
-    await updateComplaintStatus(id, updatedData.status, updatedData.adminNotes)
-    toast.success(`อัปเดตสถานะเป็น "${getStatusText(updatedData.status)}" สำเร็จ`)
+    const payload: ComplaintUpdatePayload = {
+      status: updatedData.status,
+      resolutionDetail: updatedData.resolutionDetail,
+    }
+
+    const updatedItem = await updateComplaint(id, payload)
+    toast.success(`อัปเดตสถานะเป็น "${getStatusText(updatedItem.status)}" สำเร็จ`)
     const index = complaintsList.value.findIndex((c) => c.id === id)
     if (index !== -1) {
-      complaintsList.value[index].status = updatedData.status
-      complaintsList.value[index].adminNotes = updatedData.adminNotes
+      complaintsList.value[index].status = updatedItem.status
+      complaintsList.value[index].resolutionDetail = updatedItem.resolutionDetail
     }
     closeModal()
   } catch (e: unknown) {
@@ -288,14 +306,16 @@ const handleStatusUpdate = async (updatedData: { status: ComplaintStatus; adminN
     console.error('Update status failed:', e)
   }
 }
+
 const confirmDeleteComplaint = (id: string) => {
   complaintToDeleteId.value = id
   showConfirmModal.value = true
 }
+
 const deleteComplaint = async () => {
   if (!complaintToDeleteId.value) return
   try {
-    await deleteComplaintApi(complaintToDeleteId.value)
+    await apiDeleteComplaint(complaintToDeleteId.value)
     toast.success('ลบข้อร้องเรียนสำเร็จ!')
     complaintsList.value = complaintsList.value.filter((c) => c.id !== complaintToDeleteId.value)
   } catch (e: unknown) {
