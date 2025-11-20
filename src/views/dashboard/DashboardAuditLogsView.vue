@@ -1,101 +1,169 @@
 <template>
-  <div class="p-6 bg-white rounded-lg shadow-md">
+  <div class="p-6 bg-white rounded-lg shadow-2xl border border-gray-100">
     <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-      <i class="fas fa-shield-alt mr-3 text-orange-500"></i> ประวัติการเข้าใช้งาน (Audit Logs)
+      <i class="fas fa-shield-alt mr-3 text-orange-600"></i> ประวัติการเข้าใช้งาน (Audit Logs)
     </h2>
-    <p class="text-gray-700 mb-6">หน้านี้แสดงบันทึกกิจกรรมต่างๆ ของผู้ใช้งานในระบบ เพื่อวัตถุประสงค์ในการตรวจสอบ.</p>
+    <p class="text-gray-700 mb-6">
+      หน้านี้แสดงบันทึกกิจกรรมที่มีความสำคัญด้านการเข้าถึงและความปลอดภัยของระบบ Dashboard เท่านั้น.
+    </p>
 
-    <!-- Filter and Search Options -->
-    <div class="bg-gray-50 p-6 rounded-lg shadow-inner mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-gray-50 p-6 rounded-xl shadow-inner mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
-        <label for="filterUser" class="block text-sm font-medium text-gray-700">ผู้ใช้งาน:</label>
-        <input type="text" id="filterUser" v-model="filters.user" placeholder="ค้นหาด้วยชื่อผู้ใช้" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+        <label for="filterUser" class="block text-sm font-medium text-gray-700"
+          >ผู้กระทำ (User ID):</label
+        >
+        <input
+          type="text"
+          id="filterUser"
+          v-model="filters.user"
+          placeholder="ค้นหาด้วยรหัสผู้ใช้"
+          class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+        />
       </div>
       <div>
         <label for="filterAction" class="block text-sm font-medium text-gray-700">กิจกรรม:</label>
-        <input type="text" id="filterAction" v-model="filters.action" placeholder="ค้นหาด้วยกิจกรรม" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+        <input
+          type="text"
+          id="filterAction"
+          v-model="filters.action"
+          placeholder="ค้นหาด้วยกิจกรรม"
+          class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+        />
       </div>
       <div>
         <label for="filterDate" class="block text-sm font-medium text-gray-700">วันที่:</label>
-        <input type="date" id="filterDate" v-model="filters.date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+        <input
+          type="date"
+          id="filterDate"
+          v-model="filters.date"
+          class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500 transition-colors"
+        />
       </div>
     </div>
 
-    <!-- Audit Logs Table -->
-    <div class="card bg-white p-6 rounded-lg shadow-md">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">รายการบันทึกกิจกรรม</h3>
-      <div class="overflow-x-auto">
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+    <div class="card bg-white p-0 rounded-xl shadow-xl">
+      <h3 class="text-xl font-semibold text-gray-800 p-4 border-b">
+        รายการบันทึกกิจกรรมด้านความปลอดภัย
+      </h3>
+
+      <div v-if="isLoading" class="p-12 text-center text-gray-500">
+        <i class="fas fa-spinner fa-spin text-2xl mr-2"></i> กำลังโหลดบันทึกกิจกรรม...
+      </div>
+
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg">
           <thead>
-            <tr class="bg-gray-100 text-left text-gray-600 uppercase text-sm leading-normal">
-              <th class="py-3 px-6 text-left">#</th>
+            <tr class="bg-blue-50 text-left text-blue-800 uppercase text-xs tracking-wider">
               <th class="py-3 px-6 text-left">วันที่และเวลา</th>
-              <th class="py-3 px-6 text-left">ผู้ใช้งาน</th>
+              <th class="py-3 px-6 text-left">ผู้กระทำ (Actor)</th>
+              <th class="py-3 px-6 text-left">Target/Resource</th>
               <th class="py-3 px-6 text-left">กิจกรรม</th>
               <th class="py-3 px-6 text-left">รายละเอียด</th>
             </tr>
           </thead>
-          <tbody class="text-gray-600 text-sm font-light">
-            <tr v-for="(log, index) in filteredLogs" :key="log.id" class="border-b border-gray-200 hover:bg-gray-50">
-              <td class="py-3 px-6 text-left">{{ index + 1 }}</td>
-              <td class="py-3 px-6 text-left">{{ log.timestamp }}</td>
-              <td class="py-3 px-6 text-left">{{ log.user }}</td>
-              <td class="py-3 px-6 text-left">{{ log.action }}</td>
-              <td class="py-3 px-6 text-left truncate max-w-xs">{{ log.details }}</td>
+          <tbody class="text-gray-700 text-sm font-medium">
+            <tr
+              v-for="log in filteredLogs"
+              :key="log.id"
+              class="border-b border-gray-100 hover:bg-yellow-50/50 transition-colors"
+            >
+              <td class="py-3 px-6 text-left whitespace-nowrap">
+                {{ new Date(log.timestamp).toLocaleString('th-TH') }}
+              </td>
+
+              <td class="py-3 px-6 text-left font-mono text-xs">{{ log.userId }}</td>
+
+              <td class="py-3 px-6 text-left font-semibold">
+                {{ log.targetId || '-' }}
+              </td>
+
+              <td class="py-3 px-6 text-left">
+                <span
+                  :class="{
+                    'bg-green-100 text-green-700':
+                      log.action === AuditAction.USER_LOGIN && log.details.status === 'SUCCESS',
+                    'bg-red-100 text-red-700':
+                      log.action === AuditAction.ACCESS_DENIED ||
+                      (log.action === AuditAction.USER_LOGIN && log.details.status !== 'SUCCESS'),
+                    'bg-blue-100 text-blue-700': log.action === AuditAction.USER_LOGOUT,
+                    'bg-orange-100 text-orange-700': log.action === AuditAction.PASSWORD_RESET,
+                  }"
+                  class="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
+                >
+                  {{ ACTION_DISPLAY_MAP[log.action] }}
+                </span>
+              </td>
+
+              <td
+                class="py-3 px-6 text-left max-w-lg truncate text-xs text-gray-500"
+                :title="formatLogDetails(log)"
+              >
+                {{ formatLogDetails(log) }}
+              </td>
             </tr>
-            <tr v-if="filteredLogs.length === 0">
-              <td colspan="5" class="py-8 text-center text-gray-500">ไม่พบบันทึกกิจกรรมที่ตรงกับเงื่อนไข.</td>
+            <tr v-if="filteredLogs.length === 0 && !isLoading">
+              <td colspan="5" class="py-8 text-center text-gray-500">
+                ไม่พบบันทึกกิจกรรมที่ตรงกับเงื่อนไข.
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <!-- Pagination (placeholder) -->
-      <div class="mt-6 text-center">
-        <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300">โหลดเพิ่มเติม</button>
+      <div class="mt-6 p-4 text-center border-t border-gray-100">
+        <button
+          class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+        >
+          โหลดเพิ่มเติม
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue'
 
-interface AuditLog {
-  id: number;
-  timestamp: string;
-  user: string;
-  action: string;
-  details: string;
-}
+// --- IMPORT TYPES AND SERVICES ---
+import { type AuditLog, AuditAction, ACTION_DISPLAY_MAP } from '@/types/auditlog'
+import { fetchAuditLogs, formatLogDetails } from '@/services/auditlogService'
 
-const auditLogs = ref<AuditLog[]>([
-  { id: 1, timestamp: '2024-07-16 10:00:00', user: 'admin', action: 'Login', details: 'ผู้ดูแลระบบเข้าสู่ระบบสำเร็จ' },
-  { id: 2, timestamp: '2024-07-16 10:05:30', user: 'admin', action: 'Add News', details: 'เพิ่มข่าวสาร: "การฉีดวัคซีนไข้หวัดใหญ่"' },
-  { id: 3, timestamp: '2024-07-16 10:15:00', user: 'editor', action: 'Edit ITA Doc', details: 'แก้ไขเอกสาร ITA: "รายงานประจำไตรมาส 1/2568"' },
-  { id: 4, timestamp: '2024-07-15 15:30:00', user: 'admin', action: 'Delete Slide', details: 'ลบภาพสไลด์: "สไลด์โปรโมท"' },
-  { id: 5, timestamp: '2024-07-14 09:00:00', user: 'user_reg', action: 'User Registration', details: 'ผู้ใช้งานใหม่ลงทะเบียน: "สมชาย ใจดี"' },
-]);
+// --- STATE ---
+const auditLogs = ref<AuditLog[]>([])
+const isLoading = ref(true)
 
 const filters = ref({
   user: '',
   action: '',
   date: '',
-});
+})
 
+// --- LIFECYCLE HOOKS ---
+onMounted(async () => {
+  // ใช้งาน Service Layer ที่สร้างขึ้น
+  const logs = await fetchAuditLogs()
+  auditLogs.value = logs
+  isLoading.value = false
+})
+
+// --- COMPUTED PROPERTY (Filtering) ---
 const filteredLogs = computed(() => {
-  return auditLogs.value.filter(log => {
-    const matchesUser = log.user.toLowerCase().includes(filters.value.user.toLowerCase());
-    const matchesAction = log.action.toLowerCase().includes(filters.value.action.toLowerCase());
-    const matchesDate = filters.value.date ? log.timestamp.startsWith(filters.value.date) : true;
-    return matchesUser && matchesAction && matchesDate;
-  });
-});
+  return auditLogs.value.filter((log) => {
+    // 1. กรองด้วย User ID
+    const matchesUser = log.userId.toLowerCase().includes(filters.value.user.toLowerCase())
 
-// In a real application, you would fetch logs from an API
-// onMounted(() => {
-//   fetchAuditLogs();
-// });
-// const fetchAuditLogs = async () => { /* ... */ };
+    // 2. กรองด้วย Action (กรองจาก Display Text)
+    // ต้องตรวจสอบว่า action มีอยู่ใน map ก่อนเพื่อป้องกัน error ในกรณีที่ log action ไม่ถูกต้อง
+    const actionDisplayText = ACTION_DISPLAY_MAP[log.action] || log.action
+    const matchesAction = actionDisplayText
+      .toLowerCase()
+      .includes(filters.value.action.toLowerCase())
+
+    // 3. กรองด้วย Date
+    const matchesDate = filters.value.date ? log.timestamp.startsWith(filters.value.date) : true
+
+    return matchesUser && matchesAction && matchesDate
+  })
+})
 </script>
 
 <style scoped>

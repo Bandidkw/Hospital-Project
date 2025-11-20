@@ -156,8 +156,8 @@ const router = createRouter({
         {
           path: 'audit-logs',
           name: 'dashboard-audit-logs',
-          // component: () => import('@/views/dashboard/DashboardAuditLogsView.vue'),
-          component: () => import('@/components/common/UnderDevelopment.vue'),
+          component: () => import('@/views/dashboard/DashboardAuditLogsView.vue'),
+          // component: () => import('@/components/common/UnderDevelopment.vue'),
           meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
         },
         {

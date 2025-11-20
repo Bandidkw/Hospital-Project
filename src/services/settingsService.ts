@@ -10,7 +10,6 @@ const GET_SETTINGS_URL = `/settings/public`
 const PATCH_SETTINGS_URL = `/settings/${SETTINGS_ID}`
 
 const mockSettings: SettingsData = {
-  // ... (Mock Data ยังคงเดิม)
   id: 'global-settings-1',
   hospitalNameTh: 'โรงพยาบาลแม่แตง', // ระบุให้ชัดเจนว่าใช้ Mock
   hospitalNameEn: 'Maetaeng Hospital',

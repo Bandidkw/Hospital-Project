@@ -15,7 +15,7 @@
         <li class="mb-2">
           <RouterLink
             to="/dashboard"
-            class="flex items-center p- 2 rounded-md hover:bg-gray-700 transition duration-200"
+            class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
             active-class="bg-blue-600"
           >
             <i class="fas fa-tachometer-alt mr-3 text-indigo-400"></i>
@@ -41,7 +41,7 @@
           </RouterLink>
         </li>
         <!-- 🟢 หมวดหมู่ - เฉพาะ SuperAdmin -->
-        <li class="mb-2" v-if="authStore.isSuperAdmin">
+        <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/categories"
             class="flex items-center p-2 rounded-md hover:bg-gray-700 transition duration-200"
@@ -50,7 +50,7 @@
             <i class="fas fa-tags mr-3 text-yellow-500"></i>
             <span class="text-gray-300">หมวดหมู่</span>
           </RouterLink>
-        </li>
+        </li> -->
         <!-- 🟢 ITA - ทุกคนเห็นได้ (user, admin, superadmin) -->
         <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
@@ -94,7 +94,7 @@
             <span class="text-gray-300">แก้ไขวิสัยทัศน์</span>
           </RouterLink>
         </li> -->
-        <!-- โครงสร้างองค์กร - เฉพาะ Admin และ SuperAdmin -->
+        <!-- 🟢 โครงสร้างองค์กร - เฉพาะ Admin และ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin || authStore.isAdmin">
           <RouterLink
             to="/dashboard/org-structure"
@@ -106,14 +106,14 @@
           </RouterLink>
         </li>
 
-        <!-- จัดการระบบ - ส่วนหัวข้อ -->
+        <!-- 🟢 จัดการระบบ - ส่วนหัวข้อ -->
         <li class="mb-2 mt-4" v-if="authStore.isSuperAdmin">
           <!-- เฉพาะ SuperAdmin -->
           <div class="menu-title text-gray-400 text-xs uppercase mb-2 flex items-center">
             <i class="fas fa-cog mr-2"></i> จัดการระบบ
           </div>
         </li>
-        <!-- ไฟล์มีเดีย - เฉพาะ SuperAdmin -->
+        <!-- 🟢 ไฟล์มีเดีย - เฉพาะ SuperAdmin -->
         <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/media-files"
@@ -124,7 +124,7 @@
             <span class="text-gray-300">ไฟล์มีเดีย</span>
           </RouterLink>
         </li> -->
-        <!-- รูปภาพตามหน้า - เฉพาะ SuperAdmin -->
+        <!-- 🟢 รูปภาพตามหน้า - เฉพาะ SuperAdmin -->
         <!-- <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/page-images"
@@ -135,7 +135,7 @@
             <span class="text-gray-300">รูปภาพตามหน้า</span>
           </RouterLink>
         </li> -->
-        <!-- Audit Logs - เฉพาะ SuperAdmin -->
+        <!-- 🟢 Audit Logs - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/audit-logs"
@@ -146,7 +146,7 @@
             <span class="text-gray-300">Audit Logs</span>
           </RouterLink>
         </li>
-        <!-- ตั้งค่าเว็บไซต์ - เฉพาะ SuperAdmin -->
+        <!-- 🟢 ตั้งค่าเว็บไซต์ - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/website-settings-list"
@@ -157,14 +157,14 @@
             <span class="text-gray-300">ตั้งค่าเว็บไซต์</span>
           </RouterLink>
         </li>
-        <!-- รายงาน - ส่วนหัวข้อ -->
+        <!-- 🟢 รายงาน - ส่วนหัวข้อ -->
         <li class="mb-2 mt-4" v-if="authStore.isSuperAdmin">
-          <!-- เฉพาะ Admin และ SuperAdmin -->
+          <!-- 🟢 เฉพาะ Admin และ SuperAdmin -->
           <div class="menu-title text-gray-400 text-xs uppercase mb-2 flex items-center">
             <i class="fas fa-chart-line mr-2"></i> รายงาน
           </div>
         </li>
-        <!-- รายงาน - เฉพาะ Admin และ SuperAdmin -->
+        <!-- 🟢 รายงาน - เฉพาะ Admin และ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/reports"
@@ -175,6 +175,7 @@
             <span class="text-gray-300">รายงาน</span>
           </RouterLink>
         </li>
+        <!-- 🟢 ข้อร้องเรียน - เฉพาะ superAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/complaints"
@@ -185,7 +186,7 @@
             <span class="text-gray-300">จัดการข้อร้องเรียน</span>
           </RouterLink>
         </li>
-        <!-- สถิติ - เฉพาะ Admin และ SuperAdmin -->
+        <!-- 🟢 สถิติ - เฉพาะ Admin และ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/statistics"
@@ -201,7 +202,7 @@
             <i class="fas fa-ellipsis-h mr-2"></i> อื่นๆ
           </div>
         </li>
-        <!-- โปรไฟล์ - ทุกคนเห็นได้ -->
+        <!-- 🟢 โปรไฟล์ - ทุกคนเห็นได้ -->
         <li class="mb-2">
           <RouterLink
             to="/dashboard/profile"
@@ -212,7 +213,7 @@
             <span class="text-gray-300">โปรไฟล์</span>
           </RouterLink>
         </li>
-        <!-- จัดการผู้ใช้ - เฉพาะ SuperAdmin -->
+        <!-- 🟢 จัดการผู้ใช้ - เฉพาะ SuperAdmin -->
         <li class="mb-2" v-if="authStore.isSuperAdmin">
           <RouterLink
             to="/dashboard/users"
@@ -223,7 +224,7 @@
             <span class="text-gray-300">จัดการผู้ใช้</span>
           </RouterLink>
         </li>
-        <!-- ดูเว็บไซต์ - ทุกคนเห็นได้ -->
+        <!-- 🟢 ดูเว็บไซต์ - ทุกคนเห็นได้ -->
         <li class="mb-2">
           <a
             href="/"
