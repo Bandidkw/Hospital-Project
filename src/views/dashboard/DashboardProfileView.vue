@@ -152,7 +152,7 @@
             <div class="text-sm text-amber-800">
               <p class="font-semibold mb-1">คำแนะนำด้านความปลอดภัย:</p>
               <ul class="list-disc list-inside space-y-1 text-xs">
-                <li>รหัสผ่านควรมีความยาวอย่างน้อย 6 ตัวอักษร</li>
+                <li>รหัสผ่านควรมีความยาวอย่างน้อย 5 ตัวอักษร</li>
                 <li>ใช้ตัวอักษรพิมพ์เล็ก พิมพ์ใหญ่ ตัวเลข และอักขระพิเศษ</li>
                 <li>ไม่ควรใช้รหัสผ่านเดียวกันกับบัญชีอื่น</li>
               </ul>
@@ -334,8 +334,8 @@ const changePassword = async () => {
     toast.error('รหัสผ่านใหม่และยืนยันรหัสผ่านใหม่ไม่ตรงกัน!')
     return
   }
-  if (passwordForm.newPassword.length < 6) {
-    toast.error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร!')
+  if (passwordForm.newPassword.length < 5) {
+    toast.error('รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 5 ตัวอักษร!')
     return
   }
   const success = await authStore.changePassword({
