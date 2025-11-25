@@ -1,84 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 
+import { fetchPendingQueueList } from '@/services/opdService'
 const toast = useToast()
 
 // ----------------------------------------------------
-// 1. Types และ Data (ปรับปรุงให้มีข้อมูลใบส่งตัวครบถ้วน)
+// 1. Types และ Data
 // ----------------------------------------------------
-interface QueueItem {
-  id: number
-  trackingCode: string
-  hn: string
-  patientName: string
-  phone: string // เพิ่มเบอร์โทรศัพท์
-  referralTime: string
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  reason?: string // เหตุผลการปฏิเสธ
 
-  // ข้อมูลใบส่งตัวเต็ม
-  originHospital: string
+// ใช้สถานะเป็นภาษาอังกฤษตาม Backend (PENDING, APPROVED, REJECTED)
+type QueueStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+interface QueueItem {
+  id: string // ID ควรเป็น string ตาม API
+  trackingCode: string
+  hn: string // ชื่อสั้นจาก hospitalNumber
+  patientName: string // ชื่อสั้นจาก fullName
+  phone: string // ชื่อสั้นจาก phoneNumber
+  referralTime: string // ชื่อสั้นจาก bookingTime
+  status: QueueStatus // ชื่อสั้นจาก queueStatus
+  reason?: string
+  originHospital: string // ชื่อสั้นจาก referralHospital
   destinationHospital: string
-  destinationClinic: string
+  destinationClinic: string // ชื่อสั้นจาก department
 }
 
-const queueItems = ref<QueueItem[]>([
-  {
-    id: 101,
-    trackingCode: 'REF-001',
-    hn: 'HN001',
-    patientName: 'นายสมชาย ใจดี',
-    phone: '081-XXX-9999',
-    referralTime: '09:00',
-    status: 'PENDING',
-    originHospital: 'รพ.แม่แตง',
-    destinationHospital: 'รพ.นครพิงค์',
-    destinationClinic: 'แผนกโรคหัวใจ (Cardiology)',
-  },
-  {
-    id: 102,
-    trackingCode: 'REF-002',
-    hn: 'HN002',
-    patientName: 'นางสาวมานี มีสุข',
-    phone: '089-XXX-1111',
-    referralTime: '09:15',
-    status: 'PENDING',
-    originHospital: 'รพ.จอมทอง',
-    destinationHospital: 'รพ.มหาราช',
-    destinationClinic: 'คลินิกอายุรกรรมทั่วไป',
-  },
-  {
-    id: 103,
-    trackingCode: 'REF-003',
-    hn: 'HN003',
-    patientName: 'เด็กชายธนากร เก่งมาก',
-    phone: '090-XXX-2222',
-    referralTime: '09:30',
-    status: 'PENDING',
-    originHospital: 'รพ.แม่แตง',
-    destinationHospital: 'รพ.นครพิงค์',
-    destinationClinic: 'แผนกศัลยกรรมกระดูก',
-  },
-  {
-    id: 104,
-    trackingCode: 'REF-004',
-    hn: 'HN004',
-    patientName: 'นางสายใจ รักชาติ',
-    phone: '098-XXX-3333',
-    referralTime: '09:45',
-    status: 'APPROVED',
-    originHospital: 'รพ.หางดง',
-    destinationHospital: 'รพ.นครพิงค์',
-    destinationClinic: 'แผนกโรคเบาหวาน',
-  },
-])
+const queueItems = ref<QueueItem[]>([])
+const loading = ref(true) // สถานะ Loading
 
 // ----------------------------------------------------
 // 2. State สำหรับ Modal และ Detail Modal
 // ----------------------------------------------------
 const showRejectModal = ref(false)
-const rejectingQueueId = ref<number | null>(null)
+// ID ผู้ป่วยจาก API เป็น string (guid) ตาม ReferralQueueItemApi ที่เรากำหนดไว้
+const rejectingQueueId = ref<string | null>(null)
 const rejectionReason = ref('')
 const commonReasons = [
   'เอกสารส่งตัวไม่ครบถ้วน',
@@ -87,33 +43,82 @@ const commonReasons = [
   'อื่นๆ (กรุณาระบุเพิ่ม)',
 ]
 
-// สถานะสำหรับ Modal ดูรายละเอียดใหม่
 const showDetailModal = ref(false)
 const selectedPatientDetail = ref<QueueItem | null>(null)
 
 // ----------------------------------------------------
-// 3. Logic การจัดการคิว และ ดูรายละเอียด
+// 3. Logic การจัดการคิว และ ดูรายละเอียด (ไม่เปลี่ยนแปลง)
 // ----------------------------------------------------
 
-// [A] ดูรายละเอียด: เปิด Modal รายละเอียด
+// [A] ฟังก์ชันดึงข้อมูลจริงจาก Service
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const apiData = await fetchPendingQueueList() // ตอนนี้ได้ข้อมูล "ทั้งหมด" จาก Endpoint ใหม่
+
+    // 1. ทำการ Mapping สถานะภาษาไทยและ Filter ไปพร้อมกัน
+    const mappedAndFilteredItems = apiData
+      .map((item) => {
+        let status: QueueStatus = 'REJECTED' // ตั้งค่าเริ่มต้น
+
+        // 💡 Mapping สถานะ: รวม "รอเรียก" และ "รออนุมัติ" ให้เป็น PENDING
+        if (item.queueStatus === 'รออนุมัติ' || item.queueStatus === 'รอเรียก') {
+          status = 'PENDING'
+        } else if (item.queueStatus === 'อนุมัติแล้ว') {
+          status = 'APPROVED'
+        }
+
+        // คืนค่าเป็น Local Type (QueueItem)
+        return {
+          id: item.id,
+          trackingCode: item.trackingCode || item.id,
+          hn: item.hospitalNumber,
+          patientName: item.fullName,
+          phone: item.phoneNumber,
+          referralTime: item.bookingTime,
+          status: status, // ใช้สถานะที่ Mapping แล้ว
+          reason: item.reason,
+          originHospital: item.referralHospital,
+          destinationHospital: item.destinationHospital,
+          destinationClinic: item.department,
+        }
+      })
+      // 2. 💡 Filter: คัดกรองรายการที่ต้องการแสดงใน List นี้ (เฉพาะ PENDING)
+      .filter((item) => item.status === 'PENDING')
+
+    queueItems.value = mappedAndFilteredItems as QueueItem[]
+
+    toast.info(`ดึงรายการคิวรออนุมัติสำเร็จ ${queueItems.value.length} รายการ`)
+  } catch {
+    // แสดง Toast Error เมื่อเกิด Server Error ที่ถูกโยนมาจาก service
+    toast.error('ไม่สามารถดึงรายการคิวได้')
+  } finally {
+    loading.value = false
+  }
+}
+
+// [B] ดูรายละเอียด: เปิด Modal รายละเอียด
 const viewDetails = (item: QueueItem) => {
   selectedPatientDetail.value = item
   showDetailModal.value = true
 }
 
-// [B] การอนุมัติ
-const approveQueue = (id: number) => {
+// [C] การอนุมัติ (TODO: ต้องเรียก API จริงสำหรับการยืนยัน)
+const approveQueue = (id: string) => {
+  // id เป็น string (ตาม API)
   const index = queueItems.value.findIndex((item) => item.id === id)
   if (index !== -1 && queueItems.value[index].status === 'PENDING') {
-    queueItems.value[index].status = 'APPROVED'
+    // ในการทำงานจริง: ต้องเรียก API updateQueueStatus(id, 'APPROVED')
+    queueItems.value[index].status = 'APPROVED' // Mock update UI
     toast.success(`✅ อนุมัติคิว [${queueItems.value[index].trackingCode}] เรียบร้อยแล้ว`)
   } else {
     toast.error('❌ ไม่สามารถอนุมัติได้: คิวนี้ได้รับการดำเนินการไปแล้ว')
   }
 }
 
-// [C] การปฏิเสธ: เปิด Modal
-const openRejectModal = (id: number) => {
+// [D] การปฏิเสธ: เปิด Modal
+const openRejectModal = (id: string) => {
+  // id เป็น string (ตาม API)
   const item = queueItems.value.find((item) => item.id === id)
   if (item && item.status !== 'PENDING') {
     toast.error('❌ ไม่สามารถปฏิเสธได้: คิวนี้ได้รับการดำเนินการไปแล้ว')
@@ -124,7 +129,7 @@ const openRejectModal = (id: number) => {
   showRejectModal.value = true
 }
 
-// [D] ยืนยันการปฏิเสธใน Modal
+// [E] ยืนยันการปฏิเสธใน Modal (TODO: ต้องเรียก API จริงสำหรับการยืนยัน)
 const confirmReject = () => {
   const id = rejectingQueueId.value
   const reason = rejectionReason.value.trim()
@@ -136,7 +141,8 @@ const confirmReject = () => {
 
   const index = queueItems.value.findIndex((item) => item.id === id)
   if (index !== -1) {
-    queueItems.value[index].status = 'REJECTED'
+    // ในการทำงานจริง: ต้องเรียก API updateQueueStatus(id, 'REJECTED', reason)
+    queueItems.value[index].status = 'REJECTED' // Mock update UI
     queueItems.value[index].reason = reason
 
     toast.info(
@@ -155,45 +161,110 @@ const selectCommonReason = (reason: string) => {
     rejectionReason.value = (rejectionReason.value + ' ' + reason).trim()
   }
 }
+
+// [F] Utility Function สำหรับแปลงสถานะจาก English เป็น Thai (เพื่อความสะอาด)
+const getStatusLabel = (status: QueueStatus): string => {
+  switch (status) {
+    case 'PENDING':
+      return 'รออนุมัติ'
+    case 'APPROVED':
+      return 'อนุมัติแล้ว'
+    case 'REJECTED':
+      return 'ปฏิเสธ'
+    default:
+      return 'ไม่ทราบสถานะ'
+  }
+}
+
+// ----------------------------------------------------
+// 4. Lifecycle Hook
+// ----------------------------------------------------
+onMounted(fetchData)
 </script>
 
 <template>
   <div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200">
+    <div v-if="loading" class="text-center py-10 text-gray-500">
+      <svg
+        class="animate-spin h-5 w-5 text-indigo-500 mx-auto mb-2"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      กำลังโหลดรายการคิว...
+    </div>
+    <div
+      v-else-if="queueItems.length === 0"
+      class="text-center py-10 text-gray-500 border border-dashed rounded-lg"
+    >
+      <p class="font-semibold text-lg mb-1">🎉 ไม่มีรายการคิวที่รออนุมัติ</p>
+      <p>ข้อมูลคิวส่งตัวเป็นปัจจุบันแล้ว</p>
+      <button @click="fetchData" class="mt-4 text-indigo-600 hover:text-indigo-800 text-sm">
+        คลิกเพื่อดึงข้อมูลใหม่
+      </button>
+    </div>
+    <table v-else class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
           <th
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
           >
-            HN / ชื่อผู้ป่วย
+                        HN / ชื่อผู้ป่วย          
           </th>
+                   
           <th
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
           >
-            เวลาร้องขอ
+                        เวลาร้องขอ          
           </th>
+                   
           <th
             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
           >
-            สถานะ
+                        สถานะ          
           </th>
+                   
           <th
             class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
           >
-            การดำเนินการ
+                        การดำเนินการ          
           </th>
+                 
         </tr>
+             
       </thead>
+           
       <tbody class="bg-white divide-y divide-gray-200">
+               
         <tr v-for="item in queueItems" :key="item.id">
+                   
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-            <span class="font-semibold text-indigo-600 mr-2">[{{ item.trackingCode }}]</span>
-            {{ item.patientName }} ({{ item.hn }})
+                       
+            <span class="font-semibold text-indigo-600 mr-2">[{{ item.trackingCode }}]</span>      
+                  {{ item.patientName }} ({{ item.hn }})          
           </td>
+                   
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            {{ item.referralTime }} น.
+                        {{ item.referralTime }} น.          
           </td>
+                   
           <td class="px-6 py-4 whitespace-nowrap text-sm">
+                       
             <span
               :class="[
                 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full',
@@ -204,64 +275,79 @@ const selectCommonReason = (reason: string) => {
                     : 'bg-yellow-100 text-yellow-800',
               ]"
             >
-              {{
-                item.status === 'PENDING'
-                  ? 'รออนุมัติ'
-                  : item.status === 'APPROVED'
-                    ? 'อนุมัติแล้ว'
-                    : 'ปฏิเสธ'
-              }}
+                            {{ getStatusLabel(item.status) }}            
             </span>
+                       
             <p
               v-if="item.status === 'REJECTED' && item.reason"
               class="text-xs text-red-500 mt-1 italic"
             >
-              เหตุผล: {{ item.reason }}
+                            เหตุผล: {{ item.reason }}            
             </p>
+                     
           </td>
+                   
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center space-x-2">
+                       
             <button
               @click="viewDetails(item)"
               class="bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-1 px-3 rounded-md shadow-sm transition duration-150 text-xs"
             >
-              ดูรายละเอียด
+                            ดูรายละเอียด            
             </button>
 
+                       
             <template v-if="item.status === 'PENDING'">
+                           
               <button
-                @click="approveQueue(item.id)"
+                @click="approveQueue(item.id as unknown as string)"
                 class="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-md shadow-sm transition duration-150 text-xs"
               >
-                อนุมัติ
+                                อนุมัติ              
               </button>
+                           
               <button
-                @click="openRejectModal(item.id)"
+                @click="openRejectModal(item.id as unknown as string)"
                 class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 rounded-md shadow-sm transition duration-150 text-xs"
               >
-                ปฏิเสธ
+                                ปฏิเสธ              
               </button>
+                         
             </template>
-            <span v-else class="text-gray-400">-</span>
+                        <span v-else class="text-gray-400">-</span>          
           </td>
+                 
         </tr>
+             
       </tbody>
+         
     </table>
 
+       
     <div
       v-if="showRejectModal"
       class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
     >
+           
       <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+               
         <div class="px-6 py-4 border-b">
+                   
           <h3 class="text-xl font-bold text-red-700">ระบุเหตุผลการปฏิเสธคิว</h3>
+                 
         </div>
 
+               
         <div class="p-6">
+                   
           <p class="mb-4 text-sm text-gray-600">
-            กรุณาระบุเหตุผลที่ปฏิเสธเพื่อแจ้งให้ผู้ป่วยทราบ (รหัสคิว: {{ rejectingQueueId }})
+                        กรุณาระบุเหตุผลที่ปฏิเสธเพื่อแจ้งให้ผู้ป่วยทราบ (รหัสคิว:
+            {{ rejectingQueueId }})          
           </p>
 
+                   
           <div class="mb-4 flex flex-wrap gap-2">
+                       
             <button
               v-for="reason in commonReasons"
               :key="reason"
@@ -273,55 +359,80 @@ const selectCommonReason = (reason: string) => {
                   : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200',
               ]"
             >
-              {{ reason }}
+                            {{ reason }}            
             </button>
+                     
           </div>
 
+                   
           <textarea
             v-model="rejectionReason"
             rows="4"
             placeholder="เช่น เอกสารไม่ครบถ้วน กรุณาแนบไฟล์เพิ่มเติม หรือข้อมูลไม่ตรงกับสิทธิการรักษา..."
             class="w-full border-gray-300 rounded-md shadow-sm focus:border-red-500 focus:ring-red-500 p-2"
           ></textarea>
+                 
         </div>
 
+               
         <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                   
           <button
             @click="showRejectModal = false"
             class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded transition"
           >
-            ยกเลิก
+                        ยกเลิก          
           </button>
+                   
           <button
             @click="confirmReject"
             class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded transition"
           >
-            ยืนยันการปฏิเสธ
+                        ยืนยันการปฏิเสธ          
           </button>
+                 
         </div>
+             
       </div>
+         
     </div>
+
+       
     <div
       v-if="showDetailModal && selectedPatientDetail"
       class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
     >
+           
       <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
+               
         <div class="px-6 py-4 border-b bg-blue-50">
+                   
           <h3 class="text-xl font-bold text-blue-700">📄 รายละเอียดใบส่งตัว</h3>
+                   
           <p class="text-sm text-blue-500">รหัสติดตาม: {{ selectedPatientDetail.trackingCode }}</p>
+                 
         </div>
 
+               
         <div class="p-6 text-gray-700 space-y-4">
+                   
           <div class="pb-3 border-b border-gray-200">
+                       
             <p class="font-bold text-lg text-indigo-600 mb-2">
-              {{ selectedPatientDetail.patientName }} ({{ selectedPatientDetail.hn }})
+                            {{ selectedPatientDetail.patientName }} ({{ selectedPatientDetail.hn }})
+                         
             </p>
+                       
             <div class="grid grid-cols-2 gap-2 text-sm">
+                           
               <p><strong>HN:</strong> {{ selectedPatientDetail.hn }}</p>
+                           
               <p><strong>เบอร์โทรศัพท์:</strong> {{ selectedPatientDetail.phone }}</p>
+                           
               <p><strong>เวลาร้องขอ:</strong> {{ selectedPatientDetail.referralTime }} น.</p>
+                           
               <p>
-                <strong>สถานะคิว:</strong>
+                                <strong>สถานะคิว:</strong>                
                 <span
                   class="font-medium"
                   :class="
@@ -330,42 +441,56 @@ const selectCommonReason = (reason: string) => {
                       : 'text-green-600'
                   "
                 >
-                  {{
-                    selectedPatientDetail.status === 'PENDING'
-                      ? 'รออนุมัติ'
-                      : selectedPatientDetail.status === 'APPROVED'
-                        ? 'อนุมัติแล้ว'
-                        : 'ปฏิเสธแล้ว'
-                  }}
+                                    {{ getStatusLabel(selectedPatientDetail.status) }}              
+                   
                 </span>
+                             
               </p>
+                         
             </div>
+                     
           </div>
 
+                   
           <div>
+                       
             <p class="font-bold text-lg mb-2 text-gray-800">ข้อมูลโรงพยาบาลและแผนก</p>
+                       
             <div class="grid grid-cols-1 gap-2 text-sm bg-gray-50 p-3 rounded-md">
+                           
               <p><strong>รพ.ต้นทาง:</strong> {{ selectedPatientDetail.originHospital }}</p>
+                           
               <p><strong>รพ.ปลายทาง:</strong> {{ selectedPatientDetail.destinationHospital }}</p>
+                           
               <p>
-                <strong>แผนก/คลินิก:</strong>
+                                <strong>แผนก/คลินิก:</strong>                
                 <span class="font-semibold text-blue-700">{{
                   selectedPatientDetail.destinationClinic
                 }}</span>
+                             
               </p>
+                         
             </div>
+                     
           </div>
+                 
         </div>
 
+               
         <div class="px-6 py-4 bg-gray-50 flex justify-end">
+                   
           <button
             @click="((showDetailModal = false), (selectedPatientDetail = null))"
             class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded transition"
           >
-            ปิด
+                        ปิด          
           </button>
+                 
         </div>
+             
       </div>
+         
     </div>
+     
   </div>
 </template>

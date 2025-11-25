@@ -42,7 +42,7 @@
         class="bg-white rounded-xl shadow-lg p-8"
       >
         <h2 class="text-2xl font-bold text-my-custom-gray mb-4">
-          <i class="fas fa-folder mr-3 text-emerald-600"></i> {{ moit.title }}
+          <i class="fas fa-folder mr-3 text-emerald-600"></i> {{ moit.moit_name }} {{ moit.title }}
         </h2>
         <p v-if="moit.description" class="text-gray-600 mb-6 italic">{{ moit.description }}</p>
 

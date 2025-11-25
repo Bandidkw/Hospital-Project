@@ -69,7 +69,7 @@
             active-class="bg-blue-600"
           >
             <i class="fas fa-tags mr-3 text-yellow-500"></i>
-            <span class="text-gray-300">OPD</span>
+            <span class="text-gray-300">ส่งตัวผู้ป่วย</span>
           </RouterLink>
         </li>
         <!-- 🟢 แก้ไขประวัติ รพ. เฉพาะ SuperAdmin -->

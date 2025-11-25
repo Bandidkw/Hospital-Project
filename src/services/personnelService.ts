@@ -2,7 +2,6 @@
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import apiService, { isAxiosError } from '@/services/apiService'
-// ℹ️ ต้องมั่นใจว่าไฟล์ types/personnel.ts มี PersonnelItem และ RawPersonnelItem
 import type { PersonnelItem, RawPersonnelItem, PersonnelCreateUpdateData } from '@/types/personnel'
 
 // Mock Data สำหรับส่วน Public

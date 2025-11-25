@@ -1,80 +1,3 @@
-<script setup lang="ts">
-import { ref } from 'vue'
-import OpdQueueList from '@/views/dashboard/opd/OpdQueueList.vue'
-import { useToast } from 'vue-toastification'
-
-// --- ส่วนที่ 1: เปลี่ยนมาใช้ Import Interface แทนการประกาศใหม่ ---
-import type { PatientReferralInfo, SearchError } from '@/types/opd'
-// ตรวจสอบเส้นทางให้ถูกต้องตามโครงสร้างโปรเจกต์ของคุณ (เช่น '../types/opd' หากอยู่ในโฟลเดอร์เดียวกัน)
-// -------------------------------------------------------------
-
-const toast = useToast()
-
-// ข้อมูลสถานะ (Stat Cards)
-const opdStats = ref({
-  queueCount: 20,
-  pendingResults: 12,
-  todayAppointments: 68,
-})
-
-// ----------------------------------------------------
-// Logic สำหรับ Modal ค้นหา HN
-// ----------------------------------------------------
-
-const showSearchModal = ref(false)
-const searchHN = ref('')
-// ใช้ Union Type ที่ Import เข้ามา
-const searchResult = ref<PatientReferralInfo | SearchError | null>(null)
-
-const openSearchModal = () => {
-  searchHN.value = ''
-  searchResult.value = null
-  showSearchModal.value = true
-}
-
-// ----------------------------------------------------
-// Type Guard Function (ใช้ SearchError ที่ Import เข้ามา)
-// ----------------------------------------------------
-const isSearchError = (result: PatientReferralInfo | SearchError | null): result is SearchError => {
-  return result !== null && 'error' in result
-}
-
-const performSearch = () => {
-  const hn = searchHN.value.trim()
-  if (!hn) {
-    toast.warning('⚠️ กรุณากรอกหมายเลข HN ที่ต้องการค้นหา')
-    return
-  }
-
-  console.log(`Searching for HN: ${hn}`)
-
-  // จำลองผลลัพธ์การค้นหา
-  if (hn === 'HN001' || hn === '12345') {
-    searchResult.value = {
-      hn: hn,
-      name: 'นายสมชาย ใจดี',
-      phone: '081-XXX-9999',
-      status: 'รออนุมัติ',
-      trackingCode: 'REF-001',
-      originHospital: 'รพ.แม่แตง',
-      destinationHospital: 'รพ.นครพิงค์',
-      destinationClinic: 'แผนกโรคหัวใจ (Cardiology)',
-    }
-    toast.success(`🔍 พบข้อมูลผู้ป่วย HN: ${hn}`)
-  } else {
-    // ใช้ SearchError Interface ที่ Import เข้ามา
-    searchResult.value = { error: 'ไม่พบข้อมูลผู้ป่วยด้วย HN นี้' }
-    toast.error(`❌ ไม่พบ HN: ${hn}`)
-  }
-}
-
-const closeSearchModal = () => {
-  showSearchModal.value = false
-  searchResult.value = null
-  searchHN.value = ''
-}
-</script>
-
 <template>
   <div class="opd-dashboard p-8">
     <h1 class="text-3xl font-bold mb-2 text-gray-800">OPD Dashboard (แผนกผู้ป่วยนอก)</h1>
@@ -87,19 +10,28 @@ const closeSearchModal = () => {
         class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-600 h-32 flex flex-col justify-center"
       >
         <p class="text-sm font-semibold text-gray-500 mb-1">คิวปัจจุบัน</p>
-        <p class="text-4xl font-extrabold text-blue-600">{{ opdStats.queueCount }}</p>
+        <p v-if="statsLoading" class="text-4xl font-extrabold text-gray-400 animate-pulse">...</p>
+        <p v-else class="text-4xl font-extrabold text-blue-600">
+          {{ opdStats.queueCount.toLocaleString() }}
+        </p>
       </div>
       <div
         class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500 h-32 flex flex-col justify-center"
       >
         <p class="text-sm font-semibold text-gray-500 mb-1">ผลตรวจรออนุมัติ</p>
-        <p class="text-4xl font-extrabold text-orange-500">{{ opdStats.pendingResults }}</p>
+        <p v-if="statsLoading" class="text-4xl font-extrabold text-gray-400 animate-pulse">...</p>
+        <p v-else class="text-4xl font-extrabold text-orange-500">
+          {{ opdStats.pendingResults.toLocaleString() }}
+        </p>
       </div>
       <div
         class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-600 h-32 flex flex-col justify-center"
       >
         <p class="text-sm font-semibold text-gray-500 mb-1">นัดหมายทั้งหมดวันนี้</p>
-        <p class="text-4xl font-extrabold text-green-600">{{ opdStats.todayAppointments }}</p>
+        <p v-if="statsLoading" class="text-4xl font-extrabold text-gray-400 animate-pulse">...</p>
+        <p v-else class="text-4xl font-extrabold text-green-600">
+          {{ opdStats.todayAppointments.toLocaleString() }}
+        </p>
       </div>
     </div>
 
@@ -148,9 +80,11 @@ const closeSearchModal = () => {
           />
           <button
             @click="performSearch"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition"
+            :disabled="searchLoading"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition disabled:bg-indigo-400"
           >
-            ค้นหา
+            <span v-if="searchLoading">กำลังค้นหา...</span>
+            <span v-else>ค้นหา</span>
           </button>
         </div>
 
@@ -217,6 +151,114 @@ const closeSearchModal = () => {
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import OpdQueueList from '@/views/dashboard/opd/OpdQueueList.vue'
+import { useToast } from 'vue-toastification'
+import type { PatientReferralInfo, SearchError, OpdStats } from '@/types/opd'
+import { fetchOpdStats, searchPatientByHN } from '@/services/opdService'
+
+const toast = useToast()
+
+// ----------------------------------------------------
+// 1. State สำหรับ Dashboard Stats
+// ----------------------------------------------------
+const opdStats = ref<OpdStats>({
+  queueCount: 0,
+  pendingResults: 0,
+  todayAppointments: 0,
+})
+const statsLoading = ref(true) // สถานะ Loading สำหรับ Stat Cards
+
+// ----------------------------------------------------
+// 2. Logic สำหรับ Modal ค้นหา HN
+// ----------------------------------------------------
+
+const showSearchModal = ref(false)
+const searchHN = ref('')
+const searchResult = ref<PatientReferralInfo | SearchError | null>(null)
+const searchLoading = ref(false) // สถานะ Loading สำหรับการค้นหา HN
+
+/**
+ * เปิด Modal และเคลียร์ค่าเก่า
+ */
+const openSearchModal = () => {
+  searchHN.value = ''
+  searchResult.value = null
+  showSearchModal.value = true
+}
+
+/**
+ * Type Guard เพื่อตรวจสอบว่าผลลัพธ์ที่ได้เป็น SearchError หรือไม่
+ * @param result ผลลัพธ์จากการค้นหา
+ */
+const isSearchError = (result: PatientReferralInfo | SearchError | null): result is SearchError => {
+  return result !== null && 'error' in result
+}
+
+/**
+ * ดำเนินการค้นหาข้อมูลผู้ป่วยผ่าน API
+ */
+const performSearch = async () => {
+  const hn = searchHN.value.trim()
+  if (!hn) {
+    toast.warning('⚠️ กรุณากรอกหมายเลข HN ที่ต้องการค้นหา')
+    return
+  }
+
+  searchResult.value = null
+  searchLoading.value = true
+  console.log(`Searching for HN: ${hn} via API...`)
+
+  try {
+    // 💡 เรียกใช้ Service Layer
+    const result = await searchPatientByHN(hn)
+    searchResult.value = result
+
+    if (isSearchError(result)) {
+      toast.error(`❌ ${result.error}`)
+    } else {
+      toast.success(`🔍 พบข้อมูลผู้ป่วย HN: ${hn}`)
+    }
+  } catch (e) {
+    console.error('Search HN API Error:', e)
+    toast.error('เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบค้นหา')
+  } finally {
+    searchLoading.value = false
+  }
+}
+
+/**
+ * ปิด Modal ค้นหา
+ */
+const closeSearchModal = () => {
+  showSearchModal.value = false
+  searchResult.value = null
+  searchHN.value = ''
+}
+
+// ----------------------------------------------------
+// 3. Lifecycle Hook: ดึงข้อมูล Stats
+// ----------------------------------------------------
+onMounted(async () => {
+  statsLoading.value = true
+  try {
+    const data = await fetchOpdStats()
+    opdStats.value = data
+  } catch (e) {
+    toast.error('ไม่สามารถดึงข้อมูลสรุป OPD ได้')
+    console.error('Fetch OPD Stats Error:', e)
+    opdStats.value = {
+      queueCount: 0,
+      pendingResults: 0,
+      todayAppointments: 0,
+    }
+  } finally {
+    statsLoading.value = false
+  }
+})
+</script>
 
 <style scoped>
 .opd-dashboard {
