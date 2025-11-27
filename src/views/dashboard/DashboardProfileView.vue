@@ -279,8 +279,11 @@
 import { ref, reactive } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 const toast = useToast()
+const router = useRouter()
+
 const authStore = useAuthStore()
 
 interface UserProfile {
@@ -348,6 +351,7 @@ const changePassword = async () => {
     passwordForm.currentPassword = ''
     passwordForm.newPassword = ''
     passwordForm.confirmNewPassword = ''
+    await router.push({ path: '/dashboard' })
   } else {
     toast.error('เปลี่ยนรหัสผ่านไม่สำเร็จ! อาจเป็นเพราะรหัสผ่านปัจจุบันไม่ถูกต้อง')
   }

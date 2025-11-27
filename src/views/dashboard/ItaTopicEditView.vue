@@ -2,7 +2,6 @@
   <div class="container mx-auto p-4 sm:p-6 lg:p-8">
     <!-- Header -->
     <div v-if="moit" class="mb-8">
-      <!-- ปุ่มกลับไปหน้ารายการหัวข้อของปี -->
       <router-link
         v-if="yearId"
         :to="{ name: 'dashboard-ita-topics', params: { yearId } }"
@@ -33,7 +32,6 @@
 
     <!-- Content -->
     <div v-else-if="moit">
-      <!-- Form เอกสาร -->
       <DocumentForm
         :is-editing="editingDocument"
         :document-data="currentDocument"

@@ -132,13 +132,37 @@
               </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex justify-center gap-2">
-                  <button
-                    @click="togglePublishStatus(news)"
-                    class="p-2 rounded-md hover:bg-indigo-50 text-indigo-600"
-                    :title="news.isPublished ? 'ยกเลิกเผยแพร่' : 'เผยแพร่'"
-                  >
-                    <i class="fas fa-bullhorn"></i>
-                  </button>
+                  <div class="flex items-center justify-center">
+                    <label :for="`toggle-${news.id}`" class="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        :id="`toggle-${news.id}`"
+                        :checked="news.isPublished"
+                        @change="togglePublishStatus(news)"
+                        class="sr-only"
+                      />
+
+                      <div
+                        class="relative w-10 h-5 rounded-full transition duration-300 shadow-inner"
+                        :class="news.isPublished ? 'bg-green-500' : 'bg-gray-300'"
+                        :title="news.isPublished ? 'สถานะ: เผยแพร่แล้ว' : 'สถานะ: ซ่อน'"
+                      >
+                        <div
+                          class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
+                          :class="{ 'translate-x-5': news.isPublished }"
+                        >
+                          <i
+                            class="fas w-full h-full flex items-center justify-center text-xs"
+                            :class="
+                              news.isPublished
+                                ? 'fa-check text-green-500'
+                                : 'fa-times text-gray-500'
+                            "
+                          ></i>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
                   <button
                     @click="openEditModal(news)"
                     class="p-2 rounded-md hover:bg-amber-50 text-amber-600"

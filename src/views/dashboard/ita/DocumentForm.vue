@@ -4,8 +4,6 @@
       <i class="fas" :class="isEditing ? 'fa-edit' : 'fa-plus-circle'"></i>
       {{ isEditing ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสารใหม่' }}
     </h2>
-
-    <!-- Error summary (accessibility) -->
     <div
       v-if="errors.title || errors.sub_topic || errors.quarter || errors.file"
       class="mb-4 rounded-md border border-red-200 bg-red-50 text-red-700 p-3 text-sm"

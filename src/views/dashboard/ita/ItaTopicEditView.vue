@@ -8,6 +8,7 @@
       >
         <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้ารายการหัวข้อ
       </router-link>
+
       <div class="bg-white p-6 rounded-lg shadow-md border-l-8 border-blue-500">
         <h1 class="text-3xl font-extrabold text-blue-800">
           <span class="text-gray-500 font-normal">จัดการเอกสารในหัวข้อ:</span><br />
@@ -16,6 +17,15 @@
         <p v-if="moit?.year_ita" class="text-gray-600 mt-2 text-lg">
           ปีงบประมาณ: <span class="font-semibold">{{ moit.year_ita?.year ?? '-' }}</span>
         </p>
+      </div>
+
+      <div class="flex justify-end mt-6 mb-4">
+        <button
+          @click="openCreateModal"
+          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition duration-200 flex items-center"
+        >
+          <i class="fas fa-plus-circle mr-2"></i> เพิ่มเอกสารใหม่
+        </button>
       </div>
     </div>
 
@@ -28,14 +38,6 @@
     </div>
 
     <div v-else-if="moit">
-      <DocumentForm
-        :is-editing="editingDocument"
-        :document-data="currentDocument"
-        @save="saveDocument"
-        @cancel="cancelEdit"
-        @update:file="updateSelectedFile"
-      />
-
       <DocumentTable
         :documents="moit?.documents ?? []"
         @edit="editDocument"
@@ -44,24 +46,57 @@
     </div>
 
     <div
+      v-if="isFormModalOpen"
+      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto"
+      >
+        <div
+          class="sticky top-0 px-6 py-4 border-b bg-blue-600 text-white rounded-t-xl z-10 shadow-md"
+        >
+          <h2 class="text-xl font-bold">
+            <i class="fas fa-file-alt mr-2"></i>
+            {{ editingDocument ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสารใหม่' }}
+          </h2>
+        </div>
+
+        <div class="p-6">
+          <DocumentForm
+            :is-editing="editingDocument"
+            :document-data="currentDocument"
+            @save="saveDocument"
+            @cancel="cancelEdit"
+            @update:file="updateSelectedFile"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div
       v-if="isDeleteConfirmationOpen"
       class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
     >
       <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <h2 class="text-lg font-bold text-gray-800 mb-4">ยืนยันการลบ</h2>
-        <p class="text-gray-700 mb-4">
-          คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร "{{ deleteDocumentTitle }}"?
+        <h2 class="text-xl font-bold text-red-700 mb-4 flex items-center">
+          <i class="fas fa-exclamation-triangle mr-2"></i> ยืนยันการลบ
+        </h2>
+        <p class="text-gray-700 mb-6">
+          คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร "<span class="font-semibold text-red-600">{{
+            deleteDocumentTitle
+          }}</span
+          >" นี้? การกระทำนี้ไม่สามารถยกเลิกได้
         </p>
         <div class="flex justify-end space-x-4">
           <button
             @click="isDeleteConfirmationOpen = false"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-md"
+            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition"
           >
             ยกเลิก
           </button>
           <button
             @click="handleConfirmDelete"
-            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md"
+            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition"
           >
             ลบ
           </button>
@@ -83,6 +118,8 @@ import DocumentTable from '@/views/dashboard/ita/DocumentTable.vue'
 
 const route = useRoute()
 const toast = useToast()
+
+const isFormModalOpen = ref(false)
 
 // รองรับทั้ง :id และ :moitId ใน router (กันพังถ้าชื่อ param ไม่ตรง)
 const moitId = (route.params.moitId ?? route.params.id) as string | undefined
@@ -159,20 +196,16 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
   const formData = new FormData()
   formData.append('title', documentData.title)
   formData.append('sub_topic', documentData.sub_topic)
-  formData.append('quarter', String(documentData.quarter ?? 1)) // ใช้ ?? แทน ||
+  formData.append('quarter', String(documentData.quarter ?? 1))
   if (documentData.description) formData.append('description', documentData.description)
   if (selectedFile.value) formData.append('file', selectedFile.value)
 
   try {
     toast.info('กำลังบันทึกข้อมูลเอกสาร...')
-
     if (editingDocument.value && documentData.id) {
-      // ✔ update: ไม่ต้องใช้ moitId
       await itaService.updateDocument(documentData.id, formData)
       toast.success('แก้ไขเอกสารสำเร็จ!')
     } else {
-      // ✔ create: ต้องมี moitId ที่ไม่เป็น undefined
-      // ใช้ id จาก moit ที่โหลดมาแล้วเป็นหลัก ถ้าไม่มีค่อย fallback ไปที่ param
       const targetMoitId = moit.value?.id ?? moitId
       if (!targetMoitId) {
         toast.error('ไม่พบรหัสหัวข้อ (moitId) สำหรับเพิ่มเอกสาร')
@@ -185,6 +218,7 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
     await fetchTopicDetails()
     resetForm()
     selectedFile.value = null
+    isFormModalOpen.value = false // 💡 ปิด Modal หลังจากบันทึกสำเร็จ
   } catch (err: unknown) {
     toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล')
   }
@@ -215,6 +249,7 @@ const editDocument = (doc: ItaDocument) => {
   editingDocument.value = true
   currentDocument.value = { ...doc }
   selectedFile.value = null
+  isFormModalOpen.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -243,7 +278,14 @@ const resetForm = () => {
 
 const cancelEdit = () => {
   resetForm()
+  isFormModalOpen.value = false // 💡 ปิด Modal เมื่อยกเลิก
   toast.info('ยกเลิกการแก้ไข')
+}
+// 💡 ฟังก์ชันใหม่: เปิด Modal สำหรับเพิ่มเอกสารใหม่
+const openCreateModal = () => {
+  resetForm()
+  editingDocument.value = false // ยืนยันว่าเป็นโหมดสร้าง
+  isFormModalOpen.value = true
 }
 
 // --- Lifecycle Hooks ---

@@ -210,7 +210,7 @@
             active-class="bg-blue-600"
           >
             <i class="fas fa-user mr-3 text-gray-300"></i>
-            <span class="text-gray-300">โปรไฟล์</span>
+            <span class="text-gray-300">ข้อมูลส่วนตัว</span>
           </RouterLink>
         </li>
         <!-- 🟢 จัดการผู้ใช้ - เฉพาะ SuperAdmin -->

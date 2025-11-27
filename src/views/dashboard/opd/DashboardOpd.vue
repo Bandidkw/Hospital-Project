@@ -1,268 +1,46 @@
 <template>
-  <div class="opd-dashboard p-8">
-    <h1 class="text-3xl font-bold mb-2 text-gray-800">OPD Dashboard (แผนกผู้ป่วยนอก)</h1>
-    <p class="text-base text-gray-500 mb-8">
-      ข้อมูลสรุปและเครื่องมือสำคัญสำหรับเจ้าหน้าที่ประจำแผนกผู้ป่วยนอก
-    </p>
+  <div class="dashboard-opd">
+    <h2 class="text-xl font-bold mb-4">
+      <i class="fas fa-stethoscope mr-2"></i> Dashboard ผู้ป่วยนอก
+    </h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-      <div
-        class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-600 h-32 flex flex-col justify-center"
-      >
-        <p class="text-sm font-semibold text-gray-500 mb-1">คิวปัจจุบัน</p>
-        <p v-if="statsLoading" class="text-4xl font-extrabold text-gray-400 animate-pulse">...</p>
-        <p v-else class="text-4xl font-extrabold text-blue-600">
-          {{ opdStats.queueCount.toLocaleString() }}
-        </p>
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6"></div>
+
+    <div class="card shadow-lg">
+      <div class="card-header bg-primary text-white p-3 rounded-t-lg">
+        <h3 class="text-lg font-semibold">
+          <i class="fas fa-list-ul mr-2"></i> รายการคิวรออนุมัติและรอเรียก
+        </h3>
       </div>
-      <div
-        class="bg-white p-6 rounded-lg shadow-md border-l-4 border-orange-500 h-32 flex flex-col justify-center"
-      >
-        <p class="text-sm font-semibold text-gray-500 mb-1">ผลตรวจรออนุมัติ</p>
-        <p v-if="statsLoading" class="text-4xl font-extrabold text-gray-400 animate-pulse">...</p>
-        <p v-else class="text-4xl font-extrabold text-orange-500">
-          {{ opdStats.pendingResults.toLocaleString() }}
-        </p>
-      </div>
-      <div
-        class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-600 h-32 flex flex-col justify-center"
-      >
-        <p class="text-sm font-semibold text-gray-500 mb-1">นัดหมายทั้งหมดวันนี้</p>
-        <p v-if="statsLoading" class="text-4xl font-extrabold text-gray-400 animate-pulse">...</p>
-        <p v-else class="text-4xl font-extrabold text-green-600">
-          {{ opdStats.todayAppointments.toLocaleString() }}
-        </p>
-      </div>
-    </div>
-
-    <div class="mt-8 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800">เครื่องมือด่วน</h2>
-      <div class="flex space-x-3 pb-8 border-b border-gray-200 mb-6">
-        <button
-          class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition duration-150 shadow-md"
-        >
-          จัดการคิว
-        </button>
-        <button
-          @click="openSearchModal"
-          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded transition duration-150 shadow-sm"
-        >
-          ค้นหา HN
-        </button>
-      </div>
-
-      <h3 class="text-xl font-semibold mb-4 text-gray-800">รายการคิวส่งตัวที่รอการอนุมัติ</h3>
-      <OpdQueueList />
-    </div>
-  </div>
-
-  <div
-    v-if="showSearchModal"
-    class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4"
-  >
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg">
-      <div class="px-6 py-4 border-b">
-        <h3 class="text-xl font-bold text-indigo-700">🔍 ค้นหาข้อมูลผู้ป่วยด้วย HN</h3>
-      </div>
-
-      <div class="p-6">
-        <label for="hn-input" class="block text-sm font-medium text-gray-700 mb-2">
-          หมายเลข HN:
-        </label>
-        <div class="flex space-x-2">
-          <input
-            id="hn-input"
-            v-model="searchHN"
-            type="text"
-            placeholder="กรอก HN (เช่น 12345)"
-            class="flex-1 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2"
-            @keyup.enter="performSearch"
-          />
-          <button
-            @click="performSearch"
-            :disabled="searchLoading"
-            class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition disabled:bg-indigo-400"
-          >
-            <span v-if="searchLoading">กำลังค้นหา...</span>
-            <span v-else>ค้นหา</span>
-          </button>
-        </div>
-
-        <div
-          v-if="searchResult"
-          class="mt-6 p-4 border rounded-md"
-          :class="{
-            'bg-red-50 border-red-300': isSearchError(searchResult),
-            'bg-green-50 border-green-300': !isSearchError(searchResult),
-          }"
-        >
-          <p v-if="isSearchError(searchResult)" class="text-red-700 font-semibold">
-            {{ searchResult.error }}
-          </p>
-
-          <div v-else class="text-gray-700 space-y-4">
-            <div class="pb-3 border-b border-gray-200">
-              <p class="font-bold text-xl text-indigo-600 mb-2">{{ searchResult.name }}</p>
-              <div class="grid grid-cols-2 gap-2 text-sm">
-                <p><strong>HN:</strong> {{ searchResult.hn }}</p>
-                <p><strong>เบอร์โทรศัพท์:</strong> {{ searchResult.phone }}</p>
-                <p>
-                  <strong>สถานะล่าสุด:</strong>
-                  <span
-                    class="font-medium"
-                    :class="
-                      searchResult.status === 'รออนุมัติ' ? 'text-orange-500' : 'text-green-600'
-                    "
-                    >{{ searchResult.status }}</span
-                  >
-                </p>
-                <p>
-                  <strong>รหัสติดตาม:</strong>
-                  <span class="font-semibold">{{ searchResult.trackingCode }}</span>
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <p class="font-bold text-lg mb-2 text-gray-800">ข้อมูลใบส่งตัว</p>
-              <div class="grid grid-cols-1 gap-2 text-sm bg-gray-50 p-3 rounded-md">
-                <p><strong>รพ.ต้นทาง:</strong> {{ searchResult.originHospital }}</p>
-                <p><strong>รพ.ปลายทาง:</strong> {{ searchResult.destinationHospital }}</p>
-                <p>
-                  <strong>แผนก/คลินิก:</strong>
-                  <span class="font-semibold text-blue-700">{{
-                    searchResult.destinationClinic
-                  }}</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="px-6 py-4 bg-gray-50 flex justify-end">
-        <button
-          @click="closeSearchModal"
-          class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded transition"
-        >
-          ปิด
-        </button>
+      <div class="card-body p-4">
+        <OpdQueueList />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import OpdQueueList from '@/views/dashboard/opd/OpdQueueList.vue'
-import { useToast } from 'vue-toastification'
-import type { PatientReferralInfo, SearchError, OpdStats } from '@/types/opd'
-import { fetchOpdStats, searchPatientByHN } from '@/services/opdService'
-
-const toast = useToast()
+import OpdQueueList from '@/views/dashboard/opd/OpdQueueList.vue' // ปรับ Path ให้ถูกต้องตามโครงสร้าง
 
 // ----------------------------------------------------
-// 1. State สำหรับ Dashboard Stats
-// ----------------------------------------------------
-const opdStats = ref<OpdStats>({
-  queueCount: 0,
-  pendingResults: 0,
-  todayAppointments: 0,
-})
-const statsLoading = ref(true) // สถานะ Loading สำหรับ Stat Cards
-
-// ----------------------------------------------------
-// 2. Logic สำหรับ Modal ค้นหา HN
+// ข้อมูลและ State
 // ----------------------------------------------------
 
-const showSearchModal = ref(false)
-const searchHN = ref('')
-const searchResult = ref<PatientReferralInfo | SearchError | null>(null)
-const searchLoading = ref(false) // สถานะ Loading สำหรับการค้นหา HN
-
-/**
- * เปิด Modal และเคลียร์ค่าเก่า
- */
-const openSearchModal = () => {
-  searchHN.value = ''
-  searchResult.value = null
-  showSearchModal.value = true
-}
-
-/**
- * Type Guard เพื่อตรวจสอบว่าผลลัพธ์ที่ได้เป็น SearchError หรือไม่
- * @param result ผลลัพธ์จากการค้นหา
- */
-const isSearchError = (result: PatientReferralInfo | SearchError | null): result is SearchError => {
-  return result !== null && 'error' in result
-}
-
-/**
- * ดำเนินการค้นหาข้อมูลผู้ป่วยผ่าน API
- */
-const performSearch = async () => {
-  const hn = searchHN.value.trim()
-  if (!hn) {
-    toast.warning('⚠️ กรุณากรอกหมายเลข HN ที่ต้องการค้นหา')
-    return
-  }
-
-  searchResult.value = null
-  searchLoading.value = true
-  console.log(`Searching for HN: ${hn} via API...`)
-
-  try {
-    // 💡 เรียกใช้ Service Layer
-    const result = await searchPatientByHN(hn)
-    searchResult.value = result
-
-    if (isSearchError(result)) {
-      toast.error(`❌ ${result.error}`)
-    } else {
-      toast.success(`🔍 พบข้อมูลผู้ป่วย HN: ${hn}`)
-    }
-  } catch (e) {
-    console.error('Search HN API Error:', e)
-    toast.error('เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบค้นหา')
-  } finally {
-    searchLoading.value = false
-  }
-}
-
-/**
- * ปิด Modal ค้นหา
- */
-const closeSearchModal = () => {
-  showSearchModal.value = false
-  searchResult.value = null
-  searchHN.value = ''
-}
+// ----------------------------------------------------
+// ฟังก์ชันดึงข้อมูล (ถูกลบออกไป)
+// ----------------------------------------------------
 
 // ----------------------------------------------------
-// 3. Lifecycle Hook: ดึงข้อมูล Stats
+// Lifecycle Hooks
 // ----------------------------------------------------
-onMounted(async () => {
-  statsLoading.value = true
-  try {
-    const data = await fetchOpdStats()
-    opdStats.value = data
-  } catch (e) {
-    toast.error('ไม่สามารถดึงข้อมูลสรุป OPD ได้')
-    console.error('Fetch OPD Stats Error:', e)
-    opdStats.value = {
-      queueCount: 0,
-      pendingResults: 0,
-      todayAppointments: 0,
-    }
-  } finally {
-    statsLoading.value = false
-  }
-})
 </script>
 
 <style scoped>
-.opd-dashboard {
-  background-color: #f5f7fa;
-  min-height: 100vh;
+.dashboard-opd {
+  padding: 20px;
+}
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
 }
 </style>

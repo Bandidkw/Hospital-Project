@@ -144,7 +144,9 @@ const selectedYearData = computed<YearIta | null>(() => {
  */
 const groupedMoitsByCategory = computed(() => {
   if (!selectedYearData.value) return []
-  return selectedYearData.value.moits.map((moit: Moit) => {
+
+  const moitsWithGroups = selectedYearData.value.moits.map((moit: Moit) => {
+    // Logic การจัดกลุ่มเดิม
     const grouped: Record<string, ItaDocument[]> = {}
     for (const doc of moit.documents ?? []) {
       const category = doc.sub_topic || 'เอกสารทั่วไป'
@@ -152,6 +154,18 @@ const groupedMoitsByCategory = computed(() => {
     }
     return { ...moit, groupedDocuments: grouped }
   })
+
+  // 💡 การแก้ไข: เรียงลำดับ MOIT ตามตัวเลข
+  moitsWithGroups.sort((a, b) => {
+    // 1. ดึงตัวเลข MOIT ออกมา (เช่น "MOIT 11" -> 11)
+    const numA = parseInt(a.moit_name.match(/\d+/)?.[0] ?? '0')
+    const numB = parseInt(b.moit_name.match(/\d+/)?.[0] ?? '0')
+
+    // 2. เปรียบเทียบตัวเลข
+    return numA - numB // เรียงจากน้อยไปมาก
+  })
+
+  return moitsWithGroups
 })
 
 /* ------------------------------------

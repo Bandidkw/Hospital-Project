@@ -8,7 +8,6 @@ export interface OpdStats {
 }
 
 export interface PatientReferralInfo {
-  // ข้อมูลส่วนตัว
   hn: string
   name: string
   phone: string
@@ -42,10 +41,48 @@ export interface ReferralQueueItemApi {
   reason?: string
 }
 
-// Interface สำหรับ Full Response ที่มี Array ของ Item อยู่ใน data
+export interface ReferralQueueItemApi {
+  id: string
+  trackingCode?: string
+  fullName: string
+  hospitalNumber: string
+  nationalId: string
+  phoneNumber: string
+  referralHospital: string
+  destinationHospital: string
+  department: string
+  queueStatus: 'รอเรียก' | 'รออนุมัติ' | 'อนุมัติแล้ว' | 'ปฏิเสธ'
+  bookingDate: string
+  bookingTime: string
+  medicalRights: string
+  documents: unknown[]
+  isDeleted: boolean
+  createdAt: string
+  updatedAt: string
+  reason?: string
+}
+
+// 2. Type สำหรับ Response Structure จาก API
 export interface ReferralQueueResponse {
-  status: string
-  name: string
+  status: 'SUCCESS' | 'ERROR'
   description: string
   data: ReferralQueueItemApi[]
+}
+
+// 3. Type สำหรับ Local View Model ใน OpdQueueList.vue
+export type QueueStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+export interface QueueItem {
+  id: string
+  trackingCode: string
+  hn: string
+  patientName: string
+  phone: string
+  referralTime: string
+  status: QueueStatus
+  reason?: string
+  bookingDate: string
+  destinationClinic: string
+  destinationHospital: string
+  originHospital: string
 }
