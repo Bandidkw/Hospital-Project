@@ -546,7 +546,7 @@ import {
   type NewsItem as ServiceNewsItem,
 } from '@/services/newsService'
 import { CATEGORY_LIST, attachCategory } from '@/features/news/categories'
-import NewsCreateForm from '@/components/news/NewsCreateForm.vue' // <-- Import Component เดิม
+import NewsCreateForm from '@/components/news/NewsCreateForm.vue'
 
 /* =========================================================================
  * Types (คงไว้)

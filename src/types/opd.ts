@@ -2,6 +2,8 @@
 
 // --- Interface สำหรับ Stat Cards ---
 export interface OpdStats {
+  totalNews: number
+  totalITA: number
   queueCount: number
   pendingResults: number
   todayAppointments: number
