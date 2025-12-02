@@ -27,12 +27,6 @@
       <p class="text-lg md:text-xl mb-8 animate-fade-in-up delay-200">
         {{ currentSubtitle }}
       </p>
-      <!-- <RouterLink
-        to="/services"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 animate-fade-in-up delay-400"
-      >
-        ดูบริการของเรา
-      </RouterLink> -->
     </div>
 
     <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
