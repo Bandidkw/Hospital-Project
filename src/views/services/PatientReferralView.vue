@@ -538,9 +538,7 @@ const fileInput = ref<HTMLInputElement | null>(null)
 // Master Data State
 const hospitalList = ref<Hospital[]>([])
 
-// **Extended Interface for UI State**
-// เราต้องขยาย Interface เพราะ ReferralFormData ใน type หลักอาจจะไม่มี availableClinics
-// เพื่อใช้จัดการ Dropdown ในหน้าจอ
+// Extended Interface for UI State
 interface DestinationState {
   hospitalId: string
   clinics: { clinicId: string }[]
@@ -567,10 +565,12 @@ const formData = reactive<FormState>({
       availableClinics: [],
     },
   ],
+  // 💡 หากต้องการให้ travelDate เป็น optional (Date | null), ต้องมีการ Validation ใน Step 3
   travelDate: new Date(),
 })
 
-// --- Fetching Logic ---
+// --- Fetching Logic (ละไว้บางส่วนเพื่อความกระชับ) ---
+
 const fetchHospitalsData = async () => {
   try {
     hospitalList.value = await getHospitals()
@@ -581,6 +581,7 @@ const fetchHospitalsData = async () => {
 }
 
 const fetchClinicsData = async (hospitalId: string): Promise<Clinic[]> => {
+  // ... (logic ดึง clinics ยังคงเดิม) ...
   if (!hospitalId) return []
   try {
     return await getClinicsByHospital(hospitalId)
@@ -595,11 +596,10 @@ onMounted(() => {
   fetchHospitalsData()
 })
 
-// --- Handlers ---
+// --- Handlers (ละไว้บางส่วนเพื่อความกระชับ) ---
 
 const handleHospitalChange = async (destIndex: number) => {
   const destination = formData.destinations[destIndex]
-  // Reset clinics when hospital changes
   destination.clinics = [{ clinicId: '' }]
   destination.availableClinics = []
 
@@ -608,12 +608,11 @@ const handleHospitalChange = async (destIndex: number) => {
   }
 }
 
-// 2. สร้างฟังก์ชันเพื่อเรียกใช้ click() อย่างปลอดภัย
 const triggerFileInput = () => {
   fileInput.value?.click()
 }
-
 const onFileChange = (event: Event) => {
+  // ... (logic จัดการไฟล์ยังคงเดิม) ...
   const target = event.target as HTMLInputElement
   const newFiles = target.files
   if (!newFiles) return
@@ -624,8 +623,6 @@ const onFileChange = (event: Event) => {
     target.value = ''
     return
   }
-
-  // Check file size (10MB limit example)
   const oversized = Array.from(newFiles).some((f) => f.size > 10 * 1024 * 1024)
   if (oversized) {
     toast.error('บางไฟล์มีขนาดเกิน 10MB')
@@ -636,12 +633,10 @@ const onFileChange = (event: Event) => {
   formData.referralFiles = combinedFiles
   target.value = ''
 }
-
 const removeFile = (index: number) => {
   formData.referralFiles.splice(index, 1)
 }
 
-// Destination Management
 const addDestination = () => {
   formData.destinations.push({ hospitalId: '', clinics: [{ clinicId: '' }], availableClinics: [] })
 }
@@ -650,8 +645,6 @@ const removeDestination = (index: number) => {
     formData.destinations.splice(index, 1)
   }
 }
-
-// Clinic Management
 const addClinic = (destIndex: number) => {
   formData.destinations[destIndex].clinics.push({ clinicId: '' })
 }
@@ -661,13 +654,11 @@ const removeClinic = (destIndex: number, clinicIndex: number) => {
   }
 }
 
-// --- Helpers for Display ---
+// --- Helpers for Display (ยังคงเดิม) ---
 const getHospitalName = (id: string) => {
   return hospitalList.value.find((h) => h.id === id)?.name || id
 }
-
 const getClinicName = (hospitalId: string, clinicId: string) => {
-  // ค้นหาจาก destinations state ปัจจุบัน
   const dest = formData.destinations.find((d) => d.hospitalId === hospitalId)
   if (dest) {
     return dest.availableClinics.find((c) => c.id === clinicId)?.name || clinicId
@@ -675,8 +666,9 @@ const getClinicName = (hospitalId: string, clinicId: string) => {
   return clinicId
 }
 
-// --- Validation & Navigation ---
+// --- Validation & Navigation (ยังคงเดิม) ---
 const validateStep1 = () => {
+  // ... (Validation logic ยังคงเดิม) ...
   if (!formData.patientName.trim()) return showError('กรุณากรอกชื่อผู้ป่วย')
   if (!formData.patientHN.trim()) return showError('กรุณากรอกเลข HN')
   if (!formData.patientIdCard.trim() || formData.patientIdCard.length !== 13)
@@ -686,14 +678,18 @@ const validateStep1 = () => {
   if (!formData.healthScheme) return showError('กรุณาเลือกสิทธิการรักษา')
   return true
 }
-
 const validateStep2 = () => {
+  // ... (Validation logic ยังคงเดิม) ...
   for (const dest of formData.destinations) {
     if (!dest.hospitalId) return showError('กรุณาเลือกโรงพยาบาลปลายทางให้ครบ')
     for (const clinic of dest.clinics) {
       if (!clinic.clinicId) return showError('กรุณาเลือกคลินิกให้ครบ')
     }
   }
+  return true
+}
+const validateStep3 = () => {
+  if (!formData.travelDate) return showError('กรุณาเลือกวันที่ต้องการส่งตัว')
   return true
 }
 
@@ -705,6 +701,7 @@ const showError = (msg: string) => {
 const nextStep = () => {
   if (currentStep.value === 1 && !validateStep1()) return
   if (currentStep.value === 2 && !validateStep2()) return
+  if (currentStep.value === 3 && !validateStep3()) return // 💡 เพิ่ม validateStep3 ก่อนไปยืนยัน
   if (currentStep.value < 4) currentStep.value++
 }
 
@@ -712,30 +709,53 @@ const prevStep = () => {
   if (currentStep.value > 1) currentStep.value--
 }
 
-// --- Submission ---
+// --- Submission Function (จัดเต็ม) ---
+
 const submitForm = async () => {
   if (isSubmitting.value) return
+
+  // 1. Final Validation Check (สำหรับ Step 4 เท่านั้น)
+  if (!validateStep1() || !validateStep2() || !validateStep3()) {
+    toast.error('กรุณาแก้ไขข้อมูลในขั้นตอนก่อนหน้าให้ถูกต้อง')
+    return
+  }
+
   isSubmitting.value = true
 
   try {
-    // แปลง FormState กลับเป็น ReferralFormData (ตัด availableClinics ออก)
-    // แต่จริงๆ createReferral รับ object ที่มี key เกินได้ หรือเราจะ map ใหม่ก็ได้
-    // ในที่นี้ Service เรา handle แค่ field ที่ต้องการ ดังนั้นส่ง formData ไปได้เลย (TS อาจบ่นเรื่อง availableClinics)
-    // เพื่อความ clean เรา map ให้ตรง type
+    // 2. Map FormState กลับเป็น ReferralFormData (ตัด availableClinics ออก)
+    // เพื่อให้ Service Function รับ Type ที่ถูกต้อง
     const payload: ReferralFormData = {
-      ...formData,
+      patientName: formData.patientName,
+      patientHN: formData.patientHN,
+      patientIdCard: formData.patientIdCard,
+      patientTel: formData.patientTel,
+      patientBirthdate: formData.patientBirthdate,
+      healthScheme: formData.healthScheme,
+      originHospitalId: formData.originHospitalId,
+      referralFiles: formData.referralFiles,
+      travelDate: formData.travelDate, // ส่ง Date Object ไปให้ Service จัดการ
+
       destinations: formData.destinations.map((d) => ({
         hospitalId: d.hospitalId,
-        clinics: d.clinics,
+        // clinics ถูก map เป็น ClinicSelection[] ตาม Type เดิม
+        clinics: d.clinics.map((c) => ({ clinicId: c.clinicId })),
       })),
     }
 
+    // 3. Call Service Layer (Service จะจัดการ Mapping Field Name และ FormData)
     const response = await createReferral(payload)
+
+    // 4. Handle Success
     trackingCode.value = response.trackingCode
-    toast.success('ส่งข้อมูลเรียบร้อยแล้ว')
+    toast.success(`ส่งข้อมูลเรียบร้อยแล้ว! รหัสติดตาม: ${response.trackingCode}`)
+
+    // 💡 เราอยู่ใน Step 4 อยู่แล้ว (แสดงผลลัพธ์)
   } catch (error) {
     console.error('Submission error:', error)
     toast.error('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง')
+    // ถ้าเกิด Error ให้พาผู้ใช้กลับไป Step 3 เพื่อตรวจสอบข้อมูล
+    // currentStep.value = 3;
   } finally {
     isSubmitting.value = false
   }

@@ -288,9 +288,6 @@ function absoluteImage(u?: string | null): string {
   const root = base.replace(/\/api(\/v\d+)?$/i, '')
   return `${root}/${String(u).replace(/^\/+/, '')}`
 }
-
-// ❌ ลบ handleImageUpload
-// ❌ ลบ cancelEdit, resetForm (ใช้ resetFormState, closeFormModal แทน)
 </script>
 
 <style scoped>

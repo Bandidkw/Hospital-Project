@@ -4,7 +4,7 @@ import apiService from '@/services/apiService'
 import type { ReferralFormData, ReferralResponse, Hospital, Clinic } from '@/types/referral'
 
 // Endpoint หลัก (สามารถเปลี่ยนได้ตาม Backend ของคุณ)
-const BASE_URL = '/referrals'
+const BASE_URL = '/patient/public'
 
 /**
  * ดึงรายชื่อโรงพยาบาล (Master Data)
@@ -50,35 +50,50 @@ export async function getClinicsByHospital(hospitalId: string): Promise<Clinic[]
 export async function createReferral(data: ReferralFormData): Promise<ReferralResponse> {
   const formData = new FormData()
 
-  // 1. Append ข้อมูลทั่วไป (Text Fields)
-  formData.append('patientName', data.patientName)
-  formData.append('patientHN', data.patientHN)
-  formData.append('patientIdCard', data.patientIdCard)
-  formData.append('patientTel', data.patientTel)
-  formData.append('healthScheme', data.healthScheme)
-  formData.append('originHospitalId', data.originHospitalId)
+  // 💡 1. การจัดการ Date และ Time (แยก Booking Date & Time)
+  let bookingDateStr: string = ''
+  let bookingTimeStr: string = ''
 
-  // แปลงวันที่เป็น ISO String หรือ format ที่ Backend ต้องการ
   if (data.travelDate) {
-    const dateStr =
-      data.travelDate instanceof Date ? data.travelDate.toISOString() : data.travelDate
-    formData.append('travelDate', dateStr)
+    // ใช้ฟังก์ชัน util สำหรับ format วันที่/เวลา
+    // เนื่องจากไม่มี util เราจะทำแบบง่ายๆ ที่นี่
+    const dateObj = data.travelDate
+    bookingDateStr = dateObj.toISOString().split('T')[0] // YYYY-MM-DD
+    bookingTimeStr = `${dateObj.getHours().toString().padStart(2, '0')}:${dateObj.getMinutes().toString().padStart(2, '0')}` // HH:MM
   }
 
-  // 2. Append ข้อมูลที่มีโครงสร้างซับซ้อน (Array/Object) -> ส่งเป็น JSON String
-  // หมายเหตุ: Backend ต้อง parse JSON string ใน field 'destinations' นี้
+  // 💡 2. Append และ Mapping ข้อมูลทั่วไป (Text Fields)
+  formData.append('fullName', data.patientName) // patientName -> fullName
+  formData.append('nationalId', data.patientIdCard) // patientIdCard -> nationalId
+  formData.append('phoneNumber', data.patientTel) // patientTel -> phoneNumber
+  formData.append('medicalRights', data.healthScheme) // healthScheme -> medicalRights
+  formData.append('referralHospital', data.originHospitalId) // originHospitalId -> referralHospital
+  formData.append('hospitalNumber', data.patientHN)
+  formData.append('queueStatus', 'PENDING')
+
+  // ข้อมูลนัดหมาย
+  formData.append('bookingDate', bookingDateStr) // travelDate -> bookingDate
+  formData.append('bookingTime', bookingTimeStr) // travelDate -> bookingTime
+
+  // 💡 เพิ่ม Field ที่จำเป็นแต่ขาดไปใน ReferralFormData
+  formData.append('queueStatus', 'PENDING') // สมมติค่าเริ่มต้นเป็น PENDING
+
+  // 3. Append ข้อมูลที่มีโครงสร้างซับซ้อน (Array/Object) -> ส่งเป็น JSON String
+  // destinations: { hospitalId, clinics: [{ clinicId }] }
   formData.append('destinations', JSON.stringify(data.destinations))
 
-  // 3. Append ไฟล์ (Multiple Files)
+  // 4. Append ไฟล์ (Multiple Files)
   if (data.referralFiles && data.referralFiles.length > 0) {
     data.referralFiles.forEach((file) => {
-      formData.append('referralFiles', file) // ใช้ชื่อ key เดียวกันเพื่อส่งเป็น array
+      // 💡 เปลี่ยนชื่อ key จาก 'referralFiles' เป็น 'documents' ตามที่ Backend ต้องการ
+      formData.append('documents', file)
     })
   }
 
-  // 4. ส่ง Request
-  // หมายเหตุ: axios จะตั้ง Content-Type เป็น multipart/form-data ให้อัตโนมัติเมื่อส่ง FormData
+  // 5. ส่ง Request
+  // 💡 ปรับ Type Assertion เพื่อความปลอดภัย
   const response = await apiService.post<{ data: ReferralResponse }>(BASE_URL, formData)
 
+  // หาก apiService คืนค่า JSON Body ทั้งหมดและ Response Structure คือ { data: { data: T } }
   return response.data.data
 }

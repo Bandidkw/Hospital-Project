@@ -50,7 +50,7 @@ export interface Day {
   isToday: boolean
   isSelected: boolean
 
-  // REQUIRED: ต้องมีค่าเสมอตาม logic การสร้าง array
+  // REQUIRED: ต้องมีค่าเสมอ
   slotsRemaining: number
 
   isFull: boolean
