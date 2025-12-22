@@ -27,6 +27,8 @@ export interface SearchError {
 
 export interface ReferralQueueItemApi {
   id: string
+  trackingCode?: string
+  referralCode?: string
   fullName: string
   hospitalNumber: string
   nationalId: string
@@ -39,28 +41,9 @@ export interface ReferralQueueItemApi {
   bookingTime: string
   medicalRights: string
   documents: unknown[]
-  trackingCode?: string
-  reason?: string
-}
-
-export interface ReferralQueueItemApi {
-  id: string
-  trackingCode?: string
-  fullName: string
-  hospitalNumber: string
-  nationalId: string
-  phoneNumber: string
-  referralHospital: string
-  destinationHospital: string
-  department: string
-  queueStatus: 'รอเรียก' | 'รออนุมัติ' | 'อนุมัติแล้ว' | 'ปฏิเสธ'
-  bookingDate: string
-  bookingTime: string
-  medicalRights: string
-  documents: unknown[]
-  isDeleted: boolean
-  createdAt: string
-  updatedAt: string
+  isDeleted?: boolean
+  createdAt?: string
+  updatedAt?: string
   reason?: string
 }
 
