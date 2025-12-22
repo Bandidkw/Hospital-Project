@@ -352,7 +352,7 @@ const fetchData = async () => {
 
         return {
           id: item.id,
-          trackingCode: item.trackingCode || item.id,
+          trackingCode: item.referralCode,
           hn: item.hospitalNumber,
           patientName: item.fullName,
           phone: item.phoneNumber,

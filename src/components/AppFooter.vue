@@ -6,7 +6,7 @@
       <p class="text-xs text-gray-500 mt-1">
         Developed by
         <a href="" target="_blank" class="hover:text-blue-400 underline font-semibold">
-          Bandid Kanwong (With AI Assistance)
+          IT Maetaeng Hospital
         </a>
       </p>
 
