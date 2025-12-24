@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { AxiosResponse } from 'axios'
 import apiService from '../apiService'
 import {
   getAllNews,
@@ -11,6 +12,7 @@ import {
   getNewsPublicById,
   type NewsItem,
   type PublicNewsItem,
+  type ApiSuccess,
 } from '../newsService'
 
 // Mock apiService
@@ -64,7 +66,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem[]>>)
 
       const result = await getAllNews()
 
@@ -80,7 +82,7 @@ describe('News Service', () => {
           status: 'success',
           data: [],
         },
-      } as any)
+      } as unknown as AxiosResponse<ApiSuccess<NewsItem[]>>)
 
       const result = await getAllNews()
 
@@ -106,7 +108,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem[]>>)
 
       const result = await getAllNews()
 
@@ -134,7 +136,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem>>)
 
       const result = await getNewsById('1')
 
@@ -165,7 +167,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockCreatedNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem>>)
 
       const payload = {
         title: 'New News',
@@ -204,7 +206,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockCreatedNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem>>)
 
       const payload = {
         title: 'New News',
@@ -240,7 +242,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockUpdatedNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem>>)
 
       const payload = {
         title: 'Updated News',
@@ -272,7 +274,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockUpdatedNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem>>)
 
       const payload = {
         title: 'Updated News',
@@ -303,7 +305,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<NewsItem>>)
 
       const result = await togglePublish('1', true)
 
@@ -316,7 +318,7 @@ describe('News Service', () => {
 
   describe('deleteNews', () => {
     it('should delete news item', async () => {
-      vi.mocked(apiService.delete).mockResolvedValue({} as any)
+      vi.mocked(apiService.delete).mockResolvedValue({} as AxiosResponse)
 
       await deleteNews('1')
 
@@ -345,13 +347,16 @@ describe('News Service', () => {
           status: 'success',
           data: mockPublicNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<PublicNewsItem[]>>)
 
       const result = await getPublicNews()
 
       expect(result).toHaveLength(1)
       expect(result[0].title).toBe('Public News 1')
-      expect(apiService.get).toHaveBeenCalledWith('/news/public', expect.objectContaining({ params: expect.any(Object) }))
+      expect(apiService.get).toHaveBeenCalledWith(
+        '/news/public',
+        expect.objectContaining({ params: expect.any(Object) }),
+      )
     })
   })
 
@@ -374,7 +379,7 @@ describe('News Service', () => {
           status: 'success',
           data: mockPublicNews,
         },
-      } as any)
+      } as AxiosResponse<ApiSuccess<PublicNewsItem>>)
 
       const result = await getNewsPublicById('1')
 
@@ -388,4 +393,3 @@ describe('News Service', () => {
     })
   })
 })
-

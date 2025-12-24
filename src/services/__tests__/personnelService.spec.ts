@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { AxiosResponse } from 'axios'
 import apiService from '../apiService'
 import {
   getPublicPersonnelList,
@@ -6,8 +7,8 @@ import {
   createPersonnel,
   updatePersonnel,
   deletePersonnel,
-  type PersonnelItem,
 } from '../personnelService'
+import type { PersonnelItem } from '@/types/personnel'
 
 // Mock apiService
 vi.mock('../apiService', () => ({
@@ -53,7 +54,7 @@ describe('Personnel Service', () => {
         data: {
           data: mockPersonnel,
         },
-      } as any)
+      } as AxiosResponse<{ data: PersonnelItem[] }>)
 
       const result = await getPublicPersonnelList()
 
@@ -92,7 +93,7 @@ describe('Personnel Service', () => {
         data: {
           data: mockPersonnel,
         },
-      } as any)
+      } as AxiosResponse<{ data: PersonnelItem[] }>)
 
       const result = await getPublicPersonnelList()
 
@@ -115,7 +116,7 @@ describe('Personnel Service', () => {
         data: {
           data: mockPersonnel,
         },
-      } as any)
+      } as AxiosResponse<{ data: PersonnelItem[] }>)
 
       const result = await getAdminPersonnelList()
 
@@ -155,7 +156,7 @@ describe('Personnel Service', () => {
         data: {
           data: mockCreatedPersonnel,
         },
-      } as any)
+      } as AxiosResponse<{ data: PersonnelItem }>)
 
       const data = {
         name: 'New Person',
@@ -187,7 +188,7 @@ describe('Personnel Service', () => {
         data: {
           data: mockCreatedPersonnel,
         },
-      } as any)
+      } as AxiosResponse<{ data: PersonnelItem }>)
 
       const data = {
         name: 'Simple Person',
@@ -215,7 +216,7 @@ describe('Personnel Service', () => {
         data: {
           data: mockUpdatedPersonnel,
         },
-      } as any)
+      } as AxiosResponse<{ data: PersonnelItem }>)
 
       const data = {
         name: 'Updated Person',
@@ -246,7 +247,7 @@ describe('Personnel Service', () => {
         data: {
           data: mockUpdatedPersonnel,
         },
-      } as any)
+      } as AxiosResponse<{ data: PersonnelItem }>)
 
       const data = {
         name: 'Updated Person',
@@ -262,7 +263,7 @@ describe('Personnel Service', () => {
 
   describe('deletePersonnel', () => {
     it('should delete personnel by ID', async () => {
-      vi.mocked(apiService.delete).mockResolvedValue({} as any)
+      vi.mocked(apiService.delete).mockResolvedValue({} as AxiosResponse)
 
       await deletePersonnel('1')
 
@@ -270,4 +271,3 @@ describe('Personnel Service', () => {
     })
   })
 })
-

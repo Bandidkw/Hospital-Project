@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { AxiosResponse } from 'axios'
 import { setActivePinia, createPinia } from 'pinia'
 import { useAuthStore } from '../auth'
 import apiService from '@/services/apiService'
@@ -69,7 +70,7 @@ describe('Auth Store', () => {
         },
       }
 
-      vi.mocked(apiService.post).mockResolvedValue(mockResponse as any)
+      vi.mocked(apiService.post).mockResolvedValue(mockResponse as unknown as AxiosResponse)
 
       const result = await store.login('testuser', 'password123')
 
@@ -144,7 +145,7 @@ describe('Auth Store', () => {
           },
         }
 
-        vi.mocked(apiService.post).mockResolvedValue(mockResponse as any)
+        vi.mocked(apiService.post).mockResolvedValue(mockResponse as unknown as AxiosResponse)
         await store.login('testuser', 'password')
 
         expect(store.user?.role).toBe(expectedRole)
@@ -170,7 +171,7 @@ describe('Auth Store', () => {
           },
         },
       }
-      vi.mocked(apiService.post).mockResolvedValue(mockResponse as any)
+      vi.mocked(apiService.post).mockResolvedValue(mockResponse as unknown as AxiosResponse)
       await store.login('testuser', 'password')
 
       // Then logout
@@ -201,7 +202,7 @@ describe('Auth Store', () => {
         },
       }
 
-      vi.mocked(apiService.get).mockResolvedValue(mockResponse as any)
+      vi.mocked(apiService.get).mockResolvedValue(mockResponse as unknown as AxiosResponse)
 
       const result = await store.fetchUserProfile()
 
@@ -265,7 +266,7 @@ describe('Auth Store', () => {
         name: 'New Name',
       }
 
-      vi.mocked(userService.updateUserProfile).mockResolvedValue(mockUpdatedUser as any)
+      vi.mocked(userService.updateUserProfile).mockResolvedValue(mockUpdatedUser)
 
       const result = await store.updateUserProfile({ fullName: 'New Name' })
 
@@ -291,7 +292,7 @@ describe('Auth Store', () => {
         data: {},
       }
 
-      vi.mocked(apiService.post).mockResolvedValue(mockResponse as any)
+      vi.mocked(apiService.post).mockResolvedValue(mockResponse as unknown as AxiosResponse)
 
       const result = await store.requestPasswordReset('test@example.com')
 
@@ -331,7 +332,7 @@ describe('Auth Store', () => {
         vitrify: true,
       }
 
-      vi.mocked(apiService.put).mockResolvedValue({} as any)
+      vi.mocked(apiService.put).mockResolvedValue({} as unknown as AxiosResponse)
 
       const result = await store.changePassword({
         currentPassword: 'oldpass',
@@ -359,7 +360,7 @@ describe('Auth Store', () => {
         vitrify: true,
       }
 
-      vi.mocked(apiService.put).mockResolvedValue({} as any)
+      vi.mocked(apiService.put).mockResolvedValue({} as unknown as AxiosResponse)
 
       const result = await store.changePasswordOPD({
         currentPassword: 'oldpass',
@@ -439,4 +440,3 @@ describe('Auth Store', () => {
     })
   })
 })
-
