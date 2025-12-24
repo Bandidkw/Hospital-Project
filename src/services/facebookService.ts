@@ -18,7 +18,7 @@ export const facebookService = {
 
       // สมมติว่า Backend ส่ง Array ของโพสมาใน property 'data'
       // ถ้า apiService คืนค่า JSON Body ทั้งหมด:
-      return response.data // คืนค่า Array ของ FacebookPost
+      return response.data.data // คืนค่า Array ของ FacebookPost
     } catch (error) {
       console.error('Fetch Facebook Posts Error:', error)
       // คืนค่า Array ว่างหากเกิด Error

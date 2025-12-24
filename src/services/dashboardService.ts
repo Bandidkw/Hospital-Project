@@ -11,8 +11,8 @@ export const dashboardService = {
     let newsCount = 0
     try {
       const newsRes = await apiService.get<ApiResponse<NewsResponseItem[]>>('/dashboard/news')
-      if (newsRes.data) {
-        newsCount = newsRes.data.length
+      if (newsRes.data && newsRes.data.data) {
+        newsCount = newsRes.data.data.length
       }
     } catch (err) {
       console.error('Error fetching news count, setting to 0:', err)
