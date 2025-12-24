@@ -43,26 +43,7 @@ export interface ReferralQueueItemApi {
   reason?: string
 }
 
-export interface ReferralQueueItemApi {
-  id: string
-  trackingCode?: string
-  fullName: string
-  hospitalNumber: string
-  nationalId: string
-  phoneNumber: string
-  referralHospital: string
-  destinationHospital: string
-  department: string
-  queueStatus: 'รอเรียก' | 'รออนุมัติ' | 'อนุมัติแล้ว' | 'ปฏิเสธ'
-  bookingDate: string
-  bookingTime: string
-  medicalRights: string
-  documents: unknown[]
-  isDeleted: boolean
-  createdAt: string
-  updatedAt: string
-  reason?: string
-}
+// Consolidated definition above; removed duplicate.
 
 // 2. Type สำหรับ Response Structure จาก API
 export interface ReferralQueueResponse {

@@ -369,7 +369,7 @@ const fetchData = async () => {
 
     queueItems.value = mappedAndFilteredItems
 
-    toast.info(`ดึงรายการคิวรออนุมัติสำเร็จ ${queueItems.value.length} รายการ`)
+    toast.info(`ดึงรายการคิวสำเร็จ ${queueItems.value.length} รายการ`)
   } catch (error) {
     console.error('Fetch Queue List Failed:', error)
     toast.error('ไม่สามารถดึงรายการคิวได้')
