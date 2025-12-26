@@ -39,7 +39,7 @@ onMounted(() => {
 
     <NewsSection />
 
-    <FacebookFeedSection :posts="facebookPosts" :is-loading="isLoadingFacebook" />
+    <!-- <FacebookFeedSection :posts="facebookPosts" :is-loading="isLoadingFacebook" /> -->
 
     <ContactUsSection />
   </div>

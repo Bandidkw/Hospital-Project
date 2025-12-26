@@ -187,18 +187,21 @@
 
       <!-- Submit -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t">
+        <!-- ปุ่มยกเลิก - แสดงทั้งในโหมดเพิ่มและแก้ไข -->
         <button
-          v-if="isEditing"
           type="button"
           @click="cancel"
-          class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-5 rounded-full"
+          class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-5 rounded-full transition-colors duration-200 flex items-center gap-2"
           :disabled="isSubmitting"
         >
+          <i class="fas fa-times"></i>
           ยกเลิก
         </button>
+
+        <!-- ปุ่มบันทึก/เพิ่ม -->
         <button
           type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200"
           :disabled="isSubmitting || !isValid"
         >
           <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>

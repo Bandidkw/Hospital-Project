@@ -244,7 +244,7 @@ const resetForm = () => {
 
 const cancelEdit = () => {
   resetForm()
-  toast.info('ยกเลิกการแก้ไข')
+  toast.info('ยกเลิกแล้ว')
 }
 
 /* -----------------------------
