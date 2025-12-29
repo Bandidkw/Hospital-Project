@@ -41,19 +41,11 @@ export interface ReferralQueueItemApi {
   bookingTime: string
   medicalRights: string
   documents: unknown[]
-<<<<<<< HEAD
   trackingCode?: string
   reason?: string
 }
 
 // Consolidated definition above; removed duplicate.
-=======
-  isDeleted?: boolean
-  createdAt?: string
-  updatedAt?: string
-  reason?: string
-}
->>>>>>> ee6396001ea4e6cc8a4168d9a002ca3303e60221
 
 // 2. Type สำหรับ Response Structure จาก API
 export interface ReferralQueueResponse {
