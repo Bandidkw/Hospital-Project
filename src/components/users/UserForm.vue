@@ -8,11 +8,15 @@
         type="text"
         id="username"
         v-model="userForm.username"
+        @keydown.space.prevent
+        @input="userForm.username = userForm.username.replace(/\s/g, '')"
         class="block w-full border border-gray-300 rounded-lg shadow-sm p-3 bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
         required
         :disabled="opdUser"
         :class="{ 'bg-gray-100 text-gray-500': opdUser }"
+        placeholder="ตัวอย่าง: admin (ห้ามมีช่องว่าง)"
       />
+      <p v-if="!opdUser" class="text-xs text-gray-500 mt-1">* ชื่อผู้ใช้งานต้องไม่มีช่องว่าง</p>
       <p v-if="opdUser" class="text-xs text-red-500 mt-1">**ไม่สามารถแก้ไขชื่อผู้ใช้งานได้**</p>
     </div>
 
@@ -78,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, watch } from 'vue'
 import type { User } from '@/types/user'
 
 const props = defineProps<{
