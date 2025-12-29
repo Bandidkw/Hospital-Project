@@ -8,7 +8,7 @@
         type="text"
         id="username"
         v-model="userForm.username"
-        @keydown.space.prevent
+        @keydown.space.prevent="handleSpaceKey"
         @input="userForm.username = userForm.username.replace(/\s/g, '')"
         class="block w-full border border-gray-300 rounded-lg shadow-sm p-3 bg-gray-50 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
         required
@@ -83,6 +83,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useToast } from 'vue-toastification'
 import type { User } from '@/types/user'
 
 const props = defineProps<{
@@ -92,6 +93,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['saveUser', 'cancelEdit'])
 
+const toast = useToast()
 const userForm = ref<User>({ ...props.currentUser })
 
 watch(
@@ -101,6 +103,10 @@ watch(
   },
   { deep: true },
 )
+
+const handleSpaceKey = () => {
+  toast.warning('ชื่อผู้ใช้งานห้ามมีช่องว่าง')
+}
 
 const submitForm = () => {
   emit('saveUser', userForm.value)
