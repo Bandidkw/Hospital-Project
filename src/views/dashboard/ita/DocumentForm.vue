@@ -191,7 +191,7 @@
         <button
           type="button"
           @click="cancel"
-          class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-5 rounded-full transition-colors duration-200 flex items-center gap-2"
+          class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-5 rounded-full transition-colors duration-200 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           :disabled="isSubmitting"
         >
           <i class="fas fa-times"></i>
