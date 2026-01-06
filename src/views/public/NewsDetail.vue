@@ -31,6 +31,15 @@
       </div>
 
       <div v-else class="space-y-8">
+        <div class="pt-8 border-t border-gray-100">
+          <router-link
+            :to="{ name: 'public-news' }"
+            class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold"
+          >
+            <i class="fas fa-arrow-left"></i>
+            กลับสู่หน้าข่าวสารทั้งหมด
+          </router-link>
+        </div>
         <header class="pb-6 border-b border-gray-200">
           <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-2">
             {{ newsItem.title }}
@@ -54,16 +63,6 @@
         </div>
 
         <div class="prose max-w-none text-gray-800 leading-relaxed" v-html="newsItem.content"></div>
-
-        <div class="pt-8 border-t border-gray-100">
-          <router-link
-            :to="{ name: 'public-news' }"
-            class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold"
-          >
-            <i class="fas fa-arrow-left"></i>
-            กลับสู่หน้าข่าวสารทั้งหมด
-          </router-link>
-        </div>
       </div>
     </div>
   </div>

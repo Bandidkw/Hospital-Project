@@ -14,10 +14,14 @@ export interface PublicNewsItem {
   createdAt: string
   updatedAt: string
   pdfUrl?: string | null
+  views?: number
+  tags?: string[]
 }
 
 export interface NewsDetailItem extends PublicNewsItem {
   content: string
+  views?: number
+  tags?: string[]
 }
 
 export type CategoryKey = 'general' | 'activity' | 'procurement' | 'recruitment' | 'forms' | 'staff'

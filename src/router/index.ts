@@ -86,16 +86,23 @@ const router = createRouter({
       name: 'news-detail',
       component: () => import('@/views/public/NewsDetail.vue'),
     },
+    {
+      path: '/news/:id/image',
+      name: 'news-image-detail',
+      component: () => import('@/views/public/NewsImageDetailView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
+      path: '/news-example',
+      name: 'news-example',
+      component: () => import('@/views/public/NewsImageDetailExample.vue'),
+      meta: { requiresAuth: false },
+    },
     { path: '/contact', name: 'contact', component: () => import('@/views/ContactView.vue') },
     {
       path: '/ita-documents-public',
       name: 'ita-documents-public',
       component: () => import('@/views/ita/ItaPublicView.vue'),
-    },
-    {
-      path: '/news/:id',
-      name: 'news-detail',
-      component: NewsDetailView,
     },
 
     // ---------- Dashboard (with Sidebar layout) ----------
