@@ -70,7 +70,7 @@ const slides = ref([
 ])
 
 const currentIndex = ref(0)
-let slideInterval: number | undefined
+let slideInterval: ReturnType<typeof setInterval> | undefined
 
 const currentBackground = computed(() => slides.value[currentIndex.value].background)
 const currentTitle = computed(() => slides.value[currentIndex.value].title)

@@ -41,7 +41,6 @@ export interface ReferralQueueItemApi {
   bookingTime: string
   medicalRights: string
   documents: unknown[]
-  trackingCode?: string
   reason?: string
 }
 
