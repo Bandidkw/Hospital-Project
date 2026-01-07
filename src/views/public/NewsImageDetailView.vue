@@ -383,7 +383,7 @@ async function fetchNewsDetail() {
   } catch (error) {
     console.error('Error fetching news:', error)
     errorMsg.value = isAxiosError(error)
-      ? error.response?.data?.message || error.message
+      ? (error.response?.data as { message?: string })?.message || error.message
       : 'ไม่สามารถโหลดข่าวสารได้'
   } finally {
     loading.value = false
@@ -457,6 +457,7 @@ onMounted(() => {
 /* Line Clamp Utility */
 .line-clamp-2 {
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
