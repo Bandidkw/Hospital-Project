@@ -95,8 +95,9 @@
   # Force HTTPS (uncomment if using SSL)
   # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains"
   
-  # Set proper MIME type for JavaScript modules
+  # Force proper MIME type for JavaScript modules (Stronger than AddType)
   <FilesMatch "\.(js|mjs)$">
+    ForceType application/javascript
     Header set Content-Type "application/javascript; charset=utf-8"
   </FilesMatch>
   
