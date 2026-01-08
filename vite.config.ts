@@ -9,6 +9,15 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig({
   base: '/',
   plugins: [vue(), vueDevTools()],
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name]-[hash].mjs',
+        chunkFileNames: 'assets/[name]-[hash].mjs',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
