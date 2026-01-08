@@ -33,6 +33,6 @@ coverage
 
 # Environment variables files
 .env
-.env.*
+.env.development
 .env.local
 .env.*.local
