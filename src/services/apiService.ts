@@ -8,7 +8,7 @@ import axios, {
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1'
+  'https://api.maetaeng.go.th/api/v1'
 
 const apiService: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

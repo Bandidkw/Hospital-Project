@@ -11,7 +11,7 @@ type EnvShape = { env: { VITE_API_BASE_URL?: string } }
 // สำหรับไฟล์ uploads ใช้ API_BASE_URL ที่มี /api/v1
 const API_BASE_URL =
   (import.meta as unknown as EnvShape).env.VITE_API_BASE_URL ||
-  'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1'
+  'https://api.maetaeng.go.th/api/v1'
 const FILE_BASE_URL = API_BASE_URL.replace(/\/$/, '')
 
 const toAbsoluteUrl = (u?: string): string => {

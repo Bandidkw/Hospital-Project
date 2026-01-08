@@ -4,7 +4,7 @@ import { useAuthStore } from '@/stores/auth';
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ||
-    'https://test-hospital-project-backend.wnimqo.easypanel.host/api/v1',
+    'https://api.maetaeng.go.th/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
