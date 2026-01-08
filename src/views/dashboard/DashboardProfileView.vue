@@ -52,19 +52,40 @@
                   type="text"
                   id="username"
                   v-model="profile.username"
-                  class="block w-full border-2 border-gray-300 rounded-lg shadow-sm p-3 pl-10 bg-gray-100 cursor-not-allowed text-gray-600 font-medium"
-                  disabled
+                  class="block w-full border-2 border-gray-300 rounded-lg shadow-sm p-3 pl-10 transition-all focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  :class="{
+                    'bg-gray-100 cursor-not-allowed text-gray-600 font-medium':
+                      authStore.user?.role !== 'superadmin',
+                  }"
+                  :disabled="authStore.user?.role !== 'superadmin'"
                 />
                 <i
-                  class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
+                  class="fas absolute left-3 top-1/2 -translate-y-1/2 text-sm"
+                  :class="
+                    authStore.user?.role === 'superadmin'
+                      ? 'fa-edit text-teal-500'
+                      : 'fa-lock text-gray-400'
+                  "
                 ></i>
               </div>
               <div class="flex items-center gap-2 mt-2">
                 <span
-                  class="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full"
+                  class="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full"
+                  :class="
+                    authStore.user?.role === 'superadmin'
+                      ? 'bg-teal-50 text-teal-700'
+                      : 'bg-gray-100 text-gray-600'
+                  "
                 >
-                  <i class="fas fa-info-circle"></i>
-                  ไม่สามารถแก้ไขได้
+                  <i
+                    class="fas"
+                    :class="authStore.user?.role === 'superadmin' ? 'fa-pen' : 'fa-info-circle'"
+                  ></i>
+                  {{
+                    authStore.user?.role === 'superadmin'
+                      ? 'แก้ไขได้สำหรับ Superadmin'
+                      : 'ไม่สามารถแก้ไขได้'
+                  }}
                 </span>
               </div>
             </div>
@@ -323,6 +344,7 @@ const updateProfile = async () => {
 
   const success = await authStore.updateUserProfile({
     fullName: profile.value.fullName,
+    username: profile.value.username,
   })
 
   if (success) {

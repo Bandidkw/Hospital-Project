@@ -181,7 +181,10 @@ export const useAuthStore = defineStore('auth', () => {
    * @param newProfileData - ข้อมูลโปรไฟล์ใหม่ที่ต้องการอัปเดต
    * @returns Promise<boolean> - true หากอัปเดตสำเร็จ, false หากล้มเหลว
    */
-  const updateUserProfile = async (newProfileData: { fullName: string }): Promise<boolean> => {
+  const updateUserProfile = async (newProfileData: {
+    fullName: string
+    username: string
+  }): Promise<boolean> => {
     // ตรวจสอบว่ามีผู้ใช้เข้าสู่ระบบอยู่หรือไม่
     if (!user.value) {
       console.error('ไม่สามารถอัปเดตโปรไฟล์ได้: ไม่มีผู้ใช้งานในระบบ')
@@ -192,14 +195,15 @@ export const useAuthStore = defineStore('auth', () => {
       // เตรียมข้อมูลสำหรับส่งไปยัง API
       const payload = {
         name: newProfileData.fullName,
-        username: user.value.username,
+        username: newProfileData.username,
       }
 
-      // เรียก API เพื่ออัปเดตโปรไฟล์
-      const updatedUserData = await apiUpdateUserProfile(payload)
+      // เรียก API เพื่ออัปเดตโปรไฟล์ โดยส่ง role ไปด้วยเพื่อให้เลือก endpoint ถูกต้อง
+      const updatedUserData = await apiUpdateUserProfile(payload, user.value.role)
       if (updatedUserData) {
         // อัปเดตข้อมูลใน store และ sessionStorage
         user.value.fullName = updatedUserData.name || updatedUserData.fullName
+        user.value.username = updatedUserData.username || user.value.username
         sessionStorage.setItem('user', JSON.stringify(user.value))
       }
 

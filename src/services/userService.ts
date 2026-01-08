@@ -116,9 +116,25 @@ export async function deleteUserById(id: string): Promise<void> {
 }
 
 /**
- * อัพเดท Profile ผู้ใช้งานปัจจุบัน (PUT /admin/profile)
+ * อัพเดท Profile ผู้ใช้งานปัจจุบัน
  */
-export async function updateUserProfile(data: { name: string; username: string }) {
-  const response = await apiService.put('/admin/profile', data)
+export async function updateUserProfile(data: { name: string; username: string }, role: string) {
+  let endpoint: string
+
+  switch (role) {
+    case 'superadmin':
+      endpoint = '/super-admin/profile'
+      break
+    case 'admin':
+      endpoint = '/admin/profile'
+      break
+    case 'opd':
+      endpoint = '/opd/profile'
+      break
+    default:
+      endpoint = '/admin/profile'
+  }
+
+  const response = await apiService.put(endpoint, data)
   return response.data.data
 }
