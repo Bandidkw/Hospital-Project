@@ -7,13 +7,104 @@ export type CategoryKey =
   | 'staff' // ข่าวสำหรับบุคลากร
   | 'general' // ทั่วไป (fallback)
 
-export const CATEGORY_LIST: { key: CategoryKey; label: string }[] = [
-  { key: 'activity', label: 'กิจกรรมโรงพยาบาล' },
-  { key: 'procurement', label: 'ประกวดจัดซื้อ/จัดจ้าง' },
-  { key: 'recruitment', label: 'ข่าวรับสมัคร' },
-  { key: 'forms', label: 'แบบฟอร์ม/คู่มือบริการ' },
-  { key: 'staff', label: 'ข่าวสำหรับบุคลากร รพ.' },
-  { key: 'general', label: 'ข่าวทั่วไป' },
+export const CATEGORY_LIST: {
+  key: CategoryKey
+  label: string
+  icon: string
+  color: string
+  classes: {
+    bg: string
+    text: string
+    border: string
+    badge: string
+    shadow: string
+    icon: string
+  }
+}[] = [
+  {
+    key: 'activity',
+    label: 'กิจกรรมโรงพยาบาล',
+    icon: 'fas fa-hospital-user',
+    color: 'blue',
+    classes: {
+      bg: 'bg-blue-50',
+      text: 'text-blue-700',
+      border: 'border-blue-500',
+      badge: 'bg-blue-50 text-blue-600',
+      shadow: 'shadow-blue-200',
+      icon: 'bg-blue-500',
+    },
+  },
+  {
+    key: 'procurement',
+    label: 'ประกวดจัดซื้อ/จัดจ้าง',
+    icon: 'fas fa-file-invoice-dollar',
+    color: 'amber',
+    classes: {
+      bg: 'bg-amber-50',
+      text: 'text-amber-700',
+      border: 'border-amber-500',
+      badge: 'bg-amber-50 text-amber-600',
+      shadow: 'shadow-amber-200',
+      icon: 'bg-amber-500',
+    },
+  },
+  {
+    key: 'recruitment',
+    label: 'ข่าวรับสมัคร',
+    icon: 'fas fa-user-plus',
+    color: 'purple',
+    classes: {
+      bg: 'bg-purple-50',
+      text: 'text-purple-700',
+      border: 'border-purple-500',
+      badge: 'bg-purple-50 text-purple-600',
+      shadow: 'shadow-purple-200',
+      icon: 'bg-purple-500',
+    },
+  },
+  {
+    key: 'forms',
+    label: 'แบบฟอร์ม/คู่มือบริการ',
+    icon: 'fas fa-file-alt',
+    color: 'emerald',
+    classes: {
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-700',
+      border: 'border-emerald-500',
+      badge: 'bg-emerald-50 text-emerald-600',
+      shadow: 'shadow-emerald-200',
+      icon: 'bg-emerald-500',
+    },
+  },
+  {
+    key: 'staff',
+    label: 'ข่าวสำหรับบุคลากร รพ.',
+    icon: 'fas fa-users-cog',
+    color: 'rose',
+    classes: {
+      bg: 'bg-rose-50',
+      text: 'text-rose-700',
+      border: 'border-rose-500',
+      badge: 'bg-rose-50 text-rose-600',
+      shadow: 'shadow-rose-200',
+      icon: 'bg-rose-500',
+    },
+  },
+  {
+    key: 'general',
+    label: 'ข่าวทั่วไป',
+    icon: 'fas fa-globe',
+    color: 'slate',
+    classes: {
+      bg: 'bg-slate-50',
+      text: 'text-slate-700',
+      border: 'border-slate-500',
+      badge: 'bg-slate-100 text-slate-600',
+      shadow: 'shadow-slate-200',
+      icon: 'bg-slate-500',
+    },
+  },
 ]
 
 // --- กฎคีย์เวิร์ด

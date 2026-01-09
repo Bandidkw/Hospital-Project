@@ -1,219 +1,396 @@
 <template>
-  <section class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-xl font-semibold text-gray-800">เพิ่มข่าวสารใหม่</h3>
+  <section class="max-w-6xl mx-auto">
+    <!-- Header Section -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+          <i class="fas fa-plus-circle"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800">สร้างข่าวสารใหม่</h3>
+      </div>
       <button
         type="button"
-        class="text-sm px-3 py-1.5 rounded-md border border-gray-500 hover:bg-gray-700 transition bg-gray-100 hover:text-white"
+        class="text-xs px-4 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-white hover:text-slate-800 hover:border-slate-300 transition-all font-bold flex items-center shadow-sm"
         @click="resetForm"
         :disabled="saving"
-        title="ล้างฟอร์ม"
       >
-        <i class="fas fa-undo-alt mr-2"></i> เคลียร์
+        <i class="fas fa-undo-alt mr-2 text-[10px]"></i> ล้างฟอร์ม
       </button>
     </div>
 
-    <form @submit.prevent="onSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 space-y-4">
-        <div>
-          <label for="newsTitle" class="block text-sm font-medium text-gray-700"
-            >หัวข้อข่าวสาร <span class="text-red-500">*</span></label
+    <form @submit.prevent="onSubmit" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <!-- Form Controls -->
+      <div
+        class="lg:col-span-8 space-y-6 bg-white p-8 rounded-3xl shadow-sm border border-slate-100"
+      >
+        <!-- Title Input -->
+        <div class="space-y-2">
+          <label
+            for="newsTitle"
+            class="block text-sm font-bold text-slate-700 flex items-center justify-between"
           >
-          <div class="mt-1 relative">
+            <span>หัวข้อข่าวสาร <span class="text-red-500">*</span></span>
+            <span class="text-[10px] font-medium text-slate-400"
+              >{{ currentNews.title.length }}/120</span
+            >
+          </label>
+          <div class="relative">
             <input
               type="text"
               id="newsTitle"
               v-model.trim="currentNews.title"
               @blur="touch('title')"
               :class="inputClass('title')"
-              placeholder="เช่น ประกาศวันหยุดราชการ"
+              placeholder="เช่น ประกาศรับสมัครงานตำแหน่ง..."
               maxlength="120"
               required
+              class="w-full pl-4 pr-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 font-medium placeholder:text-slate-400"
             />
-            <div class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
-              {{ currentNews.title.length }}/120
-            </div>
           </div>
-          <p v-if="touched.title && errors.title" class="mt-1 text-sm text-red-600">
-            {{ errors.title }}
+          <p
+            v-if="touched.title && errors.title"
+            class="text-xs font-bold text-red-500 mt-1 flex items-center gap-1"
+          >
+            <i class="fas fa-exclamation-circle"></i> {{ errors.title }}
           </p>
         </div>
-        <div>
-          <label for="newsCategory" class="block text-sm font-medium text-gray-700"
+
+        <!-- Visual Category Selection -->
+        <div class="space-y-4">
+          <label class="block text-sm font-bold text-slate-700"
             >หมวดหมู่ข่าวสาร <span class="text-red-500">*</span></label
           >
-          <select
-            id="newsCategory"
-            v-model="currentNews.category"
-            @change="touch('category')"
-            required
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-            :class="inputClass('category')"
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <button
+              v-for="cat in CATEGORY_LIST"
+              :key="cat.key"
+              type="button"
+              @click="selectCategory(cat.key)"
+              class="flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all group relative overflow-hidden"
+              :class="[
+                currentNews.category === cat.key
+                  ? `${cat.classes.border} ${cat.classes.bg} shadow-sm ${cat.classes.shadow}`
+                  : 'border-slate-100 bg-slate-50 hover:border-slate-300',
+              ]"
+            >
+              <!-- Active Indicator -->
+              <div
+                v-if="currentNews.category === cat.key"
+                :class="cat.classes.icon"
+                class="absolute top-2 right-2 w-1.5 h-1.5 rounded-full"
+              ></div>
+
+              <div
+                class="w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110 shadow-sm"
+                :class="[
+                  currentNews.category === cat.key
+                    ? `${cat.classes.icon} text-white`
+                    : 'bg-white text-slate-400 group-hover:text-slate-600',
+                ]"
+              >
+                <i :class="cat.icon"></i>
+              </div>
+              <span
+                class="text-[10px] font-bold text-center leading-tight transition-colors"
+                :class="currentNews.category === cat.key ? cat.classes.text : 'text-slate-500'"
+              >
+                {{ cat.label }}
+              </span>
+            </button>
+          </div>
+          <p
+            v-if="touched.category && errors.category"
+            class="text-xs font-bold text-red-500 mt-1 flex items-center gap-1"
           >
-            <option disabled value="">-- กรุณาเลือกหมวดหมู่ --</option>
-            <option v-for="cat in CATEGORY_LIST" :key="cat.key" :value="cat.key">
-              {{ cat.label }}
-            </option>
-          </select>
-          <p v-if="touched.category && errors.category" class="mt-1 text-sm text-red-600">
-            {{ errors.category }}
+            <i class="fas fa-exclamation-circle"></i> {{ errors.category }}
           </p>
         </div>
-        <div>
-          <label for="newsContent" class="block text-sm font-medium text-gray-700"
-            >เนื้อหาข่าวสาร <span class="text-red-500">*</span></label
+
+        <!-- Date Input Section -->
+        <div class="space-y-2">
+          <label for="newsDate" class="block text-sm font-bold text-slate-700"
+            >วันที่ลงข่าว <span class="text-red-500">*</span></label
           >
+          <VueDatePicker
+            v-model="currentNews.date"
+            :min-date="minDate"
+            :enable-time-picker="false"
+            auto-apply
+            locale="th"
+            format="dd/MM/yyyy"
+            model-type="yyyy-MM-dd"
+            @closed="touch('date')"
+          >
+            <template #trigger>
+              <div class="relative cursor-pointer group">
+                <input
+                  type="text"
+                  readonly
+                  :value="prettyDate(currentNews.date)"
+                  :class="inputClass('date')"
+                  placeholder="เลือกวันที่..."
+                  class="w-full pl-11 pr-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 font-bold cursor-pointer"
+                />
+                <i
+                  class="fas fa-calendar-alt absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-blue-500 transition-colors"
+                ></i>
+              </div>
+            </template>
+          </VueDatePicker>
+          <p
+            v-if="touched.date && errors.date"
+            class="text-xs font-bold text-red-500 mt-1 flex items-center gap-1"
+          >
+            <i class="fas fa-exclamation-circle"></i> {{ errors.date }}
+          </p>
+        </div>
+
+        <!-- Content Area -->
+        <div class="space-y-2">
+          <label
+            for="newsContent"
+            class="block text-sm font-bold text-slate-700 flex items-center justify-between"
+          >
+            <span>เนื้อหาโดยละเอียด <span class="text-red-500">*</span></span>
+            <span class="text-[10px] font-medium text-slate-400"
+              >{{ currentNews.content.length }}/2000</span
+            >
+          </label>
           <textarea
             id="newsContent"
             v-model.trim="currentNews.content"
             @blur="touch('content')"
             :class="textareaClass('content')"
-            rows="6"
-            placeholder="เนื้อหาข่าวโดยย่อ…"
+            rows="5"
+            placeholder="รายละเอียดข่าวสาร..."
             maxlength="2000"
             required
+            class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 font-medium placeholder:text-slate-400 resize-none min-h-[140px]"
           ></textarea>
-          <div class="flex justify-between mt-1">
-            <p v-if="touched.content && errors.content" class="text-sm text-red-600">
-              {{ errors.content }}
-            </p>
-            <span class="text-xs text-gray-400">{{ currentNews.content.length }}/2000</span>
-          </div>
         </div>
-        <div>
-          <label for="newsExcerpt" class="block text-sm font-medium text-gray-700"
-            >คำโปรย (ถ้าเว้นว่าง ระบบจะสร้างให้อัตโนมัติ)</label
+
+        <!-- Excerpt Input -->
+        <div class="space-y-2">
+          <label for="newsExcerpt" class="block text-sm font-bold text-slate-700"
+            >คำโปรย (Excerpt)</label
           >
           <input
             id="newsExcerpt"
             type="text"
             v-model.trim="currentNews.excerpt"
-            :class="inputBase"
-            placeholder="ข้อความสั้น ๆ สรุปข่าว"
+            placeholder="สรุปข่าวสั้นๆ (ถ้าเว้นจะสร้างอัตโนมัติ)"
             maxlength="200"
+            class="w-full px-4 py-3 bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 font-medium text-sm"
           />
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="newsDate" class="block text-sm font-medium text-gray-700"
-              >วันที่เผยแพร่ <span class="text-red-500">*</span></label
-            >
-            <input
-              type="date"
-              id="newsDate"
-              v-model="currentNews.date"
-              @change="touch('date')"
-              :class="inputClass('date')"
-              :min="minDate"
-              required
-            />
-            <p v-if="touched.date && errors.date" class="mt-1 text-sm text-red-600">
-              {{ errors.date }}
-            </p>
+
+        <!-- Media Uploads -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <!-- Image Upload -->
+          <div v-if="showImageUpload" class="space-y-2">
+            <span class="block text-sm font-bold text-slate-700">รูปภาพหน้าปก</span>
+            <div class="relative">
+              <label
+                for="newsImageFile"
+                class="flex flex-col items-center justify-center w-full h-32 px-4 transition bg-slate-50 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer hover:bg-slate-100 hover:border-blue-400 group"
+              >
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                  <i
+                    class="fas fa-cloud-upload-alt text-2xl text-slate-400 group-hover:text-blue-500 transition-colors mb-2"
+                  ></i>
+                  <p class="text-xs text-slate-500 font-bold group-hover:text-slate-700">
+                    {{ imageFile ? imageFile.name : 'คลิกเพื่อเลือกรูปภาพ' }}
+                  </p>
+                </div>
+                <input
+                  id="newsImageFile"
+                  type="file"
+                  accept="image/*"
+                  @change="onFileChange"
+                  class="hidden"
+                />
+              </label>
+            </div>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">สถานะการเผยแพร่</label>
+
+          <!-- PDF Upload -->
+          <div v-if="showPdfUpload" class="space-y-2">
+            <span class="block text-sm font-bold text-slate-700">ไฟล์เอกสาร (PDF)</span>
+            <div class="relative">
+              <label
+                for="newsPdfFile"
+                class="flex flex-col items-center justify-center w-full h-32 px-4 transition bg-slate-50 border-2 border-slate-200 border-dashed rounded-2xl cursor-pointer hover:bg-red-50 hover:border-red-400 group"
+              >
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                  <i
+                    class="fas fa-file-pdf text-2xl text-slate-400 group-hover:text-red-500 transition-colors mb-2"
+                  ></i>
+                  <p class="text-xs text-slate-500 font-bold group-hover:text-slate-700">
+                    {{ pdfFile ? pdfFile.name : 'คลิกเพื่อเลือกไฟล์ PDF' }}
+                  </p>
+                </div>
+                <input
+                  id="newsPdfFile"
+                  type="file"
+                  accept=".pdf, application/pdf"
+                  @change="onPdfFileChange"
+                  class="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Publish Toggle & Submit -->
+        <div
+          class="flex flex-col md:flex-row items-center justify-between gap-6 pt-4 border-t border-slate-100"
+        >
+          <div class="flex items-center gap-4">
+            <span class="text-sm font-bold text-slate-600">สถานะข่าวาสาร:</span>
             <button
               type="button"
-              class="inline-flex items-center px-3 py-2 rounded-md border transition select-none"
+              class="relative inline-flex h-8 w-24 items-center justify-center rounded-full border transition-all duration-300 font-bold text-[11px]"
               :class="
                 currentNews.isPublished
-                  ? 'bg-green-50 border-green-300 text-green-800'
-                  : 'bg-gray-50 border-gray-300 text-gray-700'
+                  ? 'bg-green-500 text-white border-green-600 shadow-md shadow-green-200'
+                  : 'bg-slate-200 text-slate-500 border-slate-300'
               "
               @click="currentNews.isPublished = !currentNews.isPublished"
             >
               <i
                 class="fas mr-2"
-                :class="currentNews.isPublished ? 'fa-toggle-on' : 'fa-toggle-off'"
+                :class="currentNews.isPublished ? 'fa-check' : 'fa-pencil-alt'"
               ></i>
-              {{ currentNews.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
+              {{ currentNews.isPublished ? 'เผยแพร่' : 'ฉบับร่าง' }}
             </button>
           </div>
-        </div>
-        <div v-if="showImageUpload">
-          <label for="newsImageFile" class="block text-sm font-medium text-gray-700"
-            >รูปภาพประกอบ</label
-          >
-          <input
-            id="newsImageFile"
-            type="file"
-            accept="image/*"
-            @change="onFileChange"
-            class="mt-1 block w-full text-sm"
-          />
-        </div>
-        <div v-if="showPdfUpload">
-          <label for="newsPdfFile" class="block text-sm font-medium text-gray-700"
-            >ไฟล์เอกสารแนบ (PDF)</label
-          >
-          <input
-            id="newsPdfFile"
-            type="file"
-            accept=".pdf, application/pdf"
-            @change="onPdfFileChange"
-            class="mt-1 block w-full text-sm"
-          />
-          <p v-if="pdfFile" class="mt-1 text-xs text-gray-500">ไฟล์ที่เลือก: {{ pdfFile.name }}</p>
-        </div>
-        <div class="flex justify-end gap-3 pt-2">
+
           <button
             type="submit"
-            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
+            class="w-full md:w-auto px-10 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-blue-200 disabled:opacity-50 disabled:grayscale disabled:scale-100"
             :disabled="!isValid || saving"
           >
-            <i class="fas fa-save mr-2"></i>เพิ่มข่าวสาร
+            <span v-if="saving" class="flex items-center gap-2">
+              <i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...
+            </span>
+            <span v-else>บันทึกและสร้างข่าวสาร</span>
           </button>
         </div>
       </div>
-      <aside class="lg:col-span-1">
-        <div class="bg-white border rounded-lg p-4 shadow-sm">
-          <h4 class="font-semibold text-gray-800 mb-3">พรีวิว</h4>
-          <div class="space-y-2">
+
+      <!-- Live Preview Sidebar -->
+      <div class="lg:col-span-4 lg:sticky lg:top-8">
+        <div
+          class="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-2xl shadow-slate-200/50"
+        >
+          <div
+            class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50"
+          >
+            <span class="text-xs font-black text-slate-400 uppercase tracking-widest"
+              >Live Preview</span
+            >
+            <div class="flex gap-1">
+              <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+              <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+              <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+            </div>
+          </div>
+
+          <div class="relative overflow-hidden group">
             <div
-              class="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
+              class="aspect-[16/10] bg-slate-100 flex items-center justify-center overflow-hidden"
             >
               <img
                 v-if="previewSrc"
                 :src="previewSrc"
-                :alt="currentNews.title || 'รูปภาพพรีวิวข่าว'"
-                class="w-full h-full object-cover"
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 @error="onImgError"
               />
-              <div v-else class="text-gray-400 text-sm flex flex-col items-center">
-                <i class="far fa-image text-3xl mb-2"></i> ไม่มีรูปภาพ
+              <div v-else class="flex flex-col items-center justify-center text-slate-300">
+                <i class="far fa-image text-4xl mb-2"></i>
+                <span class="text-[10px] font-bold uppercase tracking-tight">No Cover Image</span>
               </div>
             </div>
-            <div>
-              <div class="flex items-center justify-between">
-                <span class="text-xs text-gray-500">{{ prettyDate(currentNews.date) }}</span>
-                <span
-                  class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
-                  :class="
-                    currentNews.isPublished
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-200 text-gray-700'
-                  "
-                >
-                  {{ currentNews.isPublished ? 'เผยแพร่แล้ว' : 'ฉบับร่าง' }}
-                </span>
+            <!-- Status Badge Overlay -->
+            <div class="absolute top-4 right-4">
+              <span
+                class="px-3 py-1 text-[10px] font-black rounded-full shadow-lg backdrop-blur-md"
+                :class="
+                  currentNews.isPublished
+                    ? 'bg-green-500/90 text-white'
+                    : 'bg-white/90 text-slate-800 font-black'
+                "
+              >
+                {{ currentNews.isPublished ? 'PUBLISHED' : 'DRAFT' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-3">
+              <span
+                class="text-[10px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50 px-2 py-0.5 rounded"
+              >
+                #{{ currentNews.category || 'CATEGORY' }}
+              </span>
+              <span class="text-[10px] font-bold text-slate-400">{{
+                prettyDate(currentNews.date)
+              }}</span>
+            </div>
+
+            <h5
+              class="text-lg font-bold text-slate-800 leading-snug mb-3 line-clamp-2 min-h-[3.5rem]"
+            >
+              {{ currentNews.title || 'หัวข้อข่าวสารของคุณจะแสดงที่นี่...' }}
+            </h5>
+
+            <div class="h-px bg-slate-100 mb-4"></div>
+
+            <p class="text-slate-500 text-xs leading-relaxed line-clamp-4 min-h-[4.5rem]">
+              {{
+                currentNews.content ||
+                'ใส่รายละเอียดข่าวสารเพื่อให้เนื้อหาที่เป็นประโยชน์แก่ผู้เข้าชมเว็บไซต์...'
+              }}
+            </p>
+
+            <div class="mt-6 flex items-center justify-between">
+              <div class="flex -space-x-2">
+                <div class="w-6 h-6 rounded-full border-2 border-white bg-slate-200"></div>
+                <div class="w-6 h-6 rounded-full border-2 border-white bg-slate-300"></div>
               </div>
-              <h5 class="font-semibold mt-1 text-gray-800 line-clamp-2">
-                {{ currentNews.title || 'หัวข้อข่าว…' }}
-              </h5>
-              <p class="text-gray-600 text-sm mt-1 line-clamp-3">
-                {{ currentNews.content || 'พิมพ์เนื้อหาข่าวสั้น ๆ เพื่อพรีวิวได้ทันที…' }}
-              </p>
+              <button
+                disabled
+                class="text-[10px] font-black text-slate-300 hover:text-blue-600 transition-colors uppercase"
+              >
+                Read More <i class="fas fa-chevron-right ml-1"></i>
+              </button>
             </div>
           </div>
         </div>
-      </aside>
+
+        <!-- Help Info -->
+        <div class="mt-6 p-5 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+          <h6 class="text-xs font-black text-blue-800 uppercase mb-2">เคล็ดลับการสร้างข่าว</h6>
+          <ul class="space-y-2">
+            <li class="flex items-start gap-2 text-[11px] text-blue-700 font-medium">
+              <i class="fas fa-info-circle mt-0.5 opacity-60"></i>
+              รูปภาพควรมีขนาด 1200x630 (16:9)
+            </li>
+            <li class="flex items-start gap-2 text-[11px] text-blue-700 font-medium">
+              <i class="fas fa-info-circle mt-0.5 opacity-60"></i>
+              เนื้อหาที่กระชับจะช่วยให้น่าอ่านมากขึ้น
+            </li>
+          </ul>
+        </div>
+      </div>
     </form>
   </section>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import VueDatePicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from 'axios'
 import { createNews, togglePublish, type NewsItem as ServiceNewsItem } from '@/services/newsService'
@@ -274,6 +451,11 @@ function absoluteImage(u?: string | null): string {
 // ================= State & Validation =================
 const saving = ref(false)
 
+function selectCategory(key: string) {
+  currentNews.value.category = key
+  touch('category')
+}
+
 const currentNews = ref<NewsForm>({
   id: '',
   title: '',
@@ -330,11 +512,13 @@ function touch(field: keyof typeof errors.value) {
 // Class Helpers (Extracted)
 function inputClass(field: 'title' | 'date' | 'category') {
   const hasError = touched.value[field] && !!errors.value[field]
-  return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
+  // return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
+  return hasError ? '!border-red-400 !bg-red-50 focus:!ring-red-500/20' : ''
 }
 function textareaClass(field: 'content') {
   const hasError = touched.value[field] && !!errors.value[field]
-  return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
+  // return `${inputBase} ${hasError ? 'border-red-300 focus:border-red-400 focus:ring-red-300' : ''}`
+  return hasError ? '!border-red-400 !bg-red-50 focus:!ring-red-500/20' : ''
 }
 
 // ================= Computed =================
@@ -500,7 +684,12 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* Replicate necessary scoped styles from the parent for consistency */
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@100;300;400;500;600;700;800&display=swap');
+
+section {
+  font-family: 'Sarabun', sans-serif !important;
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -508,26 +697,11 @@ onBeforeUnmount(() => {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.line-clamp-3 {
+.line-clamp-4 {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-.aspect-video {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;
-}
-.aspect-video > img,
-.aspect-video > div {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.aspect-video > img {
-  object-fit: cover;
 }
 </style>

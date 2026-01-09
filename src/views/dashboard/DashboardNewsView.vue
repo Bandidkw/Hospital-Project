@@ -35,37 +35,52 @@
     </div>
 
     <section class="card bg-white p-6 rounded-lg shadow-md">
-      <div class="flex items-center justify-between mb-5">
-        <h3 class="text-xl font-semibold text-gray-800 flex items-center gap-2">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
           <i class="fas fa-list text-blue-500"></i> รายการข่าวสาร
         </h3>
-        <div class="flex items-center gap-2">
-          <div class="relative">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Search Input -->
+          <div class="relative group">
             <input
               type="search"
               v-model.trim="query"
-              placeholder="ค้นหาหัวข้อข่าว..."
-              class="pl-9 pr-3 py-1.5 text-sm rounded-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="ค้นหาข่าว..."
+              class="pl-10 pr-4 py-2 text-sm bg-slate-50 border-transparent rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-full md:w-64 font-medium"
             />
             <i
-              class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
+              class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs transition-colors group-focus-within:text-blue-500"
             ></i>
           </div>
-          <select
-            v-model="sortKey"
-            class="border rounded-md text-sm py-1.5 px-2 focus:ring-blue-500 focus:border-blue-500"
+
+          <!-- Sort Selector -->
+          <div
+            class="relative flex items-center bg-slate-50 rounded-xl px-3 py-1.5 border border-transparent focus-within:border-blue-500/50 transition-all"
           >
-            <option value="updated">อัปเดตล่าสุด</option>
-            <option value="date">วันที่</option>
-            <option value="title">หัวข้อ</option>
-            <option value="status">สถานะ</option>
-          </select>
+            <i class="fas fa-sort-amount-down text-slate-400 mr-2 text-xs"></i>
+            <select
+              v-model="sortKey"
+              class="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 p-0 appearance-none cursor-pointer pr-5"
+            >
+              <option value="updated">อัพเดตล่าสุด</option>
+              <option value="date">วันที่</option>
+              <option value="title">หัวข้อ</option>
+              <option value="status">สถานะ</option>
+            </select>
+            <i
+              class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"
+            ></i>
+          </div>
+
+          <!-- Sort Order Button -->
           <button
-            class="p-2 border rounded-md hover:bg-gray-50"
+            class="w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
             @click="sortAsc = !sortAsc"
             :title="sortAsc ? 'เรียง น้อย→มาก' : 'เรียง มาก→น้อย'"
           >
-            <i :class="sortAsc ? 'fas fa-arrow-up' : 'fas fa-arrow-down'"></i>
+            <i
+              :class="[sortAsc ? 'fas fa-arrow-up' : 'fas fa-arrow-down', 'text-slate-500 text-xs']"
+            ></i>
           </button>
         </div>
       </div>
@@ -112,10 +127,22 @@
                   <span class="font-medium ...">{{ news.title }}</span>
                 </div>
               </td>
-              <td class="px-4 py-3 text-gray-600">
-                <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                  {{ categoryLabels[news.category ?? 'general'] || news.category }}
-                </span>
+              <td class="px-4 py-3">
+                <div
+                  v-if="categoryConfigs[news.category ?? 'general']"
+                  class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-bold"
+                  :class="categoryConfigs[news.category ?? 'general'].classes.badge"
+                >
+                  <i :class="categoryConfigs[news.category ?? 'general'].icon"></i>
+                  {{ categoryConfigs[news.category ?? 'general'].label }}
+                </div>
+                <div
+                  v-else
+                  class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600"
+                >
+                  <i class="fas fa-globe"></i>
+                  {{ news.category || 'ทั่วไป' }}
+                </div>
               </td>
               <td class="px-4 py-3 text-gray-600 whitespace-nowrap">{{ prettyDate(news.date) }}</td>
               <td class="px-4 py-3">
@@ -148,11 +175,11 @@
                         :title="news.isPublished ? 'สถานะ: เผยแพร่แล้ว' : 'สถานะ: ซ่อน'"
                       >
                         <div
-                          class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md"
+                          class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-300 shadow-md flex items-center justify-center"
                           :class="{ 'translate-x-5': news.isPublished }"
                         >
                           <i
-                            class="fas w-full h-full flex items-center justify-center text-xs"
+                            class="fas text-[10px]"
                             :class="
                               news.isPublished
                                 ? 'fa-check text-green-500'
@@ -334,21 +361,36 @@
                   >
                 </div>
               </div>
-              <div>
-                <label for="editNewsCategory" class="block text-sm font-medium text-gray-700"
+              <div class="space-y-3">
+                <label class="block text-sm font-bold text-gray-700"
                   >หมวดหมู่ข่าวสาร <span class="text-red-500">*</span></label
                 >
-                <select
-                  id="editNewsCategory"
-                  v-model="editForm.category"
-                  required
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option disabled value="">-- กรุณาเลือกหมวดหมู่ --</option>
-                  <option v-for="cat in CATEGORY_LIST" :key="cat.key" :value="cat.key">
-                    {{ cat.label }}
-                  </option>
-                </select>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <button
+                    v-for="cat in CATEGORY_LIST"
+                    :key="cat.key"
+                    type="button"
+                    @click="editForm.category = cat.key"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl border-2 transition-all text-left"
+                    :class="[
+                      editForm.category === cat.key
+                        ? `${cat.classes.border} ${cat.classes.bg} ${cat.classes.text} shadow-sm`
+                        : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200',
+                    ]"
+                  >
+                    <div
+                      class="w-6 h-6 rounded-lg flex items-center justify-center text-[10px]"
+                      :class="[
+                        editForm.category === cat.key
+                          ? `${cat.classes.icon} text-white`
+                          : 'bg-white text-slate-400',
+                      ]"
+                    >
+                      <i :class="cat.icon"></i>
+                    </div>
+                    <span class="text-[10px] font-bold truncate">{{ cat.label }}</span>
+                  </button>
+                </div>
               </div>
               <div>
                 <label for="editNewsContent" class="block text-sm font-medium text-gray-700"
@@ -383,18 +425,34 @@
                 </div>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label for="editNewsDate" class="block text-sm font-medium text-gray-700"
+                <div class="space-y-1">
+                  <label for="editNewsDate" class="block text-sm font-bold text-gray-700"
                     >วันที่เผยแพร่ <span class="text-red-500">*</span></label
                   >
-                  <input
-                    id="editNewsDate"
-                    type="date"
+                  <VueDatePicker
                     v-model="editForm.date"
-                    :min="minDate"
-                    required
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                    :min-date="minDate"
+                    :enable-time-picker="false"
+                    auto-apply
+                    locale="th"
+                    format="dd/MM/yyyy"
+                    model-type="yyyy-MM-dd"
+                  >
+                    <template #trigger>
+                      <div class="relative cursor-pointer group">
+                        <input
+                          type="text"
+                          readonly
+                          :value="prettyDate(editForm.date)"
+                          placeholder="เลือกวันที่..."
+                          class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-800 font-bold cursor-pointer text-sm"
+                        />
+                        <i
+                          class="fas fa-calendar-alt absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-blue-500 transition-colors text-sm"
+                        ></i>
+                      </div>
+                    </template>
+                  </VueDatePicker>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2"
@@ -536,6 +594,8 @@
  * Imports
  * ========================================================================= */
 import { ref, computed, onMounted, watch } from 'vue'
+import VueDatePicker from '@vuepic/vue-datepicker'
+import '@vuepic/vue-datepicker/dist/main.css'
 import { useToast } from 'vue-toastification'
 import { isAxiosError } from 'axios'
 import {
@@ -572,6 +632,9 @@ type ApiErrorResponse = {
  * ========================================================================= */
 const toast = useToast()
 const minDate = new Date(2000, 0, 1).toISOString().split('T')[0]
+const categoryConfigs = computed(() =>
+  Object.fromEntries(CATEGORY_LIST.map((cat) => [cat.key, cat])),
+)
 const categoryLabels = computed(() =>
   Object.fromEntries(CATEGORY_LIST.map(({ key, label }) => [key, label])),
 )
