@@ -56,7 +56,7 @@
             <tr class="bg-blue-50 text-left text-blue-800 uppercase text-xs tracking-wider">
               <th class="py-3 px-6 text-left">วันที่และเวลา</th>
               <th class="py-3 px-6 text-left">ผู้กระทำ (Actor)</th>
-              <th class="py-3 px-6 text-left">Target/Resource</th>
+              <th class="py-3 px-6 text-left">ข้อมูลส่วนงาน</th>
               <th class="py-3 px-6 text-left">กิจกรรม</th>
               <th class="py-3 px-6 text-left">รายละเอียด</th>
             </tr>
@@ -72,9 +72,10 @@
               </td>
 
               <td class="py-3 px-6 text-left font-mono text-xs">{{ log.userId }}</td>
-
-              <td class="py-3 px-6 text-left font-semibold">
-                {{ log.targetId || '-' }}
+              <td class="py-3 px-6 text-left">
+                <span class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">
+                  {{ log.resource || 'ทั่วไป' }}
+                </span>
               </td>
 
               <td class="py-3 px-6 text-left">
@@ -90,7 +91,7 @@
                   }"
                   class="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap"
                 >
-                  {{ ACTION_DISPLAY_MAP[log.action] }}
+                  {{ getAuditActionDisplay(log.action) }}
                 </span>
               </td>
 
@@ -124,7 +125,7 @@
 import { ref, computed, onMounted } from 'vue'
 
 // --- IMPORT TYPES AND SERVICES ---
-import { type AuditLog, AuditAction, ACTION_DISPLAY_MAP } from '@/types/auditlog'
+import { type AuditLog, AuditAction, getAuditActionDisplay } from '@/types/auditlog'
 import { fetchAuditLogs, formatLogDetails } from '@/services/auditlogService'
 
 // --- STATE ---
@@ -152,8 +153,8 @@ const filteredLogs = computed(() => {
     const matchesUser = log.userId.toLowerCase().includes(filters.value.user.toLowerCase())
 
     // 2. กรองด้วย Action (กรองจาก Display Text)
-    // ต้องตรวจสอบว่า action มีอยู่ใน map ก่อนเพื่อป้องกัน error ในกรณีที่ log action ไม่ถูกต้อง
-    const actionDisplayText = ACTION_DISPLAY_MAP[log.action] || log.action
+    // ใช้ helper เพื่อความปลอดภัยของ type และการแสดงผลที่ถูกต้อง
+    const actionDisplayText = getAuditActionDisplay(log.action)
     const matchesAction = actionDisplayText
       .toLowerCase()
       .includes(filters.value.action.toLowerCase())
