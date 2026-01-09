@@ -15,4 +15,12 @@ export interface TopMenuItem {
 export interface StatisticsData {
   summary: SummaryStats
   topMenus: TopMenuItem[]
+  trends: {
+    dates: string[]
+    visitors: number[]
+  }
+  distribution: {
+    labels: string[]
+    values: number[]
+  }
 }

@@ -201,9 +201,8 @@ const router = createRouter({
         {
           path: 'statistics',
           name: 'dashboard-statistics',
-          // component: () => import('@/views/dashboard/DashboardStatisticsView.vue'),
-          component: () => import('@/components/common/UnderDevelopment.vue'),
-          meta: { requiresAuth: true, roles: SUPERADMIN_ONLY },
+          component: () => import('@/views/dashboard/DashboardStatisticsView.vue'),
+          meta: { requiresAuth: true, roles: ADMIN_ONLY },
         },
         {
           path: 'profile',

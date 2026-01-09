@@ -17,6 +17,14 @@ const mockStatisticsData: StatisticsData = {
     { menu: 'ติดต่อเรา', views: 18700 },
     { menu: 'ITA', views: 12000 },
   ],
+  trends: {
+    dates: ['03 ม.ค.', '04 ม.ค.', '05 ม.ค.', '06 ม.ค.', '07 ม.ค.', '08 ม.ค.', '09 ม.ค.'],
+    visitors: [4200, 4800, 5100, 4900, 5300, 5800, 5432],
+  },
+  distribution: {
+    labels: ['หน้าหลัก', 'ข่าวสาร', 'ITA', 'บุคลากร', 'อื่นๆ'],
+    values: [40, 25, 15, 12, 8],
+  },
 }
 
 /**
