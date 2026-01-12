@@ -315,7 +315,6 @@ const handleFormSubmit = async (data: TopicFormData) => {
         title: data.title,
         description: data.description,
       }
-      toast.info(`กำลังอัปเดตข้อมูล "${payload.moit_name}"...`)
       await itaService.updateTopic(data.id, payload)
       toast.success(`อัปเดตข้อมูลสำเร็จ!`)
     } else {
@@ -334,7 +333,6 @@ const handleFormSubmit = async (data: TopicFormData) => {
         title: data.title,
         description: data.description,
       }
-      toast.info(`กำลังสร้างหัวข้อ: "${payload.moit_name}"...`)
       await itaService.createTopic(payload)
       toast.success(`สร้างหัวข้อสำเร็จ!`)
     }
@@ -367,7 +365,6 @@ const closeDeleteConfirmModal = () => {
 const handleConfirmDelete = async () => {
   if (!topicToDelete.value) return
   try {
-    toast.info(`กำลังลบ "${topicToDelete.value.title}"...`)
     await itaService.deleteTopic(topicToDelete.value.id)
     toast.success(`ลบ "${topicToDelete.value.title}" สำเร็จ!`)
     closeDeleteConfirmModal()

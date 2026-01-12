@@ -201,7 +201,6 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
   if (selectedFile.value) formData.append('file', selectedFile.value)
 
   try {
-    toast.info('กำลังบันทึกข้อมูลเอกสาร...')
     if (editingDocument.value && documentData.id) {
       await itaService.updateDocument(documentData.id, formData)
       toast.success('แก้ไขเอกสารสำเร็จ!')
@@ -227,7 +226,6 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
 const deleteDocument = async (docId: string) => {
   isDeleteConfirmationOpen.value = false
   try {
-    toast.info(`กำลังลบเอกสาร ID: ${docId}...`)
     await itaService.deleteDocument(docId)
     toast.success(`ลบเอกสาร ID: ${docId} สำเร็จ!`)
     await fetchTopicDetails() // Refresh ข้อมูล
