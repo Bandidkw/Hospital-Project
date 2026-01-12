@@ -1,43 +1,89 @@
 <template>
-  <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-    <div v-if="moit" class="mb-8">
+  <div class="container mx-auto p-4 sm:p-6 lg:p-8 min-h-screen bg-slate-50/50">
+    <!-- Header Section -->
+    <div v-if="moit" class="mb-8 animate-fade-in-down">
       <router-link
         v-if="yearId"
         :to="{ name: 'dashboard-ita-topics', params: { yearId } }"
-        class="text-blue-600 hover:underline text-lg mb-4 inline-block"
+        class="group inline-flex items-center text-slate-500 hover:text-indigo-600 font-medium mb-6 transition-colors duration-200"
       >
-        <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้ารายการหัวข้อ
+        <span
+          class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-200 text-sm border border-slate-100"
+        >
+          <i class="fas fa-arrow-left"></i>
+        </span>
+        กลับไปหน้ารายการหัวข้อ
       </router-link>
 
-      <div class="bg-white p-6 rounded-lg shadow-md border-l-8 border-blue-500">
-        <h1 class="text-3xl font-extrabold text-blue-800">
-          <span class="text-gray-500 font-normal">จัดการเอกสารในหัวข้อ:</span><br />
-          {{ moit.title }}
-        </h1>
-        <p v-if="moit?.year_ita" class="text-gray-600 mt-2 text-lg">
-          ปีงบประมาณ: <span class="font-semibold">{{ moit.year_ita?.year ?? '-' }}</span>
-        </p>
+      <div
+        class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative group"
+      >
+        <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
+        <div class="p-8 relative z-10">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div>
+              <div class="flex items-center gap-3 mb-2">
+                <span
+                  class="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold tracking-wide uppercase"
+                >
+                  ITA {{ moit.year_ita?.year ?? 'Unknown' }}
+                </span>
+                <span class="text-slate-400 text-sm flex items-center gap-1">
+                  <i class="fas fa-folder-open text-xs"></i>
+                  <span>{{ moit.documents?.length ?? 0 }} เอกสาร</span>
+                </span>
+              </div>
+              <h1 class="text-2xl md:text-3xl font-bold text-slate-800 leading-relaxed max-w-4xl">
+                {{ moit.title }}
+              </h1>
+            </div>
+
+            <button
+              @click="openCreateModal"
+              class="shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-200 transform transition-all duration-200 hover:-translate-y-1 hover:shadow-xl active:translate-y-0 flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus-circle text-lg"></i>
+              <span>เพิ่มเอกสารใหม่</span>
+            </button>
+          </div>
+        </div>
+        <!-- Decorative background pattern -->
+        <div
+          class="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-indigo-50/50 to-transparent pointer-events-none"
+        ></div>
       </div>
+    </div>
 
-      <div class="flex justify-end mt-6 mb-4">
-        <button
-          @click="openCreateModal"
-          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition duration-200 flex items-center"
-        >
-          <i class="fas fa-plus-circle mr-2"></i> เพิ่มเอกสารใหม่
-        </button>
+    <!-- Loading State -->
+    <div v-if="loading" class="flex flex-col items-center justify-center py-20 animate-pulse">
+      <div
+        class="w-16 h-16 border-4 border-indigo-100 border-t-indigo-500 rounded-full animate-spin mb-4"
+      ></div>
+      <p class="text-slate-500 text-lg font-medium">กำลังโหลดข้อมูล...</p>
+    </div>
+
+    <!-- Error State -->
+    <div
+      v-else-if="error"
+      class="max-w-xl mx-auto text-center py-16 bg-white rounded-2xl shadow-sm border border-red-100 p-8 animate-fade-in"
+    >
+      <div
+        class="w-20 h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-6"
+      >
+        <i class="fas fa-exclamation-triangle"></i>
       </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-2">เกิดข้อผิดพลาด</h3>
+      <p class="text-slate-500 mb-6">{{ error }}</p>
+      <button
+        @click="fetchTopicDetails"
+        class="text-indigo-600 font-semibold hover:text-indigo-800 hover:underline"
+      >
+        ลองใหม่อีกครั้ง
+      </button>
     </div>
 
-    <div v-if="loading" class="text-center py-16">
-      <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
-      <p class="mt-4 text-xl text-gray-600">กำลังโหลดข้อมูลหัวข้อ...</p>
-    </div>
-    <div v-else-if="error" class="text-center py-16 bg-red-50 p-8 rounded-lg">
-      <p class="text-xl text-red-600">เกิดข้อผิดพลาด: {{ error }}</p>
-    </div>
-
-    <div v-else-if="moit">
+    <!-- Content -->
+    <div v-else-if="moit" class="animate-fade-in-up">
       <DocumentTable
         :documents="moit?.documents ?? []"
         @edit="editDocument"
@@ -45,64 +91,103 @@
       />
     </div>
 
-    <div
-      v-if="isFormModalOpen"
-      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
-    >
+    <!-- Form Modal with Enhanced UI -->
+    <transition name="modal-backdrop">
       <div
-        class="bg-white rounded-xl shadow-2xl w-full max-w-2xl transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto"
+        v-if="isFormModalOpen"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-hidden"
+        @click.self="cancelEdit"
       >
-        <div
-          class="sticky top-0 px-6 py-4 border-b bg-blue-600 text-white rounded-t-xl z-10 shadow-md"
-        >
-          <h2 class="text-xl font-bold">
-            <i class="fas fa-file-alt mr-2"></i>
-            {{ editingDocument ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสารใหม่' }}
-          </h2>
-        </div>
-
-        <div class="p-6">
-          <DocumentForm
-            :is-editing="editingDocument"
-            :document-data="currentDocument"
-            @save="saveDocument"
-            @cancel="cancelEdit"
-            @update:file="updateSelectedFile"
-          />
-        </div>
-      </div>
-    </div>
-
-    <div
-      v-if="isDeleteConfirmationOpen"
-      class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <h2 class="text-xl font-bold text-red-700 mb-4 flex items-center">
-          <i class="fas fa-exclamation-triangle mr-2"></i> ยืนยันการลบ
-        </h2>
-        <p class="text-gray-700 mb-6">
-          คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร "<span class="font-semibold text-red-600">{{
-            deleteDocumentTitle
-          }}</span
-          >" นี้? การกระทำนี้ไม่สามารถยกเลิกได้
-        </p>
-        <div class="flex justify-end space-x-4">
-          <button
-            @click="isDeleteConfirmationOpen = false"
-            class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition"
+        <transition name="modal-scale">
+          <div
+            v-if="isFormModalOpen"
+            class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative"
           >
-            ยกเลิก
-          </button>
-          <button
-            @click="handleConfirmDelete"
-            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition"
-          >
-            ลบ
-          </button>
-        </div>
+            <!-- Modal Header -->
+            <div
+              class="relative bg-white pt-6 px-6 pb-2 z-10 flex-shrink-0 flex items-center justify-between"
+            >
+              <div>
+                <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                  <div
+                    class="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg shadow-sm"
+                  >
+                    <i class="fas" :class="editingDocument ? 'fa-edit' : 'fa-file-medical'"></i>
+                  </div>
+                  {{ editingDocument ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสารใหม่' }}
+                </h2>
+                <p class="text-slate-500 text-sm ml-[3.25rem] mt-1">
+                  กรอกข้อมูลเอกสารด้านล่างให้ครบถ้วน
+                </p>
+              </div>
+
+              <button
+                @click="cancelEdit"
+                class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 flex items-center justify-center transition-colors"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+              <DocumentForm
+                :is-editing="editingDocument"
+                :document-data="currentDocument"
+                @save="saveDocument"
+                @cancel="cancelEdit"
+                @update:file="updateSelectedFile"
+              />
+            </div>
+          </div>
+        </transition>
       </div>
-    </div>
+    </transition>
+
+    <!-- Delete Confirmation Modal -->
+    <transition name="modal-backdrop">
+      <div
+        v-if="isDeleteConfirmationOpen"
+        class="fixed inset-0 bg-slate-900/60 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
+        @click.self="isDeleteConfirmationOpen = false"
+      >
+        <transition name="modal-bounce">
+          <div
+            v-if="isDeleteConfirmationOpen"
+            class="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-md overflow-hidden"
+          >
+            <div class="p-8 text-center">
+              <div
+                class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-sm"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-slate-800 mb-2">ยืนยันการลบ?</h3>
+              <p class="text-slate-500 mb-8 leading-relaxed">
+                คุณแน่ใจหรือไม่ว่าต้องการลบเอกสาร <br />
+                "<span class="font-semibold text-slate-700">{{ deleteDocumentTitle }}</span
+                >" <br />
+                การกระทำนี้ไม่สามารถยกเลิกได้
+              </p>
+              <div class="flex gap-3 justify-center">
+                <button
+                  @click="isDeleteConfirmationOpen = false"
+                  class="px-6 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  @click="handleConfirmDelete"
+                  class="px-6 py-2.5 rounded-xl bg-red-600 text-white font-semibold shadow-lg shadow-red-200 hover:bg-red-700 hover:-translate-y-0.5 transition-all"
+                >
+                  ยืนยันลบ
+                </button>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -121,7 +206,6 @@ const toast = useToast()
 
 const isFormModalOpen = ref(false)
 
-// รองรับทั้ง :id และ :moitId ใน router (กันพังถ้าชื่อ param ไม่ตรง)
 const moitId = (route.params.moitId ?? route.params.id) as string | undefined
 
 const moit = ref<MoitWithYear | null>(null)
@@ -136,10 +220,8 @@ const isDeleteConfirmationOpen = ref(false)
 const deleteDocumentId = ref<string | null>(null)
 const deleteDocumentTitle = ref('')
 
-// ✅ yearId จาก helper (กัน undefined โดยไม่อ้าง field ตรง ๆ)
 const yearId = computed(() => (moit.value ? getMoitYearId(moit.value) : undefined))
 
-// แปลง Moit ดิบ -> MoitWithYear (ให้ year_ita & documents พร้อมใช้เสมอ)
 function toMoitWithYear(raw: Moit): MoitWithYear {
   return {
     ...raw,
@@ -159,7 +241,7 @@ const fetchTopicDetails = async () => {
   try {
     const [moitRaw, docs] = await Promise.all([
       itaService.getMoitById(moitId),
-      itaService.getDocumentsByMoitId(moitId), // ← ดึงทั้งหมดแล้วกรอง
+      itaService.getDocumentsByMoitId(moitId),
     ])
 
     moit.value = {
@@ -210,14 +292,14 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
         toast.error('ไม่พบรหัสหัวข้อ (moitId) สำหรับเพิ่มเอกสาร')
         return
       }
-      await itaService.createDocument(String(targetMoitId), formData) // บังคับเป็น string ชัดเจน
+      await itaService.createDocument(String(targetMoitId), formData)
       toast.success('เพิ่มเอกสารใหม่สำเร็จ!')
     }
 
     await fetchTopicDetails()
     resetForm()
     selectedFile.value = null
-    isFormModalOpen.value = false // 💡 ปิด Modal หลังจากบันทึกสำเร็จ
+    isFormModalOpen.value = false
   } catch (err: unknown) {
     toast.error(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล')
   }
@@ -228,7 +310,7 @@ const deleteDocument = async (docId: string) => {
   try {
     await itaService.deleteDocument(docId)
     toast.success(`ลบเอกสาร ID: ${docId} สำเร็จ!`)
-    await fetchTopicDetails() // Refresh ข้อมูล
+    await fetchTopicDetails()
   } catch (err: unknown) {
     if (err instanceof Error) {
       toast.error(err.message)
@@ -238,7 +320,6 @@ const deleteDocument = async (docId: string) => {
   }
 }
 
-// --- UI Control Functions (ฟังก์ชันที่ถูกเรียกจาก Component ลูก) ---
 const updateSelectedFile = (file: File | null) => {
   selectedFile.value = file
 }
@@ -276,18 +357,121 @@ const resetForm = () => {
 
 const cancelEdit = () => {
   resetForm()
-  isFormModalOpen.value = false // 💡 ปิด Modal เมื่อยกเลิก
+  isFormModalOpen.value = false
   toast.info('ยกเลิกแล้ว')
 }
-// 💡 ฟังก์ชันใหม่: เปิด Modal สำหรับเพิ่มเอกสารใหม่
+
 const openCreateModal = () => {
   resetForm()
-  editingDocument.value = false // ยืนยันว่าเป็นโหมดสร้าง
+  editingDocument.value = false
   isFormModalOpen.value = true
 }
 
-// --- Lifecycle Hooks ---
 onMounted(() => {
   fetchTopicDetails()
 })
 </script>
+
+<style scoped>
+/* Page Animations */
+.animate-fade-in-down {
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Transitions */
+.modal-backdrop-enter-active,
+.modal-backdrop-leave-active {
+  transition: opacity 0.3s ease;
+}
+.modal-backdrop-enter-from,
+.modal-backdrop-leave-to {
+  opacity: 0;
+}
+
+.modal-scale-enter-active,
+.modal-scale-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.modal-scale-enter-from,
+.modal-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.95) translateY(10px);
+}
+
+.modal-bounce-enter-active {
+  animation: bounce-in 0.4s;
+}
+.modal-bounce-leave-active {
+  transition: all 0.2s ease-in;
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+</style>

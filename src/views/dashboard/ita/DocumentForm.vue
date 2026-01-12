@@ -1,17 +1,15 @@
 <template>
-  <div class="bg-white p-6 rounded-lg shadow-xl mb-8">
-    <h2 class="text-2xl font-semibold text-blue-700 mb-6 border-b pb-4 flex items-center gap-2">
-      <i class="fas" :class="isEditing ? 'fa-edit' : 'fa-plus-circle'"></i>
-      {{ isEditing ? 'แก้ไขเอกสาร' : 'เพิ่มเอกสารใหม่' }}
-    </h2>
+  <div class="document-form-container">
     <div
       v-if="errors.title || errors.sub_topic || errors.quarter || errors.file"
-      class="mb-4 rounded-md border border-red-200 bg-red-50 text-red-700 p-3 text-sm"
+      class="mb-6 p-4 rounded-xl border border-red-100 bg-red-50/50 backdrop-blur-sm text-red-700 text-sm animate-shake"
       role="alert"
-      aria-live="assertive"
     >
-      <p class="font-semibold mb-1">กรุณาตรวจสอบข้อมูลที่กรอก:</p>
-      <ul class="list-disc pl-5 space-y-1">
+      <div class="flex items-center gap-2 font-bold mb-2">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>กรุณาตรวจสอบข้อมูล:</span>
+      </div>
+      <ul class="list-disc pl-5 space-y-1 opacity-90">
         <li v-if="errors.title">{{ errors.title }}</li>
         <li v-if="errors.sub_topic">{{ errors.sub_topic }}</li>
         <li v-if="errors.quarter">{{ errors.quarter }}</li>
@@ -19,89 +17,72 @@
       </ul>
     </div>
 
-    <form @submit.prevent="submitForm" class="space-y-6" novalidate>
+    <form @submit.prevent="submitForm" class="space-y-6">
       <!-- Title -->
-      <div>
-        <label for="docTitle" class="block text-gray-700 font-semibold mb-1"
-          >ชื่อเอกสาร (Title):<span class="text-red-500">*</span></label
-        >
-        <div class="relative">
-          <span
-            class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
-          >
-            <i class="fas fa-file-alt"></i>
+      <div class="form-group">
+        <label for="docTitle" class="form-label">
+          ชื่อเอกสาร <span class="text-indigo-500">*</span>
+        </label>
+        <div class="relative group">
+          <span class="input-icon">
+            <i class="fas fa-file-signature"></i>
           </span>
           <input
             id="docTitle"
             type="text"
             v-model.trim="editableDocument.title"
             @blur="validateTitle"
-            :aria-invalid="Boolean(errors.title)"
-            :aria-describedby="errors.title ? 'err-title' : undefined"
-            placeholder="ระบุชื่อเอกสารให้ชัดเจน"
-            class="shadow appearance-none border rounded-lg w-full py-3 pl-10 pr-4 text-gray-700 focus:outline-none focus:ring-2"
-            :class="errors.title ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'"
+            placeholder="ระบุชื่อเอกสารให้ชัดเจน..."
+            class="premium-input pl-10"
+            :class="{ 'input-error': errors.title }"
             :disabled="isSubmitting"
-            autocomplete="off"
           />
         </div>
-        <p v-if="errors.title" id="err-title" class="text-red-500 text-sm mt-1">
-          {{ errors.title }}
-        </p>
+        <transition name="fade">
+          <p v-if="errors.title" class="error-text">{{ errors.title }}</p>
+        </transition>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Sub-topic -->
-        <div>
-          <label for="docSubTopic" class="block text-gray-700 font-semibold mb-1"
-            >หัวข้อย่อย (Sub-topic):<span class="text-red-500">*</span></label
-          >
-          <div class="relative">
-            <span
-              class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
-            >
-              <i class="fas fa-list"></i>
+        <div class="form-group">
+          <label for="docSubTopic" class="form-label">
+            หัวข้อย่อย <span class="text-indigo-500">*</span>
+          </label>
+          <div class="relative group">
+            <span class="input-icon">
+              <i class="fas fa-tags"></i>
             </span>
             <input
               id="docSubTopic"
               type="text"
               v-model.trim="editableDocument.sub_topic"
               @blur="validateSubTopic"
-              :aria-invalid="Boolean(errors.sub_topic)"
-              :aria-describedby="errors.sub_topic ? 'err-subtopic' : undefined"
-              placeholder="เช่น ประกาศ, รายงานผล"
-              class="shadow appearance-none border rounded-lg w-full py-3 pl-10 pr-4 text-gray-700 focus:outline-none focus:ring-2"
-              :class="
-                errors.sub_topic ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'
-              "
+              placeholder="เช่น ประกาศ, รายงานผล..."
+              class="premium-input pl-10"
+              :class="{ 'input-error': errors.sub_topic }"
               :disabled="isSubmitting"
-              autocomplete="off"
             />
           </div>
-          <p v-if="errors.sub_topic" id="err-subtopic" class="text-red-500 text-sm mt-1">
-            {{ errors.sub_topic }}
-          </p>
+          <transition name="fade">
+            <p v-if="errors.sub_topic" class="error-text">{{ errors.sub_topic }}</p>
+          </transition>
         </div>
 
         <!-- Quarter -->
-        <div>
-          <label for="docQuarter" class="block text-gray-700 font-semibold mb-1"
-            >ไตรมาส (Quarter):<span class="text-red-500">*</span></label
-          >
+        <div class="form-group">
+          <label for="docQuarter" class="form-label">
+            ไตรมาส <span class="text-indigo-500">*</span>
+          </label>
           <div class="relative">
-            <span
-              class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400"
-            >
-              <i class="fas fa-calendar-alt"></i>
+            <span class="input-icon">
+              <i class="fas fa-calendar-check"></i>
             </span>
             <select
               id="docQuarter"
               v-model="editableDocument.quarter"
-              @change="validateQuarter"
-              :aria-invalid="Boolean(errors.quarter)"
-              :aria-describedby="errors.quarter ? 'err-quarter' : undefined"
-              class="shadow border rounded-lg w-full py-3 pl-10 pr-8 text-gray-700 focus:outline-none focus:ring-2 appearance-none bg-white"
-              :class="errors.quarter ? 'border-red-500 focus:ring-red-300' : 'focus:ring-blue-500'"
+              class="premium-input pl-10 appearance-none bg-white"
+              :class="{ 'input-error': errors.quarter }"
               :disabled="isSubmitting"
             >
               <option value="1">ไตรมาส 1</option>
@@ -110,111 +91,106 @@
               <option value="4">ไตรมาส 4</option>
             </select>
             <span
-              class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400"
+              class="absolute right-4 inset-y-0 flex items-center pointer-events-none text-slate-400"
             >
-              <i class="fas fa-chevron-down"></i>
+              <i class="fas fa-chevron-down text-xs"></i>
             </span>
           </div>
-          <p v-if="errors.quarter" id="err-quarter" class="text-red-500 text-sm mt-1">
-            {{ errors.quarter }}
-          </p>
+          <transition name="fade">
+            <p v-if="errors.quarter" class="error-text">{{ errors.quarter }}</p>
+          </transition>
         </div>
       </div>
 
-      <!-- File (Dropzone style) -->
-      <div>
-        <label class="block text-gray-700 font-semibold mb-1">
-          ไฟล์เอกสาร (PDF):<span class="text-red-500" v-if="!isEditing">*</span>
+      <!-- File Upload -->
+      <div class="form-group">
+        <label class="form-label">
+          ไฟล์ไฟล์ PDF <span class="text-indigo-500" v-if="!isEditing">*</span>
         </label>
-        <input
-          id="docFile"
-          type="file"
-          class="sr-only"
-          @change="handleFileSelect"
-          accept=".pdf,application/pdf"
-          :aria-invalid="Boolean(errors.file)"
-          :aria-describedby="errors.file ? 'err-file' : 'file-hint'"
-          :disabled="isSubmitting"
-        />
-        <label
-          for="docFile"
-          class="flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl p-6 cursor-pointer transition hover:bg-blue-50"
-          :class="errors.file ? 'border-red-400 bg-red-50/50' : 'border-gray-300'"
-          title="คลิกเพื่อเลือกไฟล์ PDF หรือวางไฟล์ลงที่นี่"
-        >
-          <i
-            class="fas fa-file-pdf text-3xl mb-2"
-            :class="errors.file ? 'text-red-500' : 'text-blue-500'"
-          ></i>
-          <span class="text-sm text-gray-700"
-            >ลากไฟล์ PDF มาวาง หรือ
-            <span class="text-blue-700 underline">คลิกเพื่อเลือก</span></span
-          >
-          <span id="file-hint" class="text-xs text-gray-500 mt-1"
-            >รองรับเฉพาะ PDF ขนาดไม่เกิน {{ MAX_FILE_MB }}MB</span
-          >
-        </label>
-        <p v-if="errors.file" id="err-file" class="text-red-500 text-sm mt-2">{{ errors.file }}</p>
 
-        <div v-if="selectedFile" class="flex items-center gap-3 text-sm text-gray-600 mt-3">
-          <i class="fas fa-paperclip"></i>
-          <span
-            >ไฟล์ที่เลือก:
-            <span class="font-medium text-blue-800">{{ selectedFile.name }}</span> ({{
-              prettySize(selectedFile.size)
-            }})</span
-          >
-          <button
-            type="button"
-            class="text-red-600 hover:underline"
-            @click="removeFile"
+        <div
+          class="file-dropzone"
+          :class="{ 'dropzone-error': errors.file, 'dropzone-active': selectedFile }"
+        >
+          <input
+            id="docFile"
+            type="file"
+            class="hidden-input"
+            @change="handleFileSelect"
+            accept=".pdf"
             :disabled="isSubmitting"
-          >
-            ล้างไฟล์
-          </button>
+          />
+          <label for="docFile" class="dropzone-label">
+            <div class="icon-container">
+              <i
+                class="fas fa-cloud-upload-alt text-4xl mb-3 transition-transform group-hover:-translate-y-1"
+              ></i>
+            </div>
+            <div class="text-center">
+              <span class="block text-slate-700 font-semibold"
+                >ลากและวางไฟล์ หรือคลิกเพื่อค้นหา</span
+              >
+              <span class="block text-slate-400 text-xs mt-1"
+                >เฉพาะ PDF (สูงสุด {{ MAX_FILE_MB }}MB)</span
+              >
+            </div>
+          </label>
         </div>
 
-        <p v-else-if="editableDocument.fileUrl" class="text-sm text-gray-600 mt-3">
-          ไฟล์ปัจจุบัน:
-          <a
-            :href="editableDocument.fileUrl"
-            target="_blank"
-            class="font-medium text-blue-800 hover:underline"
-            >{{ editableDocument.fileName || 'ดูไฟล์' }}</a
-          >
-        </p>
+        <transition name="slide-up">
+          <div v-if="selectedFile" class="selected-file-info">
+            <div class="flex items-center gap-3 overflow-hidden">
+              <div class="file-icon">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div class="flex-1 overflow-hidden">
+                <p class="text-sm font-medium text-slate-700 truncate">{{ selectedFile.name }}</p>
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider">
+                  {{ prettySize(selectedFile.size) }}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="remove-file-btn"
+              @click="removeFile"
+              :disabled="isSubmitting"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div v-else-if="editableDocument.fileUrl" class="selected-file-info existing">
+            <div class="flex items-center gap-3 overflow-hidden">
+              <div class="file-icon bg-indigo-50 text-indigo-500">
+                <i class="fas fa-link"></i>
+              </div>
+              <div class="flex-1 overflow-hidden">
+                <p class="text-sm font-medium text-slate-700 truncate">ไฟล์ปัจจุบัน</p>
+                <a
+                  :href="editableDocument.fileUrl"
+                  target="_blank"
+                  class="text-[10px] text-indigo-500 hover:underline"
+                >
+                  คลิกเพื่อดูเอกสาร
+                </a>
+              </div>
+            </div>
+          </div>
+        </transition>
+        <transition name="fade">
+          <p v-if="errors.file" class="error-text">{{ errors.file }}</p>
+        </transition>
       </div>
 
-      <!-- Submit -->
-      <div class="flex items-center justify-end gap-3 pt-4 border-t">
-        <!-- ปุ่มยกเลิก - แสดงทั้งในโหมดเพิ่มและแก้ไข -->
-        <button
-          type="button"
-          @click="cancel"
-          class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-5 rounded-full transition-colors duration-200 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-          :disabled="isSubmitting"
-        >
-          <i class="fas fa-times"></i>
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+        <button type="button" @click="cancel" class="secondary-btn" :disabled="isSubmitting">
           ยกเลิก
         </button>
-
-        <!-- ปุ่มบันทึก/เพิ่ม -->
-        <button
-          type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-full disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 transition-colors duration-200"
-          :disabled="isSubmitting || !isValid"
-        >
-          <i v-if="isSubmitting" class="fas fa-spinner fa-spin"></i>
-          <i v-else class="fas fa-save"></i>
-          {{
-            isEditing
-              ? isSubmitting
-                ? 'กำลังบันทึก...'
-                : 'บันทึกการแก้ไข'
-              : isSubmitting
-                ? 'กำลังเพิ่ม...'
-                : 'เพิ่มเอกสาร'
-          }}
+        <button type="submit" class="primary-btn" :disabled="isSubmitting || !isValid">
+          <i v-if="isSubmitting" class="fas fa-circle-notch fa-spin mr-2"></i>
+          <i v-else class="fas fa-check-circle mr-2"></i>
+          <span>{{ isEditing ? 'บันทึกการแก้ไข' : 'ยืนยันเพิ่มเอกสาร' }}</span>
         </button>
       </div>
     </form>
@@ -225,25 +201,21 @@
 import { ref, watch, toRefs, reactive, computed } from 'vue'
 import type { ItaDocument } from '@/types/ita'
 
-// Props
 const props = defineProps<{
   isEditing: boolean
   documentData: Partial<ItaDocument>
   isSubmitting?: boolean
 }>()
 
-// Emits (typed)
 const emit = defineEmits<{
   (e: 'save', payload: Partial<ItaDocument>): void
   (e: 'cancel'): void
   (e: 'update:file', file: File | null): void
 }>()
 
-// Constants (ปรับเป็น 20MB)
 const MAX_FILE_MB = 20
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 
-// Local state (quarter เป็น string ให้ตรงกับ API)
 const editableDocument = ref<Partial<ItaDocument>>({
   title: '',
   sub_topic: '',
@@ -252,8 +224,7 @@ const editableDocument = ref<Partial<ItaDocument>>({
 })
 const selectedFile = ref<File | null>(null)
 
-// Errors
-const errors = reactive<{ title: string; sub_topic: string; quarter: string; file: string }>({
+const errors = reactive({
   title: '',
   sub_topic: '',
   quarter: '',
@@ -262,7 +233,6 @@ const errors = reactive<{ title: string; sub_topic: string; quarter: string; fil
 
 const { documentData } = toRefs(props)
 
-// Sync props -> local state
 watch(
   documentData,
   (doc) => {
@@ -277,24 +247,19 @@ watch(
       fileName: d.fileName,
     }
     selectedFile.value = null
-    // reset errors when doc changes
     errors.title = errors.sub_topic = errors.quarter = errors.file = ''
   },
   { immediate: true, deep: true },
 )
 
-// Validation helpers
 const validateTitle = () =>
   (errors.title = editableDocument.value.title?.trim() ? '' : 'กรุณาระบุชื่อเอกสาร')
-
 const validateSubTopic = () =>
   (errors.sub_topic = editableDocument.value.sub_topic?.trim() ? '' : 'กรุณาระบุหัวข้อย่อย')
-
 const validateQuarter = () => {
   const q = String(editableDocument.value.quarter ?? '')
   errors.quarter = ['1', '2', '3', '4'].includes(q) ? '' : 'กรุณาเลือกไตรมาส 1–4'
 }
-
 const validateFile = () => {
   if (!props.isEditing && !selectedFile.value && !editableDocument.value.fileUrl) {
     errors.file = 'กรุณาแนบไฟล์ PDF'
@@ -312,7 +277,6 @@ const validateAll = () => {
 }
 
 const isValid = computed(() => {
-  // ใช้คุม disabled ของปุ่ม submit
   const q = String(editableDocument.value.quarter ?? '')
   return Boolean(
     editableDocument.value.title?.trim() &&
@@ -322,29 +286,26 @@ const isValid = computed(() => {
   )
 })
 
-// Utils
 const prettySize = (bytes: number) => {
   if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
   if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return bytes + ' B'
 }
 
-// Handlers
 const handleFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement
-  const file = target.files && target.files.length > 0 ? target.files[0] : null
+  const file = target.files?.[0] || null
 
   if (file) {
     if (file.size > MAX_FILE_BYTES) {
+      errors.file = `ไฟล์ขนาดเกิน ${MAX_FILE_MB}MB`
       selectedFile.value = null
-      errors.file = `ไฟล์มีขนาดเกิน ${MAX_FILE_MB}MB (${prettySize(file.size)})`
       emit('update:file', null)
       return
     }
-    // ตรวจชนิดไฟล์อย่างน้อยจากนามสกุล
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      selectedFile.value = null
       errors.file = 'รองรับเฉพาะไฟล์ .pdf เท่านั้น'
+      selectedFile.value = null
       emit('update:file', null)
       return
     }
@@ -370,3 +331,129 @@ const submitForm = () => {
 
 const cancel = () => emit('cancel')
 </script>
+
+<style scoped>
+.document-form-container {
+  @apply bg-transparent;
+}
+
+.form-group {
+  @apply flex flex-col gap-1.5;
+}
+
+.form-label {
+  @apply text-slate-600 text-sm font-semibold tracking-wide ml-1;
+}
+
+.premium-input {
+  @apply w-full py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-700
+         transition-all duration-300 outline-none
+         hover:border-slate-300 hover:bg-white
+         focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10;
+}
+
+.input-icon {
+  @apply absolute left-3.5 inset-y-0 flex items-center text-slate-400 group-focus-within:text-indigo-500 transition-colors duration-300;
+}
+
+.input-error {
+  @apply border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-red-500/10;
+}
+
+.error-text {
+  @apply text-red-500 text-[11px] font-medium ml-1 mt-0.5;
+}
+
+.file-dropzone {
+  @apply relative overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50
+         rounded-2xl p-8 transition-all duration-300
+         hover:bg-indigo-50/30 hover:border-indigo-300 group;
+}
+
+.dropzone-label {
+  @apply flex flex-col items-center justify-center cursor-pointer;
+}
+
+.icon-container {
+  @apply w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4
+         text-slate-400 transition-all duration-300 group-hover:scale-110 group-hover:text-indigo-500;
+}
+
+.dropzone-error {
+  @apply border-red-200 bg-red-50/30 hover:border-red-300 hover:bg-red-50/50;
+}
+
+.dropzone-active {
+  @apply border-indigo-400 bg-indigo-50/50;
+}
+
+.hidden-input {
+  @apply absolute inset-0 opacity-0 cursor-pointer w-full h-full;
+}
+
+.selected-file-info {
+  @apply mt-4 p-3 bg-white border border-slate-100 rounded-xl shadow-sm flex items-center justify-between;
+}
+
+.file-icon {
+  @apply w-10 h-10 bg-red-50 text-red-500 rounded-lg flex items-center justify-center text-lg;
+}
+
+.remove-file-btn {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all;
+}
+
+.primary-btn {
+  @apply inline-flex items-center px-6 py-2.5 bg-indigo-600 text-white rounded-full font-bold shadow-lg shadow-indigo-600/20
+         transition-all duration-300 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0
+         disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0;
+}
+
+.secondary-btn {
+  @apply px-6 py-2.5 text-slate-500 font-semibold rounded-full transition-all hover:bg-slate-100 hover:text-slate-700;
+}
+
+/* Animations */
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+</style>
