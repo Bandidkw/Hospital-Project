@@ -105,7 +105,7 @@
           v-if="websiteSettings.googleMapsEmbed"
           class="map-container rounded-lg overflow-hidden shadow-md"
         >
-          <div v-html="websiteSettings.googleMapsEmbed" class="w-full h-96"></div>
+          <div v-html="sanitizeHtml(websiteSettings.googleMapsEmbed)" class="w-full h-96"></div>
         </div>
         <p v-else class="text-gray-600 text-center py-8">
           ไม่มีข้อมูลแผนที่ กรุณาตั้งค่าในส่วน "ตั้งค่าเว็บไซต์" ของ Dashboard.
@@ -172,6 +172,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'vue-toastification'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const toast = useToast()
 

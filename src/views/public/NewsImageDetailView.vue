@@ -140,7 +140,7 @@
             <div
               v-if="newsItem.content"
               class="text-gray-800 leading-relaxed space-y-4"
-              v-html="formatContent(newsItem.content)"
+              v-html="sanitizeHtml(formatContent(newsItem.content))"
             ></div>
             <div v-else class="text-gray-500 italic text-center py-8">ไม่มีเนื้อหารายละเอียด</div>
           </div>
@@ -239,6 +239,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { getNewsPublicById } from '@/services/newsService'
 import type { NewsDetailItem } from '@/types/new'
 import { isAxiosError } from '@/services/apiService'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 // ===== State Management =====
 const route = useRoute()

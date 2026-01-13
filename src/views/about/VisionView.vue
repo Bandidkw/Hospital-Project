@@ -19,14 +19,20 @@
         <h2 class="text-2xl font-semibold text-green-600 mb-3 flex items-center">
           <i class="fas fa-tasks mr-3 text-green-500"></i> พันธกิจ (Mission)
         </h2>
-        <div v-html="visionData.missionHtml" class="prose max-w-none text-gray-700"></div>
+        <div
+          v-html="sanitizeHtml(visionData.missionHtml)"
+          class="prose max-w-none text-gray-700"
+        ></div>
       </div>
 
       <div class="p-6 rounded-lg bg-purple-50 border-l-4 border-purple-600 shadow-md">
         <h2 class="text-2xl font-semibold text-purple-600 mb-3 flex items-center">
           <i class="fas fa-bullseye mr-3 text-purple-500"></i> ค่านิยม (Core Values)
         </h2>
-        <div v-html="visionData.coreValuesHtml" class="prose max-w-none text-gray-700"></div>
+        <div
+          v-html="sanitizeHtml(visionData.coreValuesHtml)"
+          class="prose max-w-none text-gray-700"
+        ></div>
       </div>
     </div>
   </div>
@@ -37,6 +43,7 @@ import { ref, onMounted } from 'vue'
 import { fetchVision } from '@/services/visionService'
 import type { VisionData } from '@/types/vision'
 import { useToast } from 'vue-toastification'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const toast = useToast()
 

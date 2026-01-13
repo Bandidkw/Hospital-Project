@@ -8,7 +8,7 @@
       <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
       <p class="mt-2 text-gray-600">กำลังโหลดประวัติ...</p>
     </div>
-    <div v-else v-html="history.contentHtml" class="prose max-w-none mb-6"></div>
+    <div v-else v-html="sanitizeHtml(history.contentHtml)" class="prose max-w-none mb-6"></div>
 
     <img
       v-if="history.imageUrl"
@@ -26,6 +26,7 @@ import { ref, onMounted } from 'vue'
 import { fetchHistory } from '@/services/historyService'
 import type { HistoryData } from '@/types/history'
 import { useToast } from 'vue-toastification'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const toast = useToast()
 

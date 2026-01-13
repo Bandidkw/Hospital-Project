@@ -62,7 +62,10 @@
           />
         </div>
 
-        <div class="prose max-w-none text-gray-800 leading-relaxed" v-html="newsItem.content"></div>
+        <div
+          class="prose max-w-none text-gray-800 leading-relaxed"
+          v-html="sanitizeHtml(newsItem.content)"
+        ></div>
       </div>
     </div>
   </div>
@@ -74,6 +77,7 @@ import { useRoute } from 'vue-router'
 import { getNewsPublicById } from '@/services/newsService'
 import type { NewsDetailItem } from '@/types/new'
 import { isAxiosError } from '@/services/apiService'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 /* ---------- State ---------- */
 const route = useRoute()

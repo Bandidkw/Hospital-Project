@@ -198,7 +198,6 @@ const saveDocument = async (documentData: Partial<ItaDocument>) => {
 const deleteDocument = async (docId: string) => {
   isDeleteConfirmationOpen.value = false
   try {
-    toast.info(`กำลังลบเอกสาร ID: ${docId}...`)
     await itaService.deleteDocument(docId)
     toast.success(`ลบเอกสาร ID: ${docId} สำเร็จ!`)
     await fetchTopicDetails()
@@ -244,7 +243,6 @@ const resetForm = () => {
 
 const cancelEdit = () => {
   resetForm()
-  toast.info('ยกเลิกแล้ว')
 }
 
 /* -----------------------------

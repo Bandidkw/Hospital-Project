@@ -33,7 +33,7 @@
             v-model.trim="editableDocument.title"
             @blur="validateTitle"
             placeholder="ระบุชื่อเอกสารให้ชัดเจน..."
-            class="premium-input pl-10"
+            class="premium-input"
             :class="{ 'input-error': errors.title }"
             :disabled="isSubmitting"
           />
@@ -59,7 +59,7 @@
               v-model.trim="editableDocument.sub_topic"
               @blur="validateSubTopic"
               placeholder="เช่น ประกาศ, รายงานผล..."
-              class="premium-input pl-10"
+              class="premium-input"
               :class="{ 'input-error': errors.sub_topic }"
               :disabled="isSubmitting"
             />
@@ -74,27 +74,68 @@
           <label for="docQuarter" class="form-label">
             ไตรมาส <span class="text-indigo-500">*</span>
           </label>
-          <div class="relative">
-            <span class="input-icon">
+          <div class="relative group">
+            <span class="input-icon" :class="{ '!text-indigo-500': isQuarterDropdownOpen }">
               <i class="fas fa-calendar-check"></i>
             </span>
-            <select
+
+            <!-- Custom Trigger -->
+            <div
               id="docQuarter"
-              v-model="editableDocument.quarter"
-              class="premium-input pl-10 appearance-none bg-white"
-              :class="{ 'input-error': errors.quarter }"
-              :disabled="isSubmitting"
+              class="premium-input flex items-center justify-between cursor-pointer bg-white relative z-0"
+              :class="{
+                'input-error': errors.quarter,
+                'border-indigo-500 ring-4 ring-indigo-500/10': isQuarterDropdownOpen,
+              }"
+              @click="isQuarterDropdownOpen = !isQuarterDropdownOpen"
+              tabindex="0"
+              @blur="onBlurQuarter"
             >
-              <option value="1">ไตรมาส 1</option>
-              <option value="2">ไตรมาส 2</option>
-              <option value="3">ไตรมาส 3</option>
-              <option value="4">ไตรมาส 4</option>
-            </select>
-            <span
-              class="absolute right-4 inset-y-0 flex items-center pointer-events-none text-slate-400"
-            >
-              <i class="fas fa-chevron-down text-xs"></i>
-            </span>
+              <span class="text-slate-700 font-medium">
+                {{
+                  editableDocument.quarter ? `ไตรมาส ${editableDocument.quarter}` : 'เลือกไตรมาส...'
+                }}
+              </span>
+              <span
+                class="transition-transform duration-300 text-slate-400"
+                :class="{ 'rotate-180 text-indigo-500': isQuarterDropdownOpen }"
+              >
+                <i class="fas fa-chevron-down text-xs"></i>
+              </span>
+            </div>
+
+            <!-- Custom Menu -->
+            <transition name="dropdown-scale">
+              <ul
+                v-if="isQuarterDropdownOpen"
+                class="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden py-1.5 origin-top"
+              >
+                <li
+                  v-for="q in ['1', '2', '3', '4']"
+                  :key="q"
+                  @click.stop="selectQuarter(q)"
+                  class="px-4 py-2.5 hover:bg-indigo-50 cursor-pointer flex items-center justify-between group/item transition-colors"
+                  :class="{ 'bg-indigo-50/50': editableDocument.quarter === q }"
+                >
+                  <div class="flex items-center gap-3">
+                    <span
+                      class="w-2 h-2 rounded-full bg-slate-200 transition-colors group-hover/item:bg-indigo-400"
+                      :class="{ '!bg-indigo-600': editableDocument.quarter === q }"
+                    ></span>
+                    <span
+                      class="text-slate-600 group-hover/item:text-indigo-700"
+                      :class="{ 'font-semibold text-indigo-700': editableDocument.quarter === q }"
+                    >
+                      ไตรมาส {{ q }}
+                    </span>
+                  </div>
+                  <i
+                    v-if="editableDocument.quarter === q"
+                    class="fas fa-check text-indigo-600 text-xs"
+                  ></i>
+                </li>
+              </ul>
+            </transition>
           </div>
           <transition name="fade">
             <p v-if="errors.quarter" class="error-text">{{ errors.quarter }}</p>
@@ -109,7 +150,7 @@
         </label>
 
         <div
-          class="file-dropzone"
+          class="file-dropzone group"
           :class="{ 'dropzone-error': errors.file, 'dropzone-active': selectedFile }"
         >
           <input
@@ -223,6 +264,19 @@ const editableDocument = ref<Partial<ItaDocument>>({
   description: '',
 })
 const selectedFile = ref<File | null>(null)
+const isQuarterDropdownOpen = ref(false)
+
+const selectQuarter = (q: string) => {
+  editableDocument.value.quarter = q
+  isQuarterDropdownOpen.value = false
+  validateQuarter()
+}
+
+const onBlurQuarter = () => {
+  setTimeout(() => {
+    isQuarterDropdownOpen.value = false
+  }, 200)
+}
 
 const errors = reactive({
   title: '',
@@ -346,7 +400,7 @@ const cancel = () => emit('cancel')
 }
 
 .premium-input {
-  @apply w-full py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-700
+  @apply w-full py-2.5 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-700
          transition-all duration-300 outline-none
          hover:border-slate-300 hover:bg-white
          focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10;
@@ -367,7 +421,7 @@ const cancel = () => emit('cancel')
 .file-dropzone {
   @apply relative overflow-hidden border-2 border-dashed border-slate-200 bg-slate-50/50
          rounded-2xl p-8 transition-all duration-300
-         hover:bg-indigo-50/30 hover:border-indigo-300 group;
+         hover:bg-indigo-50/30 hover:border-indigo-300;
 }
 
 .dropzone-label {
@@ -455,5 +509,16 @@ const cancel = () => emit('cancel')
 .slide-up-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+.dropdown-scale-enter-active,
+.dropdown-scale-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdown-scale-enter-from,
+.dropdown-scale-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
 }
 </style>
