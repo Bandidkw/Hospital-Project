@@ -7,15 +7,55 @@
     <!-- ตัวกรองเลือกปี -->
     <div v-if="availableYears.length > 0" class="mb-8 flex justify-center items-center space-x-4">
       <label for="yearFilter" class="text-lg font-semibold text-gray-700">เลือกปีงบประมาณ:</label>
-      <select
-        id="yearFilter"
-        v-model="selectedYear"
-        class="p-3 border rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 text-lg"
-      >
-        <option v-for="year in availableYears" :key="year" :value="year">
-          ปีงบประมาณ {{ year }}
-        </option>
-      </select>
+
+      <!-- Custom Year Dropdown -->
+      <div class="relative">
+        <div
+          id="yearFilter"
+          class="min-w-[240px] px-6 py-3 bg-white border-2 border-slate-300 rounded-xl shadow-md cursor-pointer flex items-center justify-between transition-all duration-300 hover:border-teal-700 hover:shadow-lg"
+          :class="{ 'border-teal-700 ring-4 ring-teal-700/20': isYearDropdownOpen }"
+          @click="isYearDropdownOpen = !isYearDropdownOpen"
+          tabindex="0"
+          @blur="onBlurYearDropdown"
+        >
+          <span class="text-lg font-medium text-gray-800">
+            {{ selectedYear ? `ปีงบประมาณ ${selectedYear}` : 'เลือกปีงบประมาณ...' }}
+          </span>
+          <i
+            class="fas fa-chevron-down transition-transform duration-300 text-slate-500"
+            :class="{ 'rotate-180 !text-teal-700': isYearDropdownOpen }"
+          ></i>
+        </div>
+
+        <!-- Dropdown Menu -->
+        <transition name="dropdown-scale">
+          <ul
+            v-if="isYearDropdownOpen"
+            class="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden py-2 origin-top"
+          >
+            <li
+              v-for="year in availableYears"
+              :key="year"
+              @click.stop="selectYear(year)"
+              class="px-6 py-3 hover:bg-teal-50 cursor-pointer flex items-center justify-between group transition-all duration-200"
+              :class="{ 'bg-teal-50/70': selectedYear === year }"
+            >
+              <div class="flex items-center gap-3">
+                <span
+                  class="w-2.5 h-2.5 rounded-full bg-slate-300 transition-all group-hover:bg-teal-600 group-hover:scale-110"
+                  :class="{ '!bg-teal-700 scale-110': selectedYear === year }"
+                ></span>
+                <span
+                  class="text-lg text-gray-700 group-hover:text-teal-700 transition-colors"
+                  :class="{ 'font-bold text-teal-700': selectedYear === year }"
+                >
+                  ปีงบประมาณ {{ year }}
+                </span>
+              </div>
+            </li>
+          </ul>
+        </transition>
+      </div>
     </div>
 
     <!-- สถานะโหลด/เออเรอร์ -->
@@ -120,6 +160,18 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const selectedYear = ref<string | null>(null)
 const expandedQuarters = ref<Record<string, boolean>>({})
+const isYearDropdownOpen = ref(false)
+
+const selectYear = (year: string) => {
+  selectedYear.value = year
+  isYearDropdownOpen.value = false
+}
+
+const onBlurYearDropdown = () => {
+  setTimeout(() => {
+    isYearDropdownOpen.value = false
+  }, 200)
+}
 
 // Development mode check
 // const isDev = computed(() => import.meta.env.DEV)
@@ -255,3 +307,17 @@ const openFile = (fileUrl: string, title: string) => {
 
 onMounted(fetchAllITAData)
 </script>
+
+<style scoped>
+/* Dropdown Animation */
+.dropdown-scale-enter-active,
+.dropdown-scale-leave-active {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdown-scale-enter-from,
+.dropdown-scale-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+</style>
