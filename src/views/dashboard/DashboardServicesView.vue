@@ -3,39 +3,133 @@
     <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
       <i class="fas fa-hand-holding-medical mr-3 text-cyan-600"></i> จัดการบริการ
     </h2>
-    <p class="text-gray-700 mb-6">หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบข้อมูลบริการทางการแพทย์ของโรงพยาบาล.</p>
+    <p class="text-gray-700 mb-6">
+      หน้านี้ใช้สำหรับเพิ่ม, แก้ไข, และลบข้อมูลบริการทางการแพทย์ของโรงพยาบาล.
+    </p>
 
     <div class="card bg-gray-50 p-6 rounded-lg shadow-inner mb-8">
-      <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ editingService ? 'แก้ไขบริการ' : 'เพิ่มบริการใหม่' }}</h3>
+      <h3 class="text-xl font-semibold text-gray-800 mb-4">
+        {{ editingService ? 'แก้ไขบริการ' : 'เพิ่มบริการใหม่' }}
+      </h3>
       <form @submit.prevent="saveService" class="space-y-4">
         <div>
-          <label for="serviceName" class="block text-sm font-medium text-gray-700">ชื่อบริการ:</label>
-          <input type="text" id="serviceName" v-model="currentService.name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required>
+          <label for="serviceName" class="block text-sm font-medium text-gray-700"
+            >ชื่อบริการ:</label
+          >
+          <input
+            type="text"
+            id="serviceName"
+            v-model="currentService.name"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
         </div>
         <div>
-          <label for="serviceDescription" class="block text-sm font-medium text-gray-700">คำอธิบายบริการ:</label>
-          <textarea id="serviceDescription" v-model="currentService.description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required></textarea>
+          <label for="serviceDescription" class="block text-sm font-medium text-gray-700"
+            >คำอธิบายบริการ:</label
+          >
+          <textarea
+            id="serviceDescription"
+            v-model="currentService.description"
+            rows="4"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+            required
+          ></textarea>
+        </div>
+        <!-- Custom Category Dropdown -->
+        <div class="relative">
+          <label for="serviceCategory" class="block text-sm font-medium text-gray-700 mb-2">
+            หมวดหมู่บริการ:<span class="text-red-500">*</span>
+          </label>
+
+          <!-- Custom Trigger -->
+          <div
+            id="serviceCategory"
+            class="premium-input flex items-center justify-between cursor-pointer bg-white relative z-0"
+            :class="{
+              'border-blue-500 ring-4 ring-blue-500/10': isCategoryDropdownOpen,
+            }"
+            @click="isCategoryDropdownOpen = !isCategoryDropdownOpen"
+            tabindex="0"
+            @blur="onBlurCategory"
+          >
+            <span class="text-slate-700 font-medium">
+              {{ currentService.category || 'เลือกหมวดหมู่...' }}
+            </span>
+            <span
+              class="transition-transform duration-300 text-slate-400"
+              :class="{ 'rotate-180 text-blue-500': isCategoryDropdownOpen }"
+            >
+              <i class="fas fa-chevron-down text-xs"></i>
+            </span>
+          </div>
+
+          <!-- Custom Menu -->
+          <transition name="dropdown-scale">
+            <ul
+              v-if="isCategoryDropdownOpen"
+              class="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden py-1.5 origin-top"
+            >
+              <li
+                v-for="category in serviceCategories"
+                :key="category.value"
+                @click.stop="selectCategory(category.value)"
+                class="px-4 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center justify-between group/item transition-colors"
+                :class="{ 'bg-blue-50/50': currentService.category === category.value }"
+              >
+                <div class="flex items-center gap-3">
+                  <span
+                    class="w-2 h-2 rounded-full bg-slate-200 transition-colors group-hover/item:bg-blue-400"
+                    :class="{ '!bg-blue-600': currentService.category === category.value }"
+                  ></span>
+                  <div class="flex items-center gap-2">
+                    <i
+                      :class="category.icon"
+                      class="text-sm text-slate-500 group-hover/item:text-blue-600"
+                    ></i>
+                    <span
+                      class="text-slate-600 group-hover/item:text-blue-700"
+                      :class="{
+                        'font-semibold text-blue-700': currentService.category === category.value,
+                      }"
+                    >
+                      {{ category.label }}
+                    </span>
+                  </div>
+                </div>
+                <i
+                  v-if="currentService.category === category.value"
+                  class="fas fa-check text-blue-600 text-sm"
+                ></i>
+              </li>
+            </ul>
+          </transition>
         </div>
         <div>
-          <label for="serviceCategory" class="block text-sm font-medium text-gray-700">หมวดหมู่บริการ:</label>
-          <select id="serviceCategory" v-model="currentService.category" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required>
-            <option value="">-- เลือกหมวดหมู่ --</option>
-            <option value="คลินิกเฉพาะทาง">คลินิกเฉพาะทาง</option>
-            <option value="ตรวจสุขภาพ">ตรวจสุขภาพ</option>
-            <option value="ฉุกเฉิน">ฉุกเฉิน</option>
-            <option value="ทันตกรรม">ทันตกรรม</option>
-            </select>
-        </div>
-        <div>
-          <label for="servicePrice" class="block text-sm font-medium text-gray-700">ราคา (โดยประมาณ):</label>
-          <input type="number" id="servicePrice" v-model.number="currentService.price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+          <label for="servicePrice" class="block text-sm font-medium text-gray-700"
+            >ราคา (โดยประมาณ):</label
+          >
+          <input
+            type="number"
+            id="servicePrice"
+            v-model.number="currentService.price"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+          />
           <p class="text-xs text-gray-500 mt-1">ใส่ 0 หากไม่มีค่าใช้จ่าย หรือไม่ระบุ</p>
         </div>
         <div class="flex justify-end space-x-3">
-          <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300">
+          <button
+            type="submit"
+            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-300"
+          >
             <i class="fas fa-save mr-2"></i> {{ editingService ? 'บันทึกการแก้ไข' : 'เพิ่มบริการ' }}
           </button>
-          <button v-if="editingService" type="button" @click="cancelEdit" class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300">
+          <button
+            v-if="editingService"
+            type="button"
+            @click="cancelEdit"
+            class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300"
+          >
             <i class="fas fa-times mr-2"></i> ยกเลิก
           </button>
         </div>
@@ -56,16 +150,28 @@
             </tr>
           </thead>
           <tbody class="text-gray-600 text-sm font-light">
-            <tr v-for="(service, index) in servicesList" :key="service.id" class="border-b border-gray-200 hover:bg-gray-50">
+            <tr
+              v-for="(service, index) in servicesList"
+              :key="service.id"
+              class="border-b border-gray-200 hover:bg-gray-50"
+            >
               <td class="py-3 px-6 text-left">{{ index + 1 }}</td>
               <td class="py-3 px-6 text-left">{{ service.name }}</td>
               <td class="py-3 px-6 text-left">{{ service.category }}</td>
-              <td class="py-3 px-6 text-right">{{ service.price ? service.price.toLocaleString() : '-' }}</td>
+              <td class="py-3 px-6 text-right">
+                {{ service.price ? service.price.toLocaleString() : '-' }}
+              </td>
               <td class="py-3 px-6 text-center">
-                <button @click="editService(service)" class="bg-yellow-500 text-white px-3 py-1 rounded-md text-xs hover:bg-yellow-600 transition duration-300 mr-2">
+                <button
+                  @click="editService(service)"
+                  class="bg-yellow-500 text-white px-3 py-1 rounded-md text-xs hover:bg-yellow-600 transition duration-300 mr-2"
+                >
                   <i class="fas fa-edit"></i> แก้ไข
                 </button>
-                <button @click="confirmDeleteService(service.id)" class="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition duration-300">
+                <button
+                  @click="confirmDeleteService(service.id)"
+                  class="bg-red-500 text-white px-3 py-1 rounded-md text-xs hover:bg-red-600 transition duration-300"
+                >
                   <i class="fas fa-trash-alt"></i> ลบ
                 </button>
               </td>
@@ -78,15 +184,24 @@
       </div>
     </div>
 
-    <div v-if="showConfirmModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      v-if="showConfirmModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+    >
       <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
         <h3 class="text-xl font-bold text-gray-800 mb-4">ยืนยันการลบ</h3>
         <p class="text-gray-700 mb-6">คุณแน่ใจหรือไม่ว่าต้องการลบบริการนี้?</p>
         <div class="flex justify-center space-x-4">
-          <button @click="deleteService" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-300">
+          <button
+            @click="deleteService"
+            class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-300"
+          >
             <i class="fas fa-trash-alt mr-2"></i> ลบ
           </button>
-          <button @click="cancelDelete" class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300">
+          <button
+            @click="cancelDelete"
+            class="bg-gray-400 text-white px-6 py-2 rounded-md hover:bg-gray-500 transition duration-300"
+          >
             <i class="fas fa-times mr-2"></i> ยกเลิก
           </button>
         </div>
@@ -96,23 +211,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useToast } from 'vue-toastification'; // นำเข้า useToast
+import { ref } from 'vue'
+import { useToast } from 'vue-toastification' // นำเข้า useToast
 
-const toast = useToast(); // สร้าง instance ของ toast
+const toast = useToast()
 
 interface ServiceItem {
-  id: number;
-  name: string;
-  description: string;
-  category: string;
-  price?: number;
+  id: number
+  name: string
+  description: string
+  category: string
+  price?: number
 }
 
+interface CategoryOption {
+  value: string
+  label: string
+  icon: string
+}
+
+// Service Categories with Icons
+const serviceCategories: CategoryOption[] = [
+  { value: 'คลินิกเฉพาะทาง', label: 'คลินิกเฉพาะทาง', icon: 'fas fa-stethoscope' },
+  { value: 'ตรวจสุขภาพ', label: 'ตรวจสุขภาพ', icon: 'fas fa-heartbeat' },
+  { value: 'ฉุกเฉิน', label: 'ฉุกเฉิน', icon: 'fas fa-ambulance' },
+  { value: 'ทันตกรรม', label: 'ทันตกรรม', icon: 'fas fa-tooth' },
+]
+
 const servicesList = ref<ServiceItem[]>([
-  { id: 1, name: 'ตรวจสุขภาพประจำปี', description: 'แพ็คเกจตรวจสุขภาพสำหรับบุคคลทั่วไป', category: 'ตรวจสุขภาพ', price: 1500 },
-  { id: 2, name: 'คลินิกโรคเบาหวาน', description: 'บริการให้คำปรึกษาและรักษาโรคเบาหวาน', category: 'คลินิกเฉพาะทาง', price: 300 },
-]);
+  {
+    id: 1,
+    name: 'ตรวจสุขภาพประจำปี',
+    description: 'แพ็คเกจตรวจสุขภาพสำหรับบุคคลทั่วไป',
+    category: 'ตรวจสุขภาพ',
+    price: 1500,
+  },
+  {
+    id: 2,
+    name: 'คลินิกโรคเบาหวาน',
+    description: 'บริการให้คำปรึกษาและรักษาโรคเบาหวาน',
+    category: 'คลินิกเฉพาะทาง',
+    price: 300,
+  },
+])
 
 const currentService = ref<ServiceItem>({
   id: 0,
@@ -120,51 +261,71 @@ const currentService = ref<ServiceItem>({
   description: '',
   category: '',
   price: undefined,
-});
-const editingService = ref(false);
-const serviceToDeleteId = ref<number | null>(null);
-const showConfirmModal = ref(false);
+})
+
+const editingService = ref(false)
+const serviceToDeleteId = ref<number | null>(null)
+const showConfirmModal = ref(false)
+
+// Custom Dropdown State
+const isCategoryDropdownOpen = ref(false)
+
+// Custom Dropdown Methods
+const selectCategory = (value: string) => {
+  currentService.value.category = value
+  isCategoryDropdownOpen.value = false
+}
+
+const onBlurCategory = (event: FocusEvent) => {
+  const relatedTarget = event.relatedTarget as HTMLElement
+  if (!relatedTarget || !relatedTarget.closest('.absolute')) {
+    setTimeout(() => {
+      isCategoryDropdownOpen.value = false
+    }, 200)
+  }
+}
 
 const saveService = () => {
   if (editingService.value) {
-    const index = servicesList.value.findIndex(s => s.id === currentService.value.id);
+    const index = servicesList.value.findIndex((s) => s.id === currentService.value.id)
     if (index !== -1) {
-      servicesList.value[index] = { ...currentService.value };
+      servicesList.value[index] = { ...currentService.value }
     }
-    toast.success('แก้ไขบริการสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
+    toast.success('แก้ไขบริการสำเร็จ!') // เปลี่ยนจาก alert เป็น toast.success
   } else {
-    currentService.value.id = servicesList.value.length > 0 ? Math.max(...servicesList.value.map(s => s.id)) + 1 : 1;
-    servicesList.value.push({ ...currentService.value });
-    toast.success('เพิ่มบริการใหม่สำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
+    currentService.value.id =
+      servicesList.value.length > 0 ? Math.max(...servicesList.value.map((s) => s.id)) + 1 : 1
+    servicesList.value.push({ ...currentService.value })
+    toast.success('เพิ่มบริการใหม่สำเร็จ!') // เปลี่ยนจาก alert เป็น toast.success
   }
-  resetForm();
-};
+  resetForm()
+}
 
 const editService = (service: ServiceItem) => {
-  currentService.value = { ...service };
-  editingService.value = true;
-};
+  currentService.value = { ...service }
+  editingService.value = true
+}
 
 const cancelEdit = () => {
-  resetForm();
-};
+  resetForm()
+}
 
 const confirmDeleteService = (id: number) => {
-  serviceToDeleteId.value = id;
-  showConfirmModal.value = true;
-};
+  serviceToDeleteId.value = id
+  showConfirmModal.value = true
+}
 
 const deleteService = () => {
   if (serviceToDeleteId.value !== null) {
-    servicesList.value = servicesList.value.filter(s => s.id !== serviceToDeleteId.value);
-    toast.success('ลบบริการสำเร็จ!'); // เปลี่ยนจาก alert เป็น toast.success
+    servicesList.value = servicesList.value.filter((s) => s.id !== serviceToDeleteId.value)
+    toast.success('ลบบริการสำเร็จ!') // เปลี่ยนจาก alert เป็น toast.success
   }
-  resetDeleteConfirm();
-};
+  resetDeleteConfirm()
+}
 
 const cancelDelete = () => {
-  resetDeleteConfirm();
-};
+  resetDeleteConfirm()
+}
 
 const resetForm = () => {
   currentService.value = {
@@ -173,14 +334,14 @@ const resetForm = () => {
     description: '',
     category: '',
     price: undefined,
-  };
-  editingService.value = false;
-};
+  }
+  editingService.value = false
+}
 
 const resetDeleteConfirm = () => {
-  serviceToDeleteId.value = null;
-  showConfirmModal.value = false;
-};
+  serviceToDeleteId.value = null
+  showConfirmModal.value = false
+}
 
 // In a real application, you would fetch initial services from an API on mount
 // onMounted(() => {
@@ -191,4 +352,36 @@ const resetDeleteConfirm = () => {
 
 <style scoped>
 /* Specific styles for this page */
+</style>
+
+<style scoped>
+/* Custom Dropdown Styles */
+.premium-input {
+  @apply shadow-sm border-2 border-slate-200 rounded-xl px-4 py-3
+         transition-all duration-200 ease-in-out
+         hover:border-slate-300 hover:shadow-md;
+}
+
+.premium-input:focus {
+  @apply outline-none;
+}
+
+/* Dropdown Scale Animation */
+.dropdown-scale-enter-active {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dropdown-scale-leave-active {
+  transition: all 0.15s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.dropdown-scale-enter-from {
+  opacity: 0;
+  transform: scaleY(0.8) translateY(-10px);
+}
+
+.dropdown-scale-leave-to {
+  opacity: 0;
+  transform: scaleY(0.95) translateY(-5px);
+}
 </style>

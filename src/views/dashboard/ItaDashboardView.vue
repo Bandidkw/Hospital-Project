@@ -270,7 +270,6 @@ const handleFormSubmit = async () => {
         title: formData.value.title,
         description: formData.value.description || '',
       }
-      toast.info(`กำลังสร้างปีงบประมาณ ${payload.year}...`)
       await itaService.createYear(payload)
       toast.success(`สร้างปี ${payload.year} สำเร็จ!`)
     }
@@ -290,7 +289,6 @@ const handleConfirmDelete = async () => {
   if (!yearToDelete.value) return
 
   try {
-    toast.info(`กำลังลบ "${yearToDelete.value.title}"...`)
     await itaService.deleteYear(yearToDelete.value.id)
     toast.success(`ลบ "${yearToDelete.value.title}" สำเร็จ!`)
 

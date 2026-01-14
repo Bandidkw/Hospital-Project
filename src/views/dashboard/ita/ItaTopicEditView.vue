@@ -358,7 +358,6 @@ const resetForm = () => {
 const cancelEdit = () => {
   resetForm()
   isFormModalOpen.value = false
-  toast.info('ยกเลิกแล้ว')
 }
 
 const openCreateModal = () => {

@@ -42,33 +42,42 @@
       @toggle-publish="togglePublishStatus"
     />
 
-    <!-- Create News Modal -->
+    <!-- Create News Modal - ปรับให้เป็นทางการ -->
     <div
       v-if="showCreateModal"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="createNewsTitle"
       @keydown.esc="closeCreateModal"
+      @click="closeCreateModal"
     >
       <div
-        class="bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/10 animate-[fadeIn_.18s_ease-out]"
+        class="bg-white w-full max-w-5xl rounded-lg overflow-hidden shadow-xl border border-gray-200"
+        @click.stop
       >
-        <header class="sticky top-0 z-10 bg-white/95 backdrop-blur border-b px-6 py-4">
+        <header class="sticky top-0 z-10 bg-white border-b-2 border-gray-200 px-6 py-4">
           <div class="flex items-center justify-between">
-            <h3 id="createNewsTitle" class="text-xl font-bold text-gray-900 truncate">
-              เพิ่มข่าวสารใหม่
-            </h3>
+            <div>
+              <h3
+                id="createNewsTitle"
+                class="text-xl font-semibold text-gray-800 flex items-center"
+              >
+                <i class="fas fa-newspaper text-blue-600 mr-3"></i>
+                เพิ่มข่าวสารใหม่
+              </h3>
+              <p class="text-sm text-gray-500 mt-1">กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง</p>
+            </div>
             <button
-              class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+              class="text-gray-400 hover:text-gray-600 transition-colors p-2"
               @click="closeCreateModal"
               aria-label="ปิดหน้าต่างสร้างข่าวสาร"
             >
-              <i class="fas fa-times text-gray-700"></i>
+              <i class="fas fa-times text-2xl"></i>
             </button>
           </div>
         </header>
-        <div class="max-h-[75vh] overflow-y-auto px-6 py-6">
+        <div class="max-h-[75vh] overflow-y-auto px-6 py-6 bg-gray-50">
           <NewsCreateForm @newsSaved="handleNewsSaved" />
         </div>
       </div>

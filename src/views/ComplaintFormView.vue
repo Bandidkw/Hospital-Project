@@ -54,18 +54,56 @@
               >หัวข้อเรื่องร้องเรียน: <span class="text-red-600 font-bold">*</span></label
             >
 
-            <select
-              id="subject"
-              v-model="complaintData.subject"
-              class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 bg-white focus:ring-red-500 focus:border-red-500 transition duration-150"
-              required
-            >
-              <option value="" disabled selected>--- กรุณาเลือกหัวข้อร้องเรียน ---</option>
+            <!-- Custom Dropdown สำหรับหัวข้อร้องเรียน -->
+            <div class="relative mt-1">
+              <button
+                type="button"
+                @click="isSubjectDropdownOpen = !isSubjectDropdownOpen"
+                @blur="onBlurSubject"
+                class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200 flex items-center justify-between"
+              >
+                <span v-if="complaintData.subject" class="flex items-center">
+                  <i :class="getSubjectIcon(complaintData.subject)" class="mr-2"></i>
+                  {{ complaintData.subject }}
+                </span>
+                <span v-else class="text-gray-400">--- กรุณาเลือกหัวข้อร้องเรียน ---</span>
+                <i
+                  class="fas fa-chevron-down text-gray-400 ml-2 transition-transform duration-200"
+                  :class="{ 'rotate-180': isSubjectDropdownOpen }"
+                ></i>
+              </button>
 
-              <option v-for="subject in complaintSubjects" :key="subject" :value="subject">
-                {{ subject }}
-              </option>
-            </select>
+              <!-- Dropdown Menu -->
+              <div
+                v-if="isSubjectDropdownOpen"
+                class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+                style="animation: scaleIn 0.15s ease-out"
+              >
+                <div
+                  v-for="subject in complaintSubjects"
+                  :key="subject"
+                  @mousedown.prevent="selectSubject(subject)"
+                  class="px-4 py-3 hover:bg-red-50 cursor-pointer transition-colors duration-150 flex items-center justify-between group"
+                >
+                  <div class="flex items-center">
+                    <span
+                      class="w-2 h-2 rounded-full mr-3 transition-colors duration-200"
+                      :class="
+                        complaintData.subject === subject
+                          ? 'bg-red-500'
+                          : 'bg-gray-300 group-hover:bg-red-400'
+                      "
+                    ></span>
+                    <i
+                      :class="getSubjectIcon(subject)"
+                      class="mr-2 text-gray-600 group-hover:text-red-600"
+                    ></i>
+                    <span class="text-gray-700 group-hover:text-red-600">{{ subject }}</span>
+                  </div>
+                  <i v-if="complaintData.subject === subject" class="fas fa-check text-red-500"></i>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -141,6 +179,37 @@ const initialFormData: ComplaintFormData = {
 const complaintData = ref<ComplaintFormData>({ ...initialFormData })
 const loading = ref(false)
 
+// Custom dropdown state
+const isSubjectDropdownOpen = ref(false)
+
+// ฟังก์ชันสำหรับเลือกหัวข้อจาก dropdown
+const selectSubject = (subject: string) => {
+  complaintData.value.subject = subject
+  isSubjectDropdownOpen.value = false
+}
+
+// ฟังก์ชันจัดการเมื่อ blur จาก dropdown (ปิด dropdown หลังจากคลิกข้างนอก)
+const onBlurSubject = () => {
+  setTimeout(() => {
+    isSubjectDropdownOpen.value = false
+  }, 200)
+}
+
+// ฟังก์ชันสำหรับแสดงไอคอนตามหัวข้อร้องเรียน
+const getSubjectIcon = (subject: string) => {
+  const icons: Record<string, string> = {
+    'พฤติกรรม/การบริการของบุคลากร': 'fas fa-user-tie text-purple-500',
+    'การรอคอย/ความล่าช้าในการรับบริการ': 'fas fa-clock text-orange-500',
+    'คุณภาพการรักษา/ความผิดพลาดทางการแพทย์': 'fas fa-heartbeat text-red-500',
+    'ความสะอาด/สุขอนามัยของสถานที่': 'fas fa-broom text-green-500',
+    'สิ่งอำนวยความสะดวก/สภาพแวดล้อม': 'fas fa-building text-blue-500',
+    'ปัญหาการเบิกจ่าย/ค่ารักษาพยาบาล': 'fas fa-money-bill-wave text-emerald-500',
+    'ระบบนัดหมาย/การสื่อสาร': 'fas fa-calendar-check text-indigo-500',
+    'อื่นๆ (โปรดระบุในรายละเอียด)': 'fas fa-ellipsis-h text-gray-500',
+  }
+  return icons[subject] || 'fas fa-comment-dots text-gray-500'
+}
+
 // ------------------------------------------------------------------
 // 2. Submission Logic
 // ------------------------------------------------------------------
@@ -177,3 +246,17 @@ const resetForm = () => {
   complaintData.value = { ...initialFormData }
 }
 </script>
+
+<style scoped>
+/* Animation สำหรับ dropdown */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+</style>
