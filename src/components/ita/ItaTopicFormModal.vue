@@ -21,26 +21,107 @@
           </div>
 
           <form @submit.prevent="submitForm" class="space-y-6">
-            <div v-if="!isEditing">
-              <label for="moit-template" class="block text-gray-700 font-bold mb-2"
-                >เลือกแม่แบบหัวข้อ (MOIT):</label
-              >
-              <select
+            <!-- Custom MOIT Dropdown -->
+            <div v-if="!isEditing" class="relative">
+              <label for="moit-template" class="block text-gray-700 font-bold mb-2">
+                เลือกแม่แบบหัวข้อ (MOIT):
+              </label>
+
+              <!-- Custom Trigger -->
+              <div
                 id="moit-template"
-                :value="localFormData.templateValue"
-                @change="handleTemplateChange"
-                class="shadow border rounded-lg w-full py-3 px-4 text-gray-700 transition duration-150 focus:ring-blue-500 focus:border-blue-500"
-                required
+                class="premium-input flex items-center justify-between cursor-pointer bg-white relative z-0"
+                :class="{
+                  'border-blue-500 ring-4 ring-blue-500/10': isMoitDropdownOpen,
+                }"
+                @click="isMoitDropdownOpen = !isMoitDropdownOpen"
+                tabindex="0"
+                @blur="onBlurMoit"
               >
-                <option disabled value="">-- กรุณาเลือกหัวข้อ --</option>
-                <option
-                  v-for="template in moitTemplates"
-                  :key="template.value"
-                  :value="template.value"
+                <span class="text-slate-700 font-medium truncate pr-2">
+                  {{
+                    localFormData.templateValue
+                      ? `${localFormData.templateValue}: ${getSelectedMoitText()}`
+                      : 'กรุณาเลือกหัวข้อ...'
+                  }}
+                </span>
+                <span
+                  class="transition-transform duration-300 text-slate-400 flex-shrink-0"
+                  :class="{ 'rotate-180 text-blue-500': isMoitDropdownOpen }"
                 >
-                  {{ template.value }}: {{ template.text.substring(0, 100) }}...
-                </option>
-              </select>
+                  <i class="fas fa-chevron-down text-xs"></i>
+                </span>
+              </div>
+
+              <!-- Custom Menu -->
+              <transition name="dropdown-scale">
+                <div
+                  v-if="isMoitDropdownOpen"
+                  class="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-2xl border border-slate-100 overflow-hidden origin-top max-h-96 overflow-y-auto custom-scrollbar"
+                >
+                  <!-- Search Box -->
+                  <div class="sticky top-0 bg-white border-b border-slate-100 p-3 z-10">
+                    <div class="relative">
+                      <input
+                        v-model="moitSearchQuery"
+                        type="text"
+                        placeholder="ค้นหา MOIT..."
+                        class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        @click.stop
+                      />
+                      <i
+                        class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"
+                      ></i>
+                    </div>
+                  </div>
+
+                  <!-- MOIT List -->
+                  <ul class="py-1.5">
+                    <li
+                      v-for="template in filteredMoitTemplates"
+                      :key="template.value"
+                      @click.stop="selectMoit(template.value)"
+                      class="px-4 py-3 hover:bg-blue-50 cursor-pointer group/item transition-colors border-b border-slate-50 last:border-0"
+                      :class="{ 'bg-blue-50/50': localFormData.templateValue === template.value }"
+                    >
+                      <div class="flex items-start gap-3">
+                        <span
+                          class="w-2 h-2 rounded-full bg-slate-200 transition-colors group-hover/item:bg-blue-400 mt-1.5 flex-shrink-0"
+                          :class="{
+                            '!bg-blue-600': localFormData.templateValue === template.value,
+                          }"
+                        ></span>
+                        <div class="flex-1 min-w-0">
+                          <div
+                            class="font-semibold text-sm mb-1"
+                            :class="{
+                              'text-blue-700': localFormData.templateValue === template.value,
+                              'text-slate-700 group-hover/item:text-blue-700':
+                                localFormData.templateValue !== template.value,
+                            }"
+                          >
+                            {{ template.value }}
+                          </div>
+                          <div class="text-xs text-slate-500 line-clamp-2">
+                            {{ template.text }}
+                          </div>
+                        </div>
+                        <i
+                          v-if="localFormData.templateValue === template.value"
+                          class="fas fa-check text-blue-600 text-sm mt-1 flex-shrink-0"
+                        ></i>
+                      </div>
+                    </li>
+                    <li
+                      v-if="filteredMoitTemplates.length === 0"
+                      class="px-4 py-8 text-center text-slate-500 text-sm"
+                    >
+                      <i class="fas fa-search text-2xl mb-2 text-slate-300"></i>
+                      <p>ไม่พบหัวข้อที่ค้นหา</p>
+                    </li>
+                  </ul>
+                </div>
+              </transition>
             </div>
 
             <div class="space-y-4">
@@ -102,7 +183,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 // 💡 Interface สำหรับ Prop: formData
 interface TopicFormData {
@@ -133,6 +214,10 @@ const emit = defineEmits(['close', 'save'])
 // ใช้ Local Ref เพื่อแก้ไขข้อมูลใน Modal โดยไม่กระทบ Parent โดยตรง
 const localFormData = ref<TopicFormData>({ ...props.formData })
 
+// Custom Dropdown State
+const isMoitDropdownOpen = ref(false)
+const moitSearchQuery = ref('')
+
 // Watcher เพื่ออัปเดต localFormData เมื่อ props.formData เปลี่ยนจาก Parent (เช่น เมื่อกด Edit)
 watch(
   () => props.formData,
@@ -142,15 +227,61 @@ watch(
   { deep: true },
 )
 
+// Reset search when dropdown closes
+watch(isMoitDropdownOpen, (isOpen) => {
+  if (!isOpen) {
+    moitSearchQuery.value = ''
+  }
+})
+
 // --------------------------------------------------
-// LOGIC
+// COMPUTED
 // --------------------------------------------------
+const filteredMoitTemplates = computed(() => {
+  if (!moitSearchQuery.value.trim()) {
+    return props.moitTemplates
+  }
+
+  const query = moitSearchQuery.value.toLowerCase()
+  return props.moitTemplates.filter(
+    (template) =>
+      template.value.toLowerCase().includes(query) || template.text.toLowerCase().includes(query),
+  )
+})
+
+// --------------------------------------------------
+// METHODS
+// --------------------------------------------------
+function getSelectedMoitText(): string {
+  const selected = props.moitTemplates.find((t) => t.value === localFormData.value.templateValue)
+  if (!selected) return ''
+
+  // แสดงข้อความแบบย่อ (50 ตัวอักษร)
+  const shortText =
+    selected.text.length > 50 ? selected.text.substring(0, 50) + '...' : selected.text
+  return shortText
+}
+
+function selectMoit(value: string) {
+  updateTemplate(value)
+  isMoitDropdownOpen.value = false
+}
+
+function onBlurMoit(event: FocusEvent) {
+  // ปิด dropdown เมื่อ blur แต่ต้องตรวจสอบว่าไม่ได้คลิกภายใน dropdown
+  const relatedTarget = event.relatedTarget as HTMLElement
+  if (!relatedTarget || !relatedTarget.closest('.absolute')) {
+    setTimeout(() => {
+      isMoitDropdownOpen.value = false
+    }, 200)
+  }
+}
 
 // Logic การเลือก Template (ในโหมดสร้าง)
 const updateTemplate = (value: string) => {
   localFormData.value.templateValue = value
   const selectedTemplate = props.moitTemplates.find((t) => t.value === value)
-  // ... (Logic การ set localFormData ต่อไป) ...
+
   if (selectedTemplate) {
     localFormData.value.moit_name = selectedTemplate.value
     localFormData.value.title = selectedTemplate.text
@@ -162,11 +293,9 @@ const updateTemplate = (value: string) => {
   }
 }
 
-// 💡 [ฟังก์ชันใหม่] เพื่อจัดการ Event และ Type
+// 💡 [ฟังก์ชันใหม่] เพื่อจัดการ Event และ Type (เก็บไว้สำหรับ backward compatibility)
 const handleTemplateChange = (event: Event) => {
-  // 1. ตรวจสอบว่า target มีค่าและเป็น HTMLSelectElement หรือไม่
   const target = event.target as HTMLSelectElement | null
-
   if (target && target.value !== undefined) {
     updateTemplate(target.value)
   }
@@ -208,5 +337,71 @@ const submitForm = () => {
 .modal-slide-leave-to {
   transform: translateY(-50px);
   opacity: 0;
+}
+
+/* ------------------------------------------- */
+/* 🎨 Custom Dropdown Styles */
+/* ------------------------------------------- */
+
+/* Premium Input Style */
+.premium-input {
+  @apply shadow-sm border-2 border-slate-200 rounded-xl px-4 py-3
+         transition-all duration-200 ease-in-out
+         hover:border-slate-300 hover:shadow-md;
+}
+
+.premium-input:focus {
+  @apply outline-none;
+}
+
+.premium-input.input-error {
+  @apply border-red-400 ring-4 ring-red-400/10;
+}
+
+/* Dropdown Scale Animation */
+.dropdown-scale-enter-active {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.dropdown-scale-leave-active {
+  transition: all 0.15s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.dropdown-scale-enter-from {
+  opacity: 0;
+  transform: scaleY(0.8) translateY(-10px);
+}
+
+.dropdown-scale-leave-to {
+  opacity: 0;
+  transform: scaleY(0.95) translateY(-5px);
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Line Clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>
