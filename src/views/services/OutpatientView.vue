@@ -3,9 +3,8 @@
     <h1 class="text-3xl font-bold text-gray-800 mb-6">คลินิกผู้ป่วยนอก (OPD)</h1>
     <p class="text-gray-700 leading-relaxed mb-4">
       คลินิกผู้ป่วยนอกของโรงพยาบาลแม่แตง ให้บริการตรวจรักษาโรคทั่วไป
-      และโรคเฉพาะทางโดยแพทย์ผู้เชี่ยวชาญในสาขาต่างๆ
-      เรามุ่งมั่นที่จะให้บริการที่รวดเร็ว สะดวกสบาย และมีคุณภาพ
-      เพื่อให้ผู้ป่วยได้รับการดูแลอย่างเหมาะสมโดยไม่ต้องนอนพักในโรงพยาบาล
+      และโรคเฉพาะทางโดยแพทย์ผู้เชี่ยวชาญในสาขาต่างๆ เรามุ่งมั่นที่จะให้บริการที่รวดเร็ว สะดวกสบาย
+      และมีคุณภาพ เพื่อให้ผู้ป่วยได้รับการดูแลอย่างเหมาะสมโดยไม่ต้องนอนพักในโรงพยาบาล
     </p>
     <p class="text-gray-700 leading-relaxed mb-6">
       ผู้ป่วยสามารถนัดหมายล่วงหน้า หรือ Walk-in เพื่อรับบริการได้ตามเวลาทำการของแต่ละคลินิก
@@ -45,12 +44,12 @@
       </div>
     </div>
 
-    <h2 class="text-2xl font-semibold text-gray-800 mb-4">เวลาทำการ (โดยประมาณ)</h2>
+    <!-- <h2 class="text-2xl font-semibold text-gray-800 mb-4">เวลาทำการ (โดยประมาณ)</h2>
     <p class="text-gray-700 mb-6">
       วันจันทร์ - วันศุกร์: 08:00 น. - 16:00 น.
       <br>
       วันเสาร์ - วันอาทิตย์: 09:00 น. - 12:00 น. (เฉพาะบางคลินิก)
-    </p>
+    </p> -->
 
     <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-md" role="alert">
       <p class="font-bold">การนัดหมาย:</p>
@@ -59,10 +58,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-// No specific script logic needed for a static page
-</script>
+<script setup lang="ts"></script>
 
-<style scoped>
-/* Add specific styles for this page if needed */
-</style>
+<style scoped></style>

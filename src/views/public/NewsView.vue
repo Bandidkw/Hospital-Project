@@ -25,13 +25,45 @@
       </div>
       <div class="flex items-center gap-2">
         <label class="text-sm font-medium text-gray-700">เรียงตาม</label>
-        <select
-          v-model="sortKey"
-          class="border rounded-xl text-sm py-2.5 px-4 focus:ring-4 focus:ring-teal-100 focus:border-teal-500 shadow-sm transition-all"
-        >
-          <option value="date">วันที่</option>
-          <option value="title">หัวข้อ</option>
-        </select>
+        <!-- Custom Dropdown -->
+        <div class="relative">
+          <button
+            type="button"
+            @click="isSortDropdownOpen = !isSortDropdownOpen"
+            @blur="onBlurSort"
+            class="sort-dropdown-button"
+          >
+            <span class="flex items-center">
+              <i :class="getSortIcon(sortKey)" class="mr-2 text-teal-600"></i>
+              {{ getSortLabel(sortKey) }}
+            </span>
+            <i
+              class="fas fa-chevron-down text-gray-400 ml-2 transition-transform duration-200"
+              :class="{ 'rotate-180': isSortDropdownOpen }"
+            ></i>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div v-if="isSortDropdownOpen" class="sort-dropdown-menu">
+            <div
+              v-for="option in sortOptions"
+              :key="option.value"
+              @mousedown.prevent="selectSort(option.value)"
+              class="sort-dropdown-item"
+            >
+              <div class="flex items-center">
+                <span
+                  class="w-2 h-2 rounded-full mr-3 transition-colors duration-200"
+                  :class="sortKey === option.value ? 'bg-teal-500' : 'bg-gray-300'"
+                ></span>
+                <i :class="option.icon" class="mr-2 text-gray-600"></i>
+                <span class="text-gray-700">{{ option.label }}</span>
+              </div>
+              <i v-if="sortKey === option.value" class="fas fa-check text-teal-600"></i>
+            </div>
+          </div>
+        </div>
+
         <button
           class="p-2 border border-gray-300 rounded-xl bg-white hover:bg-teal-50 hover:border-teal-500 transition-all text-gray-600 hover:text-teal-600 shadow-sm"
           @click="sortAsc = !sortAsc"
@@ -212,6 +244,40 @@ const sortAsc = ref(false)
 const page = ref(1)
 const pageSize = ref(9)
 
+// Custom dropdown state
+const isSortDropdownOpen = ref(false)
+
+// Sort options
+const sortOptions = [
+  { value: 'date' as const, label: 'วันที่', icon: 'fas fa-calendar-alt' },
+  { value: 'title' as const, label: 'หัวข้อ', icon: 'fas fa-heading' },
+]
+
+// ฟังก์ชันสำหรับเลือกการเรียงลำดับ
+const selectSort = (value: 'date' | 'title') => {
+  sortKey.value = value
+  isSortDropdownOpen.value = false
+}
+
+// ฟังก์ชันจัดการเมื่อ blur จาก dropdown
+const onBlurSort = () => {
+  setTimeout(() => {
+    isSortDropdownOpen.value = false
+  }, 200)
+}
+
+// ฟังก์ชันสำหรับแสดง label
+const getSortLabel = (value: 'date' | 'title') => {
+  const option = sortOptions.find((opt) => opt.value === value)
+  return option ? option.label : value
+}
+
+// ฟังก์ชันสำหรับแสดงไอคอน
+const getSortIcon = (value: 'date' | 'title') => {
+  const option = sortOptions.find((opt) => opt.value === value)
+  return option ? option.icon : 'fas fa-sort'
+}
+
 /* ---------- Utils ---------- */
 const categoryLabels = computed(() =>
   Object.fromEntries(CATEGORY_LIST.map(({ key, label }) => [key, label])),
@@ -332,5 +398,86 @@ onMounted(() => {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Custom Sort Dropdown */
+.sort-dropdown-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 140px;
+  padding: 0.625rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.sort-dropdown-button:hover {
+  border-color: #14b8a6;
+  background-color: #f0fdfa;
+}
+
+.sort-dropdown-button:focus {
+  outline: none;
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.sort-dropdown-menu {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  min-width: 180px;
+  margin-top: 0.25rem;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  animation: scaleIn 0.15s ease-out;
+}
+
+.sort-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sort-dropdown-item:first-child {
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.sort-dropdown-item:last-child {
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.sort-dropdown-item:hover {
+  background-color: #f0fdfa;
+}
+
+.sort-dropdown-item:hover .text-gray-700 {
+  color: #14b8a6;
+}
+
+.sort-dropdown-item:hover .text-gray-600 {
+  color: #14b8a6;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>
